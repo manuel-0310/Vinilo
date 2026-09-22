@@ -30,6 +30,7 @@ class SpotifyApi {
   final Map<String, AlbumDetail> _albums = {};
   final Map<String, AlbumPage> _pages = {};
   final Map<String, List<Artist>> _artists = {};
+  final Map<String, Artist> _artistDetails = {};
 
   bool get isConfigured => baseUrl.isNotEmpty;
 
@@ -49,6 +50,15 @@ class SpotifyApi {
         .toList();
     _artists[key] = items;
     return items;
+  }
+
+  /// Ficha del artista (nombre, foto, géneros).
+  Future<Artist> artist(String id) async {
+    final cached = _artistDetails[id];
+    if (cached != null) return cached;
+    final artist = Artist.fromJson(await _get('/artist/$id'));
+    _artistDetails[id] = artist;
+    return artist;
   }
 
   AlbumDetail? cachedAlbum(String id) => _albums[id];

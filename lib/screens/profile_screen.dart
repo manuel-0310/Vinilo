@@ -14,6 +14,7 @@ import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/format.dart';
 import '../widgets/album_cover.dart';
+import '../widgets/artist_avatar.dart';
 import '../widgets/diary_row.dart';
 import '../widgets/histogram.dart';
 import '../widgets/misc.dart';
@@ -133,11 +134,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await services.users.setFavoriteArtists(profile.uid, picked);
   }
 
-  Future<void> _setTheme(UserProfile profile, ThemeMode mode) {
-    HapticFeedback.selectionClick();
-    return ServicesScope.of(context).users.setThemeMode(profile.uid, mode);
-  }
-
   @override
   Widget build(BuildContext context) {
     final me = CurrentUser.maybeOf(context);
@@ -167,7 +163,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ? null
                 : () => _pickFavorites(profile, ratings),
             onPickArtists: () => _pickArtists(profile),
-            onTheme: (mode) => _setTheme(profile, mode),
           );
         },
       );
@@ -222,7 +217,6 @@ class _ProfileBody extends StatelessWidget {
     required this.onEdit,
     required this.onPickFavorites,
     required this.onPickArtists,
-    required this.onTheme,
   });
 
   final UserProfile profile;
@@ -233,7 +227,6 @@ class _ProfileBody extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback? onPickFavorites;
   final VoidCallback onPickArtists;
-  final ValueChanged<ThemeMode> onTheme;
 
   static const int _diaryPreview = 5;
 
@@ -335,14 +328,23 @@ class _ProfileBody extends StatelessWidget {
                             if (isMe)
                               Padding(
                                 padding: EdgeInsets.only(top: banner != null ? 42 : 0),
-                                child: IconButton(
-                                  key: const ValueKey('edit-profile'),
-                                  onPressed: onEdit,
-                                  tooltip: 'Editar perfil',
-                                  icon: const Icon(Icons.tune_rounded),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: c.surface2.withValues(alpha: 0.8),
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _HeaderButton(
+                                      key: const ValueKey('edit-profile'),
+                                      icon: Icons.tune_rounded,
+                                      tooltip: 'Editar perfil',
+                                      onTap: onEdit,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _HeaderButton(
+                                      key: const ValueKey('settings'),
+                                      icon: Icons.settings_rounded,
+                                      tooltip: 'Configuración',
+                                      onTap: () => openSettings(context),
+                                    ),
+                                  ],
                                 ),
                               ),
                           ],
@@ -493,10 +495,6 @@ class _ProfileBody extends StatelessWidget {
                   ),
                 ),
               ),
-            if (isMe)
-              SliverToBoxAdapter(
-                child: _AppearanceSection(mode: profile.themeMode, onChanged: onTheme),
-              ),
             SliverToBoxAdapter(
               child: SizedBox(
                 height: standalone
@@ -590,6 +588,41 @@ class _Banner extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Botón redondo y compacto del encabezado del perfil (editar, configuración).
+class _HeaderButton extends StatelessWidget {
+  const _HeaderButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: c.surface2.withValues(alpha: 0.8),
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: 38,
+            height: 38,
+            child: Icon(icon, size: 19, color: c.text),
+          ),
+        ),
       ),
     );
   }
@@ -834,18 +867,22 @@ class _ArtistsRow extends StatelessWidget {
           if (i > 0) const SizedBox(width: 12),
           Expanded(
             child: i < artists.length
-                ? Column(
-                    children: [
-                      _ArtistAvatar(artist: artists[i]),
-                      const SizedBox(height: 8),
-                      Text(
-                        artists[i].name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: VText.ui(13, weight: 700),
-                      ),
-                    ],
+                ? GestureDetector(
+                    key: ValueKey('fav-artist-$i'),
+                    onTap: () => openArtist(context, artists[i]),
+                    child: Column(
+                      children: [
+                        ArtistAvatar(artist: artists[i]),
+                        const SizedBox(height: 8),
+                        Text(
+                          artists[i].name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: VText.ui(13, weight: 700),
+                        ),
+                      ],
+                    ),
                   )
                     .animate()
                     .fadeIn(delay: (60 * i).ms)
@@ -881,137 +918,6 @@ class _ArtistsRow extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-/// Foto redonda de un artista con la inicial de respaldo.
-class _ArtistAvatar extends StatelessWidget {
-  const _ArtistAvatar({required this.artist, this.size});
-
-  final Artist artist;
-  final double? size;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    final fallback = Container(
-      color: c.surface2,
-      alignment: Alignment.center,
-      child: FittedBox(
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Text(
-            artist.name.isEmpty ? '?' : artist.name.characters.first.toUpperCase(),
-            style: VText.display(40, color: c.text2, height: 1),
-          ),
-        ),
-      ),
-    );
-    final url = size != null && size! <= 64 ? artist.smallImage : artist.bestImage;
-    Widget child = ClipOval(
-      child: url == null
-          ? fallback
-          : Image.network(
-              url,
-              fit: BoxFit.cover,
-              gaplessPlayback: true,
-              errorBuilder: (_, _, _) => fallback,
-            ),
-    );
-    if (size != null) {
-      return SizedBox(width: size, height: size, child: child);
-    }
-    return AspectRatio(aspectRatio: 1, child: child);
-  }
-}
-
-/// Sistema, claro u oscuro. Se guarda en el perfil, así que sigue a la
-/// persona en cualquier dispositivo.
-class _AppearanceSection extends StatelessWidget {
-  const _AppearanceSection({required this.mode, required this.onChanged});
-
-  final ThemeMode mode;
-  final ValueChanged<ThemeMode> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    const options = [
-      (ThemeMode.system, 'Sistema', Icons.brightness_auto_rounded, 'system'),
-      (ThemeMode.light, 'Claro', Icons.light_mode_rounded, 'light'),
-      (ThemeMode.dark, 'Oscuro', Icons.dark_mode_rounded, 'dark'),
-    ];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(VSpace.page, 34, VSpace.page, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('APARIENCIA', style: VText.label(11, color: c.text3)),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              for (final (i, o) in options.indexed) ...[
-                if (i > 0) const SizedBox(width: 8),
-                Expanded(
-                  child: _ThemeChoice(
-                    key: ValueKey('theme-${o.$4}'),
-                    label: o.$2,
-                    icon: o.$3,
-                    selected: mode == o.$1,
-                    onTap: () => onChanged(o.$1),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ThemeChoice extends StatelessWidget {
-  const _ThemeChoice({
-    super.key,
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    final color = selected ? c.accent : c.text2;
-    return Material(
-      color: selected ? c.accent.withValues(alpha: 0.14) : c.surface2,
-      borderRadius: BorderRadius.circular(16),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selected ? c.accent.withValues(alpha: 0.6) : Colors.transparent,
-            ),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, size: 20, color: color),
-              const SizedBox(height: 6),
-              Text(label, style: VText.ui(13, weight: 700, color: color)),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -1387,7 +1293,7 @@ class _ArtistPickerState extends State<_ArtistPicker> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _ArtistAvatar(artist: a, size: 26),
+                          ArtistAvatar(artist: a, size: 26),
                           const SizedBox(width: 8),
                           Text(a.name, style: VText.ui(13, weight: 700, color: c.accent)),
                           const SizedBox(width: 6),
@@ -1497,7 +1403,7 @@ class _ArtistResultRow extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               child: Row(
                 children: [
-                  _ArtistAvatar(artist: artist, size: 46),
+                  ArtistAvatar(artist: artist, size: 46),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

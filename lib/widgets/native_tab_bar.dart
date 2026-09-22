@@ -27,6 +27,10 @@ class NativeTab {
 /// UITabBar de iOS incrustado como platform view (ver ios/Runner/NativeTabBar.swift).
 /// Con el SDK de iOS 26 se dibuja con Liquid Glass. Solo tiene sentido en
 /// iOS 26 o superior: consultar [NativeTabBar.isSupported] antes de usarlo.
+///
+/// Va pegado al borde inferior de la pantalla, sin SafeArea: el UITabBar
+/// necesita cubrir la zona del indicador de inicio para colocar la píldora
+/// donde la pone iOS. Encajonado más arriba, la aplasta y corta las etiquetas.
 class NativeTabBar extends StatefulWidget {
   const NativeTabBar({
     super.key,
@@ -36,7 +40,6 @@ class NativeTabBar extends StatefulWidget {
     required this.tint,
     required this.unselectedTint,
     required this.dark,
-    this.height = 54,
   });
 
   final List<NativeTab> items;
@@ -45,7 +48,6 @@ class NativeTabBar extends StatefulWidget {
   final Color tint;
   final Color unselectedTint;
   final bool dark;
-  final double height;
 
   /// True en iOS 26 o superior, donde UIKit trae Liquid Glass.
   static final bool isSupported = _detectSupport();
@@ -64,6 +66,7 @@ class NativeTabBar extends StatefulWidget {
 class _NativeTabBarState extends State<NativeTabBar> {
   MethodChannel? _channel;
   Rect? _hitRect;
+  double? _height;
 
   Map<String, Object?> get _style => {
         'tint': widget.tint.toARGB32(),
@@ -77,6 +80,9 @@ class _NativeTabBarState extends State<NativeTabBar> {
       switch (call.method) {
         case 'selected':
           widget.onSelected(call.arguments as int);
+        case 'height':
+          final h = (call.arguments as num).toDouble();
+          if (mounted && h != _height) setState(() => _height = h);
         case 'frame':
           final v = (call.arguments as List).cast<num>();
           final rect = Rect.fromLTWH(
@@ -108,7 +114,8 @@ class _NativeTabBarState extends State<NativeTabBar> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: widget.height,
+      // Hasta que UIKit informe su alto, el de un UITabBarController.
+      height: _height ?? 49 + MediaQuery.viewPaddingOf(context).bottom,
       child: _HitRegion(
         rect: _hitRect,
         child: UiKitView(

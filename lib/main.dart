@@ -27,8 +27,19 @@ class ViniloApp extends StatefulWidget {
 }
 
 class _ViniloAppState extends State<ViniloApp> {
-  late final ThemeData _dark = buildViniloTheme(ViniloPalette.dark);
-  late final ThemeData _light = buildViniloTheme(ViniloPalette.light);
+  // Un par de temas por color de énfasis; se construyen la primera vez que
+  // alguien elige ese color y se reutilizan.
+  final Map<int, (ThemeData, ThemeData)> _themes = {};
+
+  (ThemeData, ThemeData) _themesFor(Color seed) {
+    return _themes.putIfAbsent(
+      seed.toARGB32(),
+      () => (
+        buildViniloTheme(ViniloPalette.light.withSeed(seed)),
+        buildViniloTheme(ViniloPalette.dark.withSeed(seed)),
+      ),
+    );
+  }
   String? _profileUid;
   Stream<UserProfile?>? _profileStream;
   Object? _authError;
@@ -57,13 +68,14 @@ class _ViniloAppState extends State<ViniloApp> {
   }
 
   Widget _app({UserProfile? profile, required Widget home}) {
+    final (light, dark) = _themesFor(profile?.color ?? ViniloPalette.defaultSeed);
     return CurrentUser(
       profile: profile,
       child: MaterialApp(
         title: 'Vinilo',
         debugShowCheckedModeBanner: false,
-        theme: _light,
-        darkTheme: _dark,
+        theme: light,
+        darkTheme: dark,
         // Sin perfil (splash, onboarding) la app arranca oscura, que es su
         // carácter; la preferencia vive en el documento del usuario.
         themeMode: profile?.themeMode ?? ThemeMode.dark,

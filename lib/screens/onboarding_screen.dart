@@ -45,6 +45,7 @@ class OnboardingScreen extends StatelessWidget {
               const SizedBox(height: 36),
               ProfileForm(
                 submitLabel: 'Empezar',
+                showColor: true,
                 onSubmit: (edit) async {
                   String? url;
                   if (edit.avatar != null) {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../theme/vinilo_theme.dart';
+import '../widgets/image_cropper.dart';
 import '../widgets/user_avatar.dart';
 
 /// Lo que devuelve el formulario al guardar.
@@ -26,6 +27,14 @@ class ProfileEdit {
 
 typedef ProfileSubmit = Future<void> Function(ProfileEdit edit);
 
+/// Tamaños con los que se exportan las fotos antes de subirlas a Storage.
+const int avatarSize = 512;
+const int bannerWidth = 1600;
+
+/// Proporción del banner: la del encabezado del perfil (ancho completo por
+/// ~210 pt de alto en un iPhone), redondeada a 2:1.
+const double bannerAspect = 2;
+
 /// Formulario compartido por el onboarding y la edición de perfil.
 class ProfileForm extends StatefulWidget {
   const ProfileForm({
@@ -37,6 +46,7 @@ class ProfileForm extends StatefulWidget {
     this.initialAvatarUrl,
     this.initialBannerUrl,
     this.showBanner = false,
+    this.showColor = false,
     this.autofocus = false,
   });
 
@@ -49,6 +59,10 @@ class ProfileForm extends StatefulWidget {
 
   /// Muestra el selector de foto de fondo (solo al editar el perfil).
   final bool showBanner;
+
+  /// Muestra el selector de color. Solo en el onboarding: después el color
+  /// vive en Configuración, porque es el énfasis de toda la app.
+  final bool showColor;
   final bool autofocus;
 
   @override
@@ -58,7 +72,7 @@ class ProfileForm extends StatefulWidget {
 class _ProfileFormState extends State<ProfileForm> {
   late final TextEditingController _name =
       TextEditingController(text: widget.initialName);
-  late int _color = widget.initialColor ?? VColors.avatarPalette.first.toARGB32();
+  late int _color = widget.initialColor ?? VColors.accentPalette.first.toARGB32();
   Uint8List? _picked;
   bool _removed = false;
   Uint8List? _pickedBanner;
@@ -77,16 +91,25 @@ class _ProfileFormState extends State<ProfileForm> {
     super.dispose();
   }
 
-  Future<Uint8List?> _pickImage({required double maxWidth, required double maxHeight}) async {
+  /// Abre la galería y luego el recortador. La galería entrega una copia
+  /// ya reducida (para que el recortador no cargue una foto de 12 MP) y el
+  /// recortador devuelve el JPEG final, listo para subir.
+  Future<Uint8List?> _pickImage({
+    required double aspectRatio,
+    required int outputWidth,
+    required bool circle,
+    required String title,
+  }) async {
+    Uint8List bytes;
     try {
       final file = await ImagePicker().pickImage(
         source: ImageSource.gallery,
-        maxWidth: maxWidth,
-        maxHeight: maxHeight,
-        imageQuality: 85,
+        maxWidth: 2048,
+        maxHeight: 2048,
+        imageQuality: 92,
       );
       if (file == null) return null;
-      return file.readAsBytes();
+      bytes = await file.readAsBytes();
     } on PlatformException catch (e) {
       if (!mounted) return null;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -94,10 +117,24 @@ class _ProfileFormState extends State<ProfileForm> {
       );
       return null;
     }
+    if (!mounted) return null;
+    return showImageCropper(
+      context,
+      bytes: bytes,
+      aspectRatio: aspectRatio,
+      outputWidth: outputWidth,
+      circle: circle,
+      title: title,
+    );
   }
 
   Future<void> _pick() async {
-    final bytes = await _pickImage(maxWidth: 640, maxHeight: 640);
+    final bytes = await _pickImage(
+      aspectRatio: 1,
+      outputWidth: avatarSize,
+      circle: true,
+      title: 'Tu foto de perfil',
+    );
     if (bytes == null || !mounted) return;
     setState(() {
       _picked = bytes;
@@ -106,7 +143,12 @@ class _ProfileFormState extends State<ProfileForm> {
   }
 
   Future<void> _pickBanner() async {
-    final bytes = await _pickImage(maxWidth: 1600, maxHeight: 1600);
+    final bytes = await _pickImage(
+      aspectRatio: bannerAspect,
+      outputWidth: bannerWidth,
+      circle: false,
+      title: 'Tu foto de fondo',
+    );
     if (bytes == null || !mounted) return;
     setState(() {
       _pickedBanner = bytes;
@@ -234,49 +276,15 @@ class _ProfileFormState extends State<ProfileForm> {
             counterStyle: VText.label(10, color: c.text3),
           ),
         ),
-        const SizedBox(height: 14),
-        Text('TU COLOR', style: VText.label(11, color: c.text3)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            for (final swatch in VColors.avatarPalette)
-              GestureDetector(
-                key: ValueKey('color-${swatch.toARGB32()}'),
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _color = swatch.toARGB32());
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: swatch,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: swatch.toARGB32() == _color
-                          ? c.text
-                          : Colors.transparent,
-                      width: 3,
-                    ),
-                    // Siempre una sombra (aunque invisible) para que la
-                    // interpolación nunca produzca un radio negativo.
-                    boxShadow: [
-                      BoxShadow(
-                        color: swatch.withValues(
-                          alpha: swatch.toARGB32() == _color ? 0.5 : 0,
-                        ),
-                        blurRadius: swatch.toARGB32() == _color ? 14 : 0,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
+        if (widget.showColor) ...[
+          const SizedBox(height: 14),
+          Text('TU COLOR', style: VText.label(11, color: c.text3)),
+          const SizedBox(height: 12),
+          ColorSwatches(
+            selected: _color,
+            onChanged: (v) => setState(() => _color = v),
+          ),
+        ],
         const SizedBox(height: 30),
         FilledButton(
           key: const ValueKey('profile-submit'),
@@ -297,7 +305,65 @@ class _ProfileFormState extends State<ProfileForm> {
   }
 }
 
-/// Vista previa de la foto de fondo (3:1); sin foto muestra el degradado
+/// Los colores que puede elegir la persona, en círculos; el elegido lleva
+/// un anillo y una sombra de su propio color.
+class ColorSwatches extends StatelessWidget {
+  const ColorSwatches({
+    super.key,
+    required this.selected,
+    required this.onChanged,
+    this.size = 34,
+  });
+
+  final int selected;
+  final ValueChanged<int> onChanged;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        for (final swatch in VColors.accentPalette)
+          GestureDetector(
+            key: ValueKey('color-${swatch.toARGB32()}'),
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onChanged(swatch.toARGB32());
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: swatch,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: swatch.toARGB32() == selected ? c.text : Colors.transparent,
+                  width: 3,
+                ),
+                // Siempre una sombra (aunque invisible) para que la
+                // interpolación nunca produzca un radio negativo.
+                boxShadow: [
+                  BoxShadow(
+                    color: swatch.withValues(
+                      alpha: swatch.toARGB32() == selected ? 0.5 : 0,
+                    ),
+                    blurRadius: swatch.toARGB32() == selected ? 14 : 0,
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Vista previa de la foto de fondo (2:1, como en el perfil); sin foto muestra el degradado
 /// del color del perfil, igual que el encabezado.
 class _BannerField extends StatelessWidget {
   const _BannerField({
@@ -319,7 +385,7 @@ class _BannerField extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AspectRatio(
-        aspectRatio: 3,
+        aspectRatio: bannerAspect,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(18),
           child: Stack(

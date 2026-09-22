@@ -80,6 +80,19 @@ class UserRepo {
     if (pending > 0) await batch.commit();
   }
 
+  /// Cambia el color de la persona (avatar, resplandor y énfasis de su app)
+  /// y lo propaga a sus notas como hace `updateProfile`.
+  Future<void> setColor(UserProfile profile, int colorValue) {
+    return updateProfile(
+      RaterInfo(
+        uid: profile.uid,
+        name: profile.name,
+        colorValue: colorValue,
+        avatarUrl: profile.avatarUrl,
+      ),
+    );
+  }
+
   Future<String> uploadAvatar(String uid, Uint8List bytes) async {
     final ref = _storage.ref('avatars/$uid.jpg');
     await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));

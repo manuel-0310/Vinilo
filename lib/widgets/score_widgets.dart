@@ -4,7 +4,7 @@ import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 
 /// Píldora pequeña con un promedio ("8,4"). Va sobre la portada, con fondo
-/// oscuro en ambos temas, así que usa la escala de colores oscura.
+/// oscuro en ambos temas, así que usa la variante oscura de la escala.
 class ScoreBadge extends StatelessWidget {
   const ScoreBadge({super.key, required this.value, this.fontSize = 12});
 
@@ -13,7 +13,7 @@ class ScoreBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Score.color(value);
+    final color = VColors.of(context).scoreOnDark(value);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: fontSize * 0.6, vertical: fontSize * 0.28),
       decoration: BoxDecoration(

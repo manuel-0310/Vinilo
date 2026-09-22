@@ -5,10 +5,12 @@ import 'score.dart';
 
 /// Paleta de Vinilo, en dos versiones: carbón cálido (oscura) y papel cálido
 /// (clara). Se obtiene con `VColors.of(context)`; nunca hay negro ni blanco
-/// puros y el acento ámbar se mantiene en ambas.
+/// puros. El énfasis (`accent`) sale del color que eligió la persona
+/// (`seed`), ajustado al tema con `withSeed`; por defecto es el ámbar.
 class ViniloPalette extends ThemeExtension<ViniloPalette> {
   const ViniloPalette({
     required this.brightness,
+    this.seed = defaultSeed,
     required this.bg,
     required this.surface,
     required this.surface2,
@@ -23,7 +25,14 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
     required this.success,
   });
 
+  /// Color de énfasis por defecto (el primero de `VColors.accentPalette`).
+  static const Color defaultSeed = Color(0xFFE8A04B);
+
   final Brightness brightness;
+
+  /// Color elegido por la persona, sin ajustar. `accent` es su versión
+  /// adaptada a este tema.
+  final Color seed;
   final Color bg;
   final Color surface;
   final Color surface2;
@@ -43,7 +52,19 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
   Color get scrim => isDark ? Colors.black : Colors.white;
 
   /// Color de una nota, legible sobre este fondo.
-  Color score(num value) => Score.color(value, light: !isDark);
+  Color score(num value) => Score.color(value, accent: accent, light: !isDark);
+
+  /// Color de una nota sobre un fondo siempre oscuro (la insignia sobre las
+  /// portadas), sea cual sea el tema.
+  Color scoreOnDark(num value) =>
+      Score.color(value, accent: accentFor(seed, Brightness.dark));
+
+  /// La misma paleta con el énfasis derivado de `seed`: ajusta luminosidad y
+  /// saturación al tema y calcula el color del texto encima.
+  ViniloPalette withSeed(Color seed) {
+    final accent = accentFor(seed, brightness);
+    return copyWith(seed: seed, accent: accent, onAccent: onAccentFor(accent));
+  }
 
   static const ViniloPalette dark = ViniloPalette(
     brightness: Brightness.dark,
@@ -80,6 +101,7 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
   @override
   ViniloPalette copyWith({
     Brightness? brightness,
+    Color? seed,
     Color? bg,
     Color? surface,
     Color? surface2,
@@ -95,6 +117,7 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
   }) {
     return ViniloPalette(
       brightness: brightness ?? this.brightness,
+      seed: seed ?? this.seed,
       bg: bg ?? this.bg,
       surface: surface ?? this.surface,
       surface2: surface2 ?? this.surface2,
@@ -115,6 +138,7 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
     if (other is! ViniloPalette) return this;
     return ViniloPalette(
       brightness: t < 0.5 ? brightness : other.brightness,
+      seed: Color.lerp(seed, other.seed, t)!,
       bg: Color.lerp(bg, other.bg, t)!,
       surface: Color.lerp(surface, other.surface, t)!,
       surface2: Color.lerp(surface2, other.surface2, t)!,
@@ -138,8 +162,9 @@ class VColors {
   static ViniloPalette of(BuildContext context) =>
       Theme.of(context).extension<ViniloPalette>() ?? ViniloPalette.dark;
 
-  /// Colores que puede elegir cada persona para su avatar (iguales en ambos temas).
-  static const List<Color> avatarPalette = [
+  /// Colores que puede elegir cada persona: su avatar, su resplandor y el
+  /// énfasis de toda la app cuando es la propia (se ajustan a cada tema).
+  static const List<Color> accentPalette = [
     Color(0xFFE8A04B),
     Color(0xFFD26A5C),
     Color(0xFF8DBB7A),

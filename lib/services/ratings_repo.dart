@@ -55,6 +55,13 @@ class RatingsRepo {
       .map((s) =>
           s.docs.map(AlbumStats.fromDoc).where((a) => a.count > 0).toList());
 
+  /// Agregados de todos los discos de un artista que alguien haya
+  /// calificado (índice de un solo campo: array-contains sobre artistIds).
+  Stream<List<AlbumStats>> artistAlbumStats(String artistId) => _albums
+      .where('artistIds', arrayContains: artistId)
+      .snapshots()
+      .map((s) => s.docs.map(AlbumStats.fromDoc).toList());
+
   Stream<AlbumStats?> albumStats(String albumId) => _albums
       .doc(albumId)
       .snapshots()

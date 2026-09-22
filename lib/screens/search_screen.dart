@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../models/album.dart';
+import '../models/artist.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/album_cover.dart';
+import '../widgets/artist_avatar.dart';
 import '../widgets/misc.dart';
 import 'routes.dart';
 
@@ -36,6 +38,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   String _query = '';
   AlbumPage? _page;
+  List<Artist>? _artists;
   bool _loading = false;
   bool _loadingMore = false;
   Object? _error;
@@ -56,6 +59,7 @@ class _SearchScreenState extends State<SearchScreen> {
       setState(() {
         _query = '';
         _page = null;
+        _artists = null;
         _error = null;
         _loading = false;
       });
@@ -73,10 +77,17 @@ class _SearchScreenState extends State<SearchScreen> {
       _error = null;
     });
     try {
-      final result = await ServicesScope.of(context).spotify.search(q);
+      // Álbumes y artistas a la vez; si solo falla la búsqueda de artistas,
+      // se muestran los álbumes igual.
+      final spotify = ServicesScope.of(context).spotify;
+      final albums = spotify.search(q);
+      final artists = spotify.searchArtists(q).catchError((_) => <Artist>[]);
+      final result = await albums;
+      final found = await artists;
       if (id != _requestId || !mounted) return;
       setState(() {
         _page = result;
+        _artists = found;
         _loading = false;
       });
     } catch (e) {
@@ -200,7 +211,9 @@ class _SearchScreenState extends State<SearchScreen> {
             )
           else if (_loading && _page == null)
             const _GridSkeleton()
-          else if (_page != null && _page!.items.isEmpty)
+          else if (_page != null &&
+              _page!.items.isEmpty &&
+              (_artists?.isEmpty ?? true))
             const SliverToBoxAdapter(
               child: EmptyState(
                 title: 'Nada por aquí',
@@ -208,8 +221,25 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             )
           else if (_page != null) ...[
+            if (_artists != null && _artists!.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionHeader('Artistas', top: 22),
+                    _ArtistStrip(artists: _artists!),
+                  ],
+                ),
+              ),
+            if (_page!.items.isNotEmpty)
+              SliverToBoxAdapter(
+                child: SectionHeader(
+                  'Álbumes',
+                  top: _artists != null && _artists!.isNotEmpty ? 26 : 22,
+                ),
+              ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(VSpace.page, 22, VSpace.page, 0),
+              padding: const EdgeInsets.fromLTRB(VSpace.page, 0, VSpace.page, 0),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
@@ -234,6 +264,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
             ),
+            if (_page!.items.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
@@ -318,6 +349,53 @@ class _ResultTile extends StatelessWidget {
           end: const Offset(1, 1),
           curve: Curves.easeOutCubic,
         );
+  }
+}
+
+/// Fila horizontal de artistas encontrados: foto redonda y nombre.
+class _ArtistStrip extends StatelessWidget {
+  const _ArtistStrip({required this.artists});
+
+  final List<Artist> artists;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 124,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+        itemCount: artists.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 16),
+        itemBuilder: (context, i) {
+          final a = artists[i];
+          return GestureDetector(
+            key: ValueKey('artist-hit-$i'),
+            onTap: () => openArtist(context, a),
+            child: SizedBox(
+              width: 84,
+              child: Column(
+                children: [
+                  ArtistAvatar(artist: a, size: 84),
+                  const SizedBox(height: 8),
+                  Text(
+                    a.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: VText.ui(12, weight: 700, height: 1.2),
+                  ),
+                ],
+              ),
+            ),
+          )
+              .animate()
+              .fadeIn(delay: (40 * i).ms, duration: 380.ms)
+              .slideX(begin: 0.08, curve: Curves.easeOutCubic);
+        },
+      ),
+    );
   }
 }
 

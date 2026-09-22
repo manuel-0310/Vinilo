@@ -16,6 +16,13 @@ class ShellScreen extends StatefulWidget {
   /// que no puede tocar la barra nativa).
   static final ValueNotifier<int?> tabRequests = ValueNotifier<int?>(null);
 
+  /// Pide al shell ejecutar una acción con su BuildContext (el driver de
+  /// pruebas la usa para abrir rutas, como el recortador, sin pasar por la
+  /// interfaz). Un navigatorKey en MaterialApp no sirve: impide que el
+  /// cambio de `home` (splash → shell) llegue a la ruta raíz.
+  static final ValueNotifier<void Function(BuildContext)?> actionRequests =
+      ValueNotifier(null);
+
   @override
   State<ShellScreen> createState() => _ShellScreenState();
 }
@@ -27,12 +34,22 @@ class _ShellScreenState extends State<ShellScreen> {
   void initState() {
     super.initState();
     ShellScreen.tabRequests.addListener(_onTabRequest);
+    ShellScreen.actionRequests.addListener(_onActionRequest);
   }
 
   @override
   void dispose() {
     ShellScreen.tabRequests.removeListener(_onTabRequest);
+    ShellScreen.actionRequests.removeListener(_onActionRequest);
     super.dispose();
+  }
+
+  void _onActionRequest() {
+    final action = ShellScreen.actionRequests.value;
+    if (action != null && mounted) {
+      ShellScreen.actionRequests.value = null;
+      action(context);
+    }
   }
 
   void _onTabRequest() {
@@ -74,20 +91,17 @@ class _ShellScreenState extends State<ShellScreen> {
   /// iOS 26+: la barra nativa con Liquid Glass.
   Widget _nativeBar(BuildContext context) {
     final c = VColors.of(context);
-    return SafeArea(
-      top: false,
-      child: NativeTabBar(
-        items: const [
-          NativeTab(label: 'Inicio', icon: 'house', selectedIcon: 'house.fill'),
-          NativeTab(label: 'Buscar', icon: 'magnifyingglass'),
-          NativeTab(label: 'Perfil', icon: 'person', selectedIcon: 'person.fill'),
-        ],
-        selected: _index,
-        onSelected: _select,
-        tint: c.accent,
-        unselectedTint: c.text2,
-        dark: c.isDark,
-      ),
+    return NativeTabBar(
+      items: const [
+        NativeTab(label: 'Inicio', icon: 'house', selectedIcon: 'house.fill'),
+        NativeTab(label: 'Buscar', icon: 'magnifyingglass'),
+        NativeTab(label: 'Perfil', icon: 'person', selectedIcon: 'person.fill'),
+      ],
+      selected: _index,
+      onSelected: _select,
+      tint: c.accent,
+      unselectedTint: c.text2,
+      dark: c.isDark,
     );
   }
 

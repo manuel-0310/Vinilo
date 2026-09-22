@@ -9,14 +9,14 @@ import '../services/services.dart';
 import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/format.dart';
+import '../util/ranking.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/album_strip.dart';
+import '../widgets/comment_card.dart';
 import '../widgets/histogram.dart';
 import '../widgets/misc.dart';
-import '../widgets/rating_dial.dart';
 import '../widgets/rating_sheet.dart';
 import '../widgets/score_widgets.dart';
-import '../widgets/user_avatar.dart';
 import 'routes.dart';
 
 class AlbumScreen extends StatefulWidget {
@@ -38,9 +38,6 @@ class _AlbumScreenState extends State<AlbumScreen> {
   Stream<AlbumStats?>? _stats;
   Stream<RatingEntry?>? _mine;
   Stream<List<RatingEntry>>? _community;
-
-  /// Nota elegida en el dial de la pantalla, antes de confirmarla en la hoja.
-  int? _pending;
 
   Album get _album => _detail ?? widget.album;
 
@@ -91,16 +88,13 @@ class _AlbumScreenState extends State<AlbumScreen> {
     if (color != null && mounted) setState(() => _glow = color);
   }
 
-  Future<void> _rate(RatingEntry? existing, {int? initialScore}) async {
+  Future<void> _rate(RatingEntry? existing) async {
     final result = await showRatingSheet(
       context,
       album: _album,
       existing: existing,
-      initialScore: initialScore,
     );
-    if (!mounted) return;
-    setState(() => _pending = null);
-    if (result == null) return;
+    if (!mounted || result == null) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -130,96 +124,84 @@ class _AlbumScreenState extends State<AlbumScreen> {
     ].join(' · ');
 
     return Scaffold(
-      body: Stack(
-        children: [
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // El resplandor vive dentro del encabezado: sube con la portada
-              // y desaparece; el resto del contenido queda sobre el fondo liso.
-              SliverToBoxAdapter(
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      top: -AmbientGlow.bleed,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: AmbientGlow(color: glow),
+      body: StreamBuilder<RatingEntry?>(
+        stream: _mine,
+        builder: (context, mineSnap) {
+          final mine = mineSnap.data;
+          final waitingMine = mineSnap.connectionState == ConnectionState.waiting;
+          final showRateButton = !waitingMine && mine == null;
+          return Stack(
+            children: [
+              CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // El resplandor vive dentro del encabezado: sube con la portada
+                  // y desaparece; el resto del contenido queda sobre el fondo liso.
+                  SliverToBoxAdapter(
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          top: -AmbientGlow.bleed,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: AmbientGlow(color: glow),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(top: topPad + 66),
+                          child: Column(
+                            children: [
+                              Center(
+                                child: AlbumCover(
+                                  url: album.bestCover,
+                                  size: coverSize,
+                                  radius: 18,
+                                  heroTag: widget.heroTag,
+                                  shadow: true,
+                                  shadowColor: glow,
+                                ),
+                              ),
+                              const SizedBox(height: 30),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 28),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      album.name,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: VText.display(36, height: 1.02),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _ArtistLink(album: album),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      meta,
+                                      textAlign: TextAlign.center,
+                                      style: VText.ui(13, color: c.text3),
+                                    ),
+                                  ],
+                                ),
+                              ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.06),
+                              const SizedBox(height: 26),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(top: topPad + 66),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
                       child: Column(
                         children: [
-                          Center(
-                            child: AlbumCover(
-                              url: album.bestCover,
-                              size: coverSize,
-                              radius: 18,
-                              heroTag: widget.heroTag,
-                              shadow: true,
-                              shadowColor: glow,
-                            ),
-                          ),
-                          const SizedBox(height: 30),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 28),
-                            child: Column(
-                              children: [
-                                Text(
-                                  album.name,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: VText.display(36, height: 1.02),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  album.artist,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: VText.ui(16, weight: 600),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  meta,
-                                  textAlign: TextAlign.center,
-                                  style: VText.ui(13, color: c.text3),
-                                ),
-                              ],
-                            ),
-                          ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.06),
-                          const SizedBox(height: 26),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                  child: StreamBuilder<RatingEntry?>(
-                    stream: _mine,
-                    builder: (context, mineSnap) {
-                      final mine = mineSnap.data;
-                      final waiting =
-                          mineSnap.connectionState == ConnectionState.waiting;
-                      return Column(
-                        children: [
-                          if (waiting)
+                          if (waitingMine)
                             const Skeleton(height: 64, radius: 20)
-                          else
-                            _MyRatingBlock(
-                              entry: mine,
-                              pending: _pending,
-                              onPending: (v) => setState(() => _pending = v),
-                              onCommit: (v) => _rate(null, initialScore: v),
-                              onEdit: () => _rate(mine),
-                            ),
-                          const SizedBox(height: 14),
+                          else if (mine != null)
+                            _MyRatingRow(entry: mine, onEdit: () => _rate(mine)),
+                          if (waitingMine || mine != null) const SizedBox(height: 14),
                           StreamBuilder<AlbumStats?>(
                             stream: _stats,
                             builder: (context, statsSnap) => _CommunityBlock(
@@ -228,236 +210,315 @@ class _AlbumScreenState extends State<AlbumScreen> {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                  if (detail == null && _detailError == null) ...[
+                    const SliverToBoxAdapter(child: SectionHeader('Canciones')),
+                    SliverList.separated(
+                      itemCount: 6,
+                      separatorBuilder: (_, _) => const SizedBox(height: 14),
+                      itemBuilder: (_, _) => const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: VSpace.page),
+                        child: Skeleton(height: 18, radius: 6),
+                      ),
+                    ),
+                  ] else if (_detailError != null)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(VSpace.page, 24, VSpace.page, 0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'No se pudo cargar el detalle: $_detailError',
+                                style: VText.ui(13, color: c.danger),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                setState(() => _detailError = null);
+                                _loadDetail();
+                              },
+                              child: const Text('Reintentar'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else if (detail!.tracks.isNotEmpty) ...[
+                    SliverToBoxAdapter(
+                      child: SectionHeader(
+                        'Canciones',
+                        subtitle:
+                            '${plural(detail.tracks.length, 'canción', 'canciones')} · ${detail.totalDurationLabel}',
+                      ),
+                    ),
+                    SliverList.separated(
+                      itemCount: detail.tracks.length,
+                      separatorBuilder: (_, _) => const Padding(
+                        padding: EdgeInsets.only(left: VSpace.page + 32, right: VSpace.page),
+                        child: Divider(),
+                      ),
+                      itemBuilder: (_, i) => _TrackRow(
+                        track: detail.tracks[i],
+                        albumArtist: detail.artist,
+                      ),
+                    ),
+                  ],
+                  StreamBuilder<List<RatingEntry>>(
+                    stream: _community,
+                    builder: (context, snap) {
+                      final entries = snap.data ?? const <RatingEntry>[];
+                      final all = topComments(entries);
+                      if (all.isEmpty) {
+                        return const SliverToBoxAdapter(child: SizedBox.shrink());
+                      }
+                      final shown = all.take(_maxComments).toList();
+                      final hidden = all.length - shown.length;
+                      return SliverMainAxisGroup(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: SectionHeader(
+                              'Comentarios',
+                              subtitle: plural(all.length, 'comentario', 'comentarios'),
+                            ),
+                          ),
+                          SliverList.separated(
+                            itemCount: shown.length,
+                            separatorBuilder: (_, _) => const SizedBox(height: 10),
+                            itemBuilder: (_, i) => CommentCard(
+                              key: ValueKey('comment-$i'),
+                              entry: shown[i],
+                            ).animate().fadeIn(delay: (40 * i).ms),
+                          ),
+                          if (hidden > 0)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(VSpace.page, 14, VSpace.page, 0),
+                                child: Center(
+                                  child: Pill(
+                                    key: const ValueKey('comments-more'),
+                                    onTap: () => openComments(
+                                      context,
+                                      album: album,
+                                      initial: entries,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                                    child: Text(
+                                      'Ver más ($hidden)',
+                                      style: VText.ui(13, weight: 700),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       );
                     },
                   ),
-                ),
-              ),
-              if (detail == null && _detailError == null) ...[
-                const SliverToBoxAdapter(child: SectionHeader('Canciones')),
-                SliverList.separated(
-                  itemCount: 6,
-                  separatorBuilder: (_, _) => const SizedBox(height: 14),
-                  itemBuilder: (_, _) => const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: VSpace.page),
-                    child: Skeleton(height: 18, radius: 6),
+                  FutureBuilder<AlbumPage>(
+                    future: _more,
+                    builder: (context, snap) {
+                      final items = (snap.data?.items ?? const <Album>[])
+                          .where((a) => a.id != album.id)
+                          .toList();
+                      if (items.isEmpty) {
+                        return const SliverToBoxAdapter(child: SizedBox.shrink());
+                      }
+                      return SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SectionHeader('Más de ${album.artist}'),
+                            AlbumStrip(
+                              albums: items,
+                              heroPrefix: 'more-${album.id}',
+                              size: 124,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                ),
-              ] else if (_detailError != null)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(VSpace.page, 24, VSpace.page, 0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'No se pudo cargar el detalle: $_detailError',
-                            style: VText.ui(13, color: c.danger),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setState(() => _detailError = null);
-                            _loadDetail();
-                          },
-                          child: const Text('Reintentar'),
-                        ),
-                      ],
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      // Con el botón flotante visible, la lista deja sitio para
+                      // que las últimas canciones y este pie no queden tapados.
+                      padding: EdgeInsets.fromLTRB(
+                        VSpace.page,
+                        34,
+                        VSpace.page,
+                        bottomPad + 30 + (showRateButton ? _rateButtonClearance : 0),
+                      ),
+                      child: Text(
+                        [
+                          if (detail?.label != null) detail!.label!,
+                          if (detail?.copyright != null) detail!.copyright!,
+                          if (album.releaseDate != null)
+                            'Publicado el ${album.releaseDate}',
+                          'Datos y portadas de Spotify',
+                        ].join('\n'),
+                        style: VText.ui(11, color: c.text3, height: 1.5),
+                      ),
                     ),
                   ),
-                )
-              else if (detail!.tracks.isNotEmpty) ...[
-                SliverToBoxAdapter(
-                  child: SectionHeader(
-                    'Canciones',
-                    subtitle:
-                        '${plural(detail.tracks.length, 'canción', 'canciones')} · ${detail.totalDurationLabel}',
-                  ),
-                ),
-                SliverList.separated(
-                  itemCount: detail.tracks.length,
-                  separatorBuilder: (_, _) => const Padding(
-                    padding: EdgeInsets.only(left: VSpace.page + 32, right: VSpace.page),
-                    child: Divider(),
-                  ),
-                  itemBuilder: (_, i) => _TrackRow(
-                    track: detail.tracks[i],
-                    albumArtist: detail.artist,
-                  ),
-                ),
-              ],
-              StreamBuilder<List<RatingEntry>>(
-                stream: _community,
-                builder: (context, snap) {
-                  final entries = snap.data ?? const <RatingEntry>[];
-                  if (entries.isEmpty) {
-                    return const SliverToBoxAdapter(child: SizedBox.shrink());
-                  }
-                  return SliverMainAxisGroup(
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: SectionHeader(
-                          'Lo que dice la comunidad',
-                          subtitle: plural(entries.length, 'nota', 'notas'),
-                        ),
-                      ),
-                      SliverList.separated(
-                        itemCount: entries.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
-                        itemBuilder: (_, i) => _CommunityRow(entry: entries[i])
-                            .animate()
-                            .fadeIn(delay: (40 * (i % 8)).ms),
-                      ),
-                    ],
-                  );
-                },
+                ],
               ),
-              FutureBuilder<AlbumPage>(
-                future: _more,
-                builder: (context, snap) {
-                  final items = (snap.data?.items ?? const <Album>[])
-                      .where((a) => a.id != album.id)
-                      .toList();
-                  if (items.isEmpty) {
-                    return const SliverToBoxAdapter(child: SizedBox.shrink());
-                  }
-                  return SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SectionHeader('Más de ${album.artist}'),
-                        AlbumStrip(
-                          albums: items,
-                          heroPrefix: 'more-${album.id}',
-                          size: 124,
-                        ),
-                      ],
+              Positioned(
+                top: topPad + 8,
+                left: 16,
+                child: GlassIconButton(
+                  key: const ValueKey('back'),
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  onTap: () => Navigator.of(context).maybePop(),
+                ),
+              ),
+              // Botón fijo abajo mientras el disco no tenga nota mía. Al guardar
+              // se va deslizándose hacia abajo y aparece la fila "Tu nota".
+              Positioned(
+                left: VSpace.page,
+                right: VSpace.page,
+                bottom: bottomPad + 14,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 360),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, anim) => FadeTransition(
+                    opacity: anim,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: const Offset(0, 0.6),
+                        end: Offset.zero,
+                      ).animate(anim),
+                      child: child,
                     ),
-                  );
-                },
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    VSpace.page,
-                    34,
-                    VSpace.page,
-                    bottomPad + 30,
                   ),
-                  child: Text(
-                    [
-                      if (detail?.label != null) detail!.label!,
-                      if (detail?.copyright != null) detail!.copyright!,
-                      if (album.releaseDate != null)
-                        'Publicado el ${album.releaseDate}',
-                      'Datos y portadas de Spotify',
-                    ].join('\n'),
-                    style: VText.ui(11, color: c.text3, height: 1.5),
-                  ),
+                  child: showRateButton
+                      ? _RateButton(
+                          key: const ValueKey('rate-button'),
+                          onTap: () => _rate(null),
+                        )
+                      : const SizedBox.shrink(key: ValueKey('no-rate-button')),
                 ),
               ),
             ],
-          ),
-          Positioned(
-            top: topPad + 8,
-            left: 16,
-            child: GlassIconButton(
-              key: const ValueKey('back'),
-              icon: Icons.arrow_back_ios_new_rounded,
-              onTap: () => Navigator.of(context).maybePop(),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 }
 
-class _MyRatingBlock extends StatelessWidget {
-  const _MyRatingBlock({
-    required this.entry,
-    required this.pending,
-    required this.onPending,
-    required this.onCommit,
-    required this.onEdit,
-  });
+/// Nombre del artista; al tocarlo se abre su ficha. Con varios artistas se
+/// abre el primero (el principal según Spotify).
+class _ArtistLink extends StatelessWidget {
+  const _ArtistLink({required this.album});
 
-  final RatingEntry? entry;
-  final int? pending;
-  final ValueChanged<int> onPending;
-  final ValueChanged<int> onCommit;
+  final Album album;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final artists = album.artists;
+    final text = Text(
+      album.artist,
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: VText.ui(16, weight: 600, color: artists.isEmpty ? null : c.accent),
+    );
+    if (artists.isEmpty) return text;
+    return GestureDetector(
+      key: const ValueKey('album-artist'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => openArtist(context, artists.first),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: text,
+      ),
+    );
+  }
+}
+
+/// Alto que reserva la lista al final para que el botón no tape nada.
+const double _rateButtonClearance = 76;
+const int _maxComments = 3;
+
+class _RateButton extends StatelessWidget {
+  const _RateButton({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: c.accent.withValues(alpha: c.isDark ? 0.35 : 0.28),
+            blurRadius: 26,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: c.scrim.withValues(alpha: c.isDark ? 0.5 : 0.0),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: FilledButton.icon(
+        onPressed: onTap,
+        icon: const Icon(Icons.album_rounded, size: 20),
+        label: const Text('Calificar este disco'),
+      ),
+    );
+  }
+}
+
+/// Ya calificado: una sola fila, "Tu nota 8 ·········· Editar".
+class _MyRatingRow extends StatelessWidget {
+  const _MyRatingRow({required this.entry, required this.onEdit});
+
+  final RatingEntry entry;
   final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    final e = entry;
-    if (e != null) {
-      // Ya calificado: una sola fila, "Tu nota 8 ·········· Editar".
-      final color = c.score(e.score);
-      return Container(
-        key: ValueKey('rated-${e.score}'),
-        padding: const EdgeInsets.fromLTRB(18, 10, 8, 10),
-        decoration: BoxDecoration(
-          color: c.surface.withValues(alpha: 0.72),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.35)),
-        ),
-        child: Row(
-          children: [
-            Text('Tu nota', style: VText.ui(15, weight: 600)),
-            const SizedBox(width: 12),
-            ScoreNumeral(score: e.score, size: 30),
-            const SizedBox(width: 14),
-            Expanded(child: _DotLeader(color: c.text3)),
-            const SizedBox(width: 4),
-            TextButton(
-              key: const ValueKey('rating-edit'),
-              onPressed: onEdit,
-              style: TextButton.styleFrom(
-                foregroundColor: c.accent,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                minimumSize: const Size(0, 36),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text('Editar', style: VText.ui(14, weight: 700, color: c.accent)),
-            ),
-          ],
-        ),
-      ).animate().fadeIn(duration: 300.ms);
-    }
-    // Sin nota todavía: el dial grande, aquí mismo.
-    final p = pending;
-    final color = p == null ? c.text3 : c.score(p);
+    final color = c.score(entry.score);
     return Container(
-      key: const ValueKey('unrated'),
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 4),
+      key: ValueKey('rated-${entry.score}'),
+      padding: const EdgeInsets.fromLTRB(18, 10, 8, 10),
       decoration: BoxDecoration(
         color: c.surface.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: c.line),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Text('TU NOTA', style: VText.label(11, color: color)),
-              const Spacer(),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Text(
-                  p == null ? 'Toca o desliza para elegir' : '$p · ${Score.label(p)}',
-                  key: ValueKey(p),
-                  style: VText.display(18, italic: true, color: color),
-                ),
-              ),
-            ],
+          Text('Tu nota', style: VText.ui(15, weight: 600)),
+          const SizedBox(width: 12),
+          ScoreNumeral(score: entry.score, size: 30),
+          const SizedBox(width: 14),
+          Expanded(child: _DotLeader(color: c.text3)),
+          const SizedBox(width: 4),
+          TextButton(
+            key: const ValueKey('rating-edit'),
+            onPressed: onEdit,
+            style: TextButton.styleFrom(
+              foregroundColor: c.accent,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              minimumSize: const Size(0, 36),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text('Editar', style: VText.ui(14, weight: 700, color: c.accent)),
           ),
-          RatingDial(value: p, onChanged: onPending, onCommit: onCommit),
         ],
       ),
-    ).animate().fadeIn(duration: 300.ms);
+    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.15, curve: Curves.easeOutCubic);
   }
 }
 
@@ -529,7 +590,7 @@ class _CommunityBlock extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('COMUNIDAD', style: VText.label(11, color: c.text3)),
+              Text('CALIFICACIÓN', style: VText.label(11, color: c.text3)),
               const SizedBox(height: 4),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -615,80 +676,6 @@ class _TrackRow extends StatelessWidget {
             ),
           Text(track.duration, style: VText.ui(13, color: c.text3)),
         ],
-      ),
-    );
-  }
-}
-
-class _CommunityRow extends StatelessWidget {
-  const _CommunityRow({required this.entry});
-
-  final RatingEntry entry;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-      child: Material(
-        color: c.surface.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(20),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => openUser(context, entry.user.uid),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                UserAvatar(
-                  name: entry.user.name,
-                  color: entry.user.color,
-                  url: entry.user.avatarUrl,
-                  size: 36,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              entry.user.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: VText.ui(14, weight: 700),
-                            ),
-                          ),
-                          Text(
-                            timeAgo(entry.updatedAt),
-                            style: VText.ui(11, color: c.text3),
-                          ),
-                        ],
-                      ),
-                      if (entry.hasNote) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          entry.note,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: VText.display(17, italic: true, height: 1.2),
-                        ),
-                      ] else
-                        Text(
-                          Score.label(entry.score),
-                          style: VText.ui(12, color: c.text2),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 14),
-                ScoreNumeral(score: entry.score, size: 36),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

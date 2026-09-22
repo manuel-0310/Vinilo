@@ -9,6 +9,7 @@
  * Rutas (todas GET):
  *   /search?q=texto&offset=0        → { items: [Album], total, nextOffset }
  *   /album/:id                      → AlbumDetail (con tracks)
+ *   /artist/:id                     → Artist (nombre, foto, géneros)
  *   /artist/:id/albums?offset=0     → { items: [Album], total, nextOffset }
  *   /new?offset=0                   → { items: [Album] } álbumes del año en curso
  *   /artists/search?q=texto&offset=0 → { items: [Artist], total, nextOffset }
@@ -272,6 +273,11 @@ async function route(req) {
 
   const albumMatch = path.match(/^\/album\/([A-Za-z0-9]+)$/);
   if (albumMatch) return getAlbumDetail(albumMatch[1]);
+
+  const artistDetailMatch = path.match(/^\/artist\/([A-Za-z0-9]+)$/);
+  if (artistDetailMatch) {
+    return normalizeArtist(await spotifyGet(`/artists/${artistDetailMatch[1]}`));
+  }
 
   const artistMatch = path.match(/^\/artist\/([A-Za-z0-9]+)\/albums$/);
   if (artistMatch) {

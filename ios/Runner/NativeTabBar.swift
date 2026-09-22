@@ -6,9 +6,10 @@ import UIKit
 ///
 /// Canal `vinilo/tabbar_<id>`:
 ///   Dart → iOS: setSelected(int), setStyle({tint, unselectedTint, dark})
-///   iOS → Dart: selected(int), frame([x, y, w, h]) con el rectángulo de la
-///               píldora para que Flutter solo le entregue los toques que caen
-///               dentro y deje pasar el resto al contenido de debajo.
+///   iOS → Dart: selected(int), height(double) con el alto que pide la barra,
+///               frame([x, y, w, h]) con el rectángulo de la píldora para que
+///               Flutter solo le entregue los toques que caen dentro y deje
+///               pasar el resto al contenido de debajo.
 final class NativeTabBarFactory: NSObject, FlutterPlatformViewFactory {
   private let messenger: FlutterBinaryMessenger
 
@@ -40,6 +41,7 @@ final class NativeTabBarView: NSObject, FlutterPlatformView, UITabBarDelegate {
   private let tabBar = UITabBar()
   private let channel: FlutterMethodChannel
   private var lastFrame = CGRect.null
+  private var lastHeight: CGFloat = 0
 
   init(frame: CGRect, viewId: Int64, args: [String: Any], messenger: FlutterBinaryMessenger) {
     channel = FlutterMethodChannel(name: "vinilo/tabbar_\(viewId)", binaryMessenger: messenger)
@@ -53,7 +55,10 @@ final class NativeTabBarView: NSObject, FlutterPlatformView, UITabBarDelegate {
     tabBar.backgroundColor = .clear
     apply(args)
 
-    container.onLayout = { [weak self] in self?.reportFrame() }
+    container.onLayout = { [weak self] in
+      self?.reportHeight()
+      self?.reportFrame()
+    }
     channel.setMethodCallHandler { [weak self] call, result in
       guard let self else { return result(nil) }
       switch call.method {
@@ -130,6 +135,16 @@ final class NativeTabBarView: NSObject, FlutterPlatformView, UITabBarDelegate {
     channel.invokeMethod("frame", arguments: [union.minX, union.minY, union.width, union.height])
   }
 
+  /// Alto que pide el UITabBar, zona segura de abajo incluida (83 pt en un
+  /// iPhone con indicador de inicio). Flutter dimensiona la vista con él.
+  private func reportHeight() {
+    guard container.window != nil, container.bounds.width > 0 else { return }
+    let height = tabBar.sizeThatFits(CGSize(width: container.bounds.width, height: 0)).height
+    guard abs(height - lastHeight) >= 0.5 else { return }
+    lastHeight = height
+    channel.invokeMethod("height", arguments: Double(height))
+  }
+
   private func controls(in view: UIView) -> [UIView] {
     var out: [UIView] = []
     for sub in view.subviews where !sub.isHidden {
@@ -166,6 +181,11 @@ final class TabBarContainer: UIView {
     super.layoutSubviews()
     tabBar?.frame = bounds
     onLayout?()
+  }
+
+  override func safeAreaInsetsDidChange() {
+    super.safeAreaInsetsDidChange()
+    setNeedsLayout()
   }
 }
 

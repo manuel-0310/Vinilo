@@ -1,3 +1,5 @@
+import 'artist.dart';
+
 /// Álbum tal como lo devuelve la Cloud Function (normalizado) o como se
 /// guarda de forma compacta dentro de Firestore.
 class Album {
@@ -6,6 +8,7 @@ class Album {
     required this.name,
     required this.artist,
     this.artistIds = const [],
+    this.artistNames = const [],
     this.year,
     this.releaseDate,
     this.type,
@@ -20,6 +23,9 @@ class Album {
   final String name;
   final String artist;
   final List<String> artistIds;
+
+  /// Nombres en el mismo orden que `artistIds` (vacío en documentos viejos).
+  final List<String> artistNames;
   final int? year;
   final String? releaseDate;
   final String? type;
@@ -39,6 +45,10 @@ class Album {
           .map((a) => ((a as Map)['id'] ?? '') as String)
           .where((s) => s.isNotEmpty)
           .toList(),
+      artistNames: artists
+          .where((a) => (((a as Map)['id'] ?? '') as String).isNotEmpty)
+          .map((a) => ((a as Map)['name'] ?? '') as String)
+          .toList(),
       year: (j['year'] as num?)?.toInt(),
       releaseDate: j['releaseDate'] as String?,
       type: j['type'] as String?,
@@ -56,6 +66,7 @@ class Album {
       name: (m['name'] ?? '') as String,
       artist: (m['artist'] ?? '') as String,
       artistIds: List<String>.from((m['artistIds'] as List?) ?? const []),
+      artistNames: List<String>.from((m['artistNames'] as List?) ?? const []),
       year: (m['year'] as num?)?.toInt(),
       type: m['type'] as String?,
       totalTracks: (m['totalTracks'] as num?)?.toInt(),
@@ -69,12 +80,25 @@ class Album {
         'name': name,
         'artist': artist,
         'artistIds': artistIds,
+        'artistNames': artistNames,
         'year': year,
         'type': type,
         'totalTracks': totalTracks,
         'cover': cover,
         'coverSmall': coverSmall,
       };
+
+  /// Artistas del disco con id y nombre. Si el documento es viejo y solo
+  /// trae ids, el primero se queda con el nombre conjunto.
+  List<Artist> get artists => [
+        for (final (i, id) in artistIds.indexed)
+          Artist(
+            id: id,
+            name: i < artistNames.length
+                ? artistNames[i]
+                : (i == 0 ? artist : ''),
+          ),
+      ];
 
   String? get bestCover => cover ?? coverSmall ?? coverThumb;
   String? get smallCover => coverSmall ?? cover ?? coverThumb;
@@ -138,6 +162,7 @@ class AlbumDetail extends Album {
     required super.name,
     required super.artist,
     super.artistIds,
+    super.artistNames,
     super.year,
     super.releaseDate,
     super.type,
@@ -166,6 +191,7 @@ class AlbumDetail extends Album {
       name: base.name,
       artist: base.artist,
       artistIds: base.artistIds,
+      artistNames: base.artistNames,
       year: base.year,
       releaseDate: base.releaseDate,
       type: base.type,
