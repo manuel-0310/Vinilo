@@ -49,3 +49,7 @@ PROMPT_FABLE.md
 
 # Dependencias de las Cloud Functions
 functions/node_modules/
+
+# Capturas de pantalla: el diseño lo revisa Manuel en su iPhone, no van al repo
+docs/capturas/
+*.screenshot.png
