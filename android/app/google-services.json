@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "409695014933",
+    "project_id": "red-social-c786b",
+    "storage_bucket": "red-social-c786b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:409695014933:android:04e6b2374fc50d3005fe1c",
+        "android_client_info": {
+          "package_name": "com.buildday.no_retiene"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWTRKTQYEd55MygbHSlFmKU4nENRRDDgE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
