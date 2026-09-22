@@ -54,6 +54,9 @@ Firestore y Storage siguen en **modo de prueba** (vencen ~30 días después del 
 - Capturar pantalla: `SIM_DEVICE=<id> tool/shot.sh nombre` deja `/tmp/vinilo_shots/nombre_s.png`.
 - Hot reload: `kill -USR1 $(cat /tmp/vinilo.pid)`; hot restart: `kill -USR2 …`.
 - Los finders del driver no ven pestañas ocultas del `IndexedStack`; usar `home N` primero.
+- El `tap` del driver se cuelga sobre widgets cuyo centro cae en una portada con `Hero`; `tool/drive.mjs` cae solo a un arrastre de 1 px que el reconocedor trata como toque. Los toques reales funcionan.
+- Manuel suele usar la app en vivo en el iPhone 18 Pro mientras se desarrolla: correr la automatización en el iPhone 18 Pro Max y recargar ambos con `kill -USR1`.
+- Capturas de referencia del 2026-09-21 en `docs/capturas/`.
 
 ## Trampas conocidas (Xcode 27)
 
