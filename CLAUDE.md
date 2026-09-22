@@ -4,65 +4,78 @@ App tipo Letterboxd pero para álbumes de música: buscar un álbum, ponerle not
 
 ## Dirección visual
 
-"Estuche de vinilo, editorial y oscuro". Fondo carbón cálido (`VColors.bg`, nunca negro puro), la portada manda y un resplandor sacado de sus colores (`PaletteService` + `AmbientGlow`) tiñe la pantalla de detalle. Tipografía: Instrument Serif para títulos y numerales grandes, Manrope (variable) para la interfaz; ambas en `assets/fonts`, se usan a través de `VText.display` y `VText.ui`. La nota se elige con un dial de surcos (`RatingDial`) con hápticos; el color de la nota va de rosa apagado a ámbar a dorado (`Score.color`). Nada de estrellas. Transiciones con Hero de la portada y entradas escalonadas con `flutter_animate`.
+"Estuche de vinilo, editorial". Dos temas con el mismo carácter: el oscuro (carbón cálido, nunca negro puro) y el claro (papel cálido, nunca blanco puro). La paleta vive en `ViniloPalette` (un `ThemeExtension` con `dark` y `light`) y se lee siempre con `final c = VColors.of(context);` → `c.bg`, `c.surface`, `c.text2`, `c.accent`… Nada de constantes de color sueltas: `VText.display/ui/label` sin `color` heredan el del tema. La nota tiene su propia escala rosa→ámbar→dorado; usar `c.score(valor)` (elige la variante densa para fondo claro); `Score.color(valor)` a secas solo sobre fondos siempre oscuros (la insignia sobre portadas). La portada manda y un resplandor sacado de sus colores (`PaletteService` + `AmbientGlow`) tiñe el encabezado del detalle: el resplandor va **dentro** del primer sliver, así sube con la portada y el resto del contenido queda sobre fondo liso. Tipografía: Instrument Serif para títulos y numerales grandes, Manrope (variable) para la interfaz; ambas en `assets/fonts`. La nota se elige con un dial de surcos (`RatingDial`) con hápticos. Nada de estrellas. Transiciones con Hero de la portada y entradas escalonadas con `flutter_animate`. La barra de estado sigue al tema (`AnnotatedRegion` en `MaterialApp.builder`); las pantallas con foto de fondo la fuerzan clara.
 
 ## Estado técnico (probado el 2026-09-21)
 
 - Flutter 3.41, paquete `no_retiene` (nombre heredado del scaffold), bundle iOS `com.buildday.noRetiene`, nombre visible "Vinilo". Plataformas: ios, android, web.
 - Firebase: proyecto `red-social-c786b` (plan Blaze), `lib/firebase_options.dart` ya generado. No volver a correr `flutterfire configure`. `.firebaserc` apunta al proyecto.
 - Verificados desde el simulador: Auth anónimo, Firestore y Storage (bucket `red-social-c786b.firebasestorage.app`).
-- Paquetes con pods ya compilados: `firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_storage`, `video_player`, `image_picker`, `flutter_animate`, `http`. `flutter_driver` está en dev_dependencies (solo Dart).
+- Paquetes con pods ya compilados: `firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_storage`, `video_player`, `image_picker`, `flutter_animate`, `http`. `flutter_driver` está en dev_dependencies (solo Dart). No se agregó ningún paquete nativo en la ronda 2.
 - `ios/Runner/Info.plist` declara permisos de galería, cámara y micrófono.
+
+### Barra de navegación nativa (Liquid Glass)
+
+- `ios/Runner/NativeTabBar.swift`: un `UITabBar` real incrustado como platform view (`viewType` `vinilo/tabbar`), registrado en `AppDelegate.swift`. Compilado con Xcode 27 sale con Liquid Glass en iOS 26+ sin pods nuevos. Canal `vinilo/tabbar_<id>`: Dart → `setSelected`, `setStyle` (tint, unselectedTint, dark); iOS → `selected`, `frame` (rectángulo de la píldora).
+- `lib/widgets/native_tab_bar.dart`: `NativeTabBar` (UiKitView) + `NativeTabBar.isSupported` (iOS ≥ 26). Con el rectángulo que manda iOS, solo reclama los toques que caen sobre la píldora; el resto pasa al contenido de debajo.
+- `ShellScreen` usa la nativa cuando `isSupported`; si no (iOS 15–18, Android, web), la imitación en Dart `GlassBar` (`lib/widgets/glass_bar.dart`) con los `_TabItem` de siempre. Las tres pestañas usan íconos (SF Symbols en la nativa).
+- El archivo Swift se agregó al `project.pbxproj` con la gema `xcodeproj` (viene con CocoaPods). Cambiar Swift exige relanzar `flutter run` (build incremental ~25 s); el hot reload no lo toca.
 
 ### Reglas de seguridad
 
-Firestore y Storage siguen en **modo de prueba** (vencen ~30 días después del 2026-09-21). En el repo hay reglas listas para reemplazarlo: `firestore.rules`, `storage.rules` y `firestore.indexes.json`. Para desplegarlas hay que agregar las secciones `firestore` y `storage` a `firebase.json` y correr `firebase deploy --only firestore:rules,storage`. No están desplegadas todavía.
+Firestore y Storage siguen en **modo de prueba** (vencen ~30 días después del 2026-09-21). En el repo hay reglas listas para reemplazarlo: `firestore.rules`, `storage.rules` (avatares y banners) y `firestore.indexes.json`. Para desplegarlas hay que agregar las secciones `firestore` y `storage` a `firebase.json` y correr `firebase deploy --only firestore:rules,storage`. No están desplegadas todavía.
 
 ## Estructura de `lib/`
 
-- `main.dart`: inicializa Firebase, hace login anónimo, escucha el perfil (`users/{uid}`) y decide entre `SplashScreen`, `OnboardingScreen` y `ShellScreen`. `CurrentUser` (InheritedWidget) vive por encima de `MaterialApp` para que las rutas empujadas lo vean.
-- `theme/`: `vinilo_theme.dart` (colores, tipografía, `ThemeData`) y `score.dart` (etiquetas, color y formato de la nota).
-- `models/`: `Album`/`AlbumDetail`/`Track`/`AlbumPage` (de la función), `RatingEntry`/`AlbumStats`/`RaterInfo`, `UserProfile`.
-- `services/`: `SpotifyApi` (http a la Cloud Function, cachés en memoria), `AuthService`, `UserRepo`, `RatingsRepo` (transacciones que mantienen los agregados), `PaletteService` (color dominante sin paquetes nativos), `services.dart` (`Services`, `ServicesScope`, `CurrentUser`).
-- `widgets/`: `AlbumCover`, `VinylDisc`/`SpinningVinyl`, `UserAvatar`, `ScoreBadge`/`ScoreNumeral`, `ScoreHistogram`, `RatingDial`, `RatingSheet` (`showRatingSheet`), `FeedCard`/`LikeButton`, `AlbumStrip`, y `misc.dart` (`SectionHeader`, `Skeleton`, `EmptyState`, `GlassIconButton`, `AmbientGlow`, `Pill`).
-- `screens/`: `shell_screen.dart` (3 pestañas con barra flotante), `home_screen.dart`, `search_screen.dart`, `album_screen.dart`, `profile_screen.dart` (propio y ajeno, con afinidad), `onboarding_screen.dart` + `profile_form.dart`, `splash_screen.dart`, `routes.dart` (`openAlbum`, `openUser`).
+- `main.dart`: inicializa Firebase, hace login anónimo, escucha el perfil (`users/{uid}`) y decide entre `SplashScreen`, `OnboardingScreen` y `ShellScreen`. `MaterialApp` con `theme` (claro) y `darkTheme` (oscuro); `themeMode` sale de `profile.themeMode` (oscuro si no hay perfil). `CurrentUser` (InheritedWidget) vive por encima de `MaterialApp` para que las rutas empujadas lo vean.
+- `theme/`: `vinilo_theme.dart` (`ViniloPalette`, `VColors.of`, `VText`, `VSpace`, `buildViniloTheme(paleta)`, `overlayStyleFor`) y `score.dart` (etiquetas, color con variante `light`, formato de la nota).
+- `models/`: `Album`/`AlbumDetail`/`Track`/`AlbumPage` (de la función), `Artist`, `RatingEntry`/`AlbumStats`/`RaterInfo`, `UserProfile` (+ `themeModeFrom`/`themeModeKey`).
+- `services/`: `SpotifyApi` (http a la Cloud Function, cachés en memoria; `search`, `album`, `artistAlbums`, `searchArtists`), `AuthService`, `UserRepo` (perfil, avatar, banner, favoritos ×3, artistas ×3, tema), `RatingsRepo` (transacciones que mantienen los agregados), `PaletteService` (color dominante sin paquetes nativos; devuelve null si no encuentra), `services.dart` (`Services`, `ServicesScope`, `CurrentUser`).
+- `widgets/`: `AlbumCover`, `VinylDisc`/`SpinningVinyl`, `UserAvatar`, `ScoreBadge`/`ScoreNumeral`, `ScoreHistogram`, `RatingDial` (con `onCommit` al soltar), `RatingSheet` (`showRatingSheet`, acepta `initialScore`), `FeedCard`/`LikeButton`, `AlbumStrip`, `DiaryList`/`DiaryRow`, `GlassBar`, `NativeTabBar`, y `misc.dart` (`SectionHeader`, `Skeleton`, `EmptyState`, `GlassIconButton`, `AmbientGlow`, `Pill`).
+- `screens/`: `shell_screen.dart` (3 pestañas; `ShellScreen.tabRequests` para cambiar de pestaña desde fuera), `home_screen.dart` (título centrado, "Popular en la comunidad", "Actividad"), `search_screen.dart`, `album_screen.dart` (dial en la pantalla si no hay nota; fila compacta "Tu nota N ···· Editar" si la hay; sin notas de la comunidad solo el texto "Nadie ha calificado este disco todavía"), `profile_screen.dart` (propio y ajeno, con afinidad; banner o resplandor en el encabezado; 3 discos + 3 artistas favoritos con sus selectores; diario de 5 con "Ver más"; sección Apariencia solo en el propio), `diary_screen.dart` (diario completo: buscar por disco/artista, filtrar por nota, ordenar por fecha o nota), `onboarding_screen.dart` + `profile_form.dart` (`ProfileForm` devuelve un `ProfileEdit`; `showBanner` solo al editar), `splash_screen.dart`, `routes.dart` (`openAlbum`, `openUser`, `openDiary`).
 
 ## Datos en Firestore
 
-- `users/{uid}`: `name`, `color` (int ARGB), `avatarUrl`, `createdAt`, `ratingsCount`, `ratingsSum`, `favorites` (hasta 4 álbumes compactos), `recentSearches`.
+- `users/{uid}`: `name`, `color` (int ARGB), `avatarUrl`, `bannerUrl` (null = degradado del color), `createdAt`, `ratingsCount`, `ratingsSum`, `favorites` (hasta 3 álbumes compactos; los documentos viejos con 4 siguen valiendo y se muestran los 3 primeros), `favoriteArtists` (hasta 3: `id`, `name`, `image`, `imageSmall`), `recentSearches`, `theme` (`system` | `light` | `dark`; ausente = oscuro).
 - `albums/{spotifyId}`: copia compacta del álbum + `ratingsCount`, `ratingsSum`, `hist` (mapa "1".."10" → conteo), `lastRatedAt`.
 - `ratings/{uid}_{albumId}`: `uid`, `albumId`, `score`, `note` (≤180), `album` y `user` denormalizados, `createdAt`, `updatedAt`, `likedBy` (uids).
+- Storage: `avatars/{uid}.jpg` y `banners/{uid}.jpg`.
 - Todas las consultas usan índices de un solo campo (feed por `updatedAt`, álbumes por `lastRatedAt`/`ratingsCount`, filtros por `uid`/`albumId` ordenados en el cliente). No hacen falta índices compuestos.
 
 ## Spotify
 
 - Cloud Function HTTP `spotify` (2ª gen, Node 22, us-central1) en `functions/index.js`. Guarda `SPOTIFY_CLIENT_ID` y `SPOTIFY_CLIENT_SECRET` en Secret Manager, pide el token con client credentials y exige un ID token de Firebase Auth en `Authorization: Bearer`.
-- URL: `https://us-central1-red-social-c786b.cloudfunctions.net/spotify`. Rutas: `/search?q=&offset=`, `/album/:id`, `/artist/:id/albums?offset=`, `/new?offset=` (álbumes del año en curso), `/` (salud).
+- URL: `https://us-central1-red-social-c786b.cloudfunctions.net/spotify`. Rutas: `/search?q=&offset=`, `/album/:id`, `/artist/:id/albums?offset=`, `/artists/search?q=&offset=` (artistas con `image`, `imageSmall`, `genres`; desplegada y probada el 2026-09-21), `/new?offset=` (sigue existiendo pero la app ya no la usa), `/` (salud).
 - Desplegar: `firebase deploy --only functions`. Si `npm install` falla por permisos de `~/.npm/_cacache`, usar `npm install --cache /tmp/npm-cache`.
-- Límites del modo desarrollo de Spotify comprobados: máximo 10 resultados por página (`limit` mayor da 400), `/browse/new-releases` y `/albums?ids=` devuelven 403, el objeto álbum no trae `label` ni `popularity`. La función pagina hasta offset 50 y completa las canciones con `/albums/:id/tracks`.
+- Límites del modo desarrollo de Spotify comprobados: máximo 10 resultados por página (`limit` mayor da 400), `/browse/new-releases` y `/albums?ids=` devuelven 403, el objeto álbum no trae `label` ni `popularity`, el objeto artista llega con `genres` vacío. La función pagina hasta offset 50 y completa las canciones con `/albums/:id/tracks`.
 
 ## Correr la app
 
-- iOS: `flutter run -d 9B5FCCD2-D3ED-4B32-AD82-D6764E4A46B4 --dart-define=SPOTIFY_FN_URL=https://us-central1-red-social-c786b.cloudfunctions.net/spotify` (iPhone 18 Pro). También está encendido el iPhone 18 Pro Max `AB81FF4C-42BD-434A-8181-29B24B7CCBF3`. En Xcode 27 el simulador se ve desde DeviceHub.app.
+- iOS: `flutter run -d 9B5FCCD2-D3ED-4B32-AD82-D6764E4A46B4 --dart-define=SPOTIFY_FN_URL=https://us-central1-red-social-c786b.cloudfunctions.net/spotify` (iPhone 18 Pro). También está el iPhone 18 Pro Max `AB81FF4C-42BD-434A-8181-29B24B7CCBF3`. Ambos con iOS 27.0 (también hay runtime iOS 26.3; no hay simulador con iOS < 26 para probar el respaldo `GlassBar`). En Xcode 27 el simulador se ve desde DeviceHub.app.
 - Web: `flutter run -d chrome --dart-define=SPOTIFY_FN_URL=…`.
 - Sin `SPOTIFY_FN_URL` la app arranca pero la búsqueda muestra un error explicando qué falta.
 
 ## Probar sin tocar el simulador
 
 - Arrancar con la extensión de Flutter Driver: `flutter run -t test_driver/app.dart -d <id> --pid-file /tmp/vinilo.pid --dart-define=SPOTIFY_FN_URL=…`.
-- Manejar la app: `node tool/drive.mjs <ws-url-del-vm-service> tap key:tab-1 -- tap key:search-field -- type "ok computer" -- wait key:result-0 -- tap key:result-0`. Comandos: `tap`, `type`, `wait`, `gone`, `scroll`, `into`, `home [tab]`, `gettext`, `sleep`. Llaves útiles: `tab-0/1/2`, `search-field`, `result-N`, `name-field`, `profile-submit`, `color-<argb>`, `dial-N`, `note-field`, `rating-save`, `back`.
+- Manejar la app: `node tool/drive.mjs <ws-url-del-vm-service> tab 1 -- tap key:search-field -- type "ok computer" -- wait key:result-0 -- tap key:result-0`. Comandos: `tap`, `type`, `wait`, `gone`, `scroll`, `into`, `home [tab]`, `tab N`, `msg <texto>`, `gettext`, `sleep`.
+- La barra nativa no tiene finders: `tab N` y `home N` mandan el mensaje `tab:N` al handler de `test_driver/app.dart`. `msg banner:<url>` fija la foto de fondo del perfil actual sin pasar por la galería (`msg banner:` la quita). El botón de la barra en sí solo se puede probar con toques reales.
+- Llaves útiles: `tab-bar`, `search-field`, `result-N`, `name-field`, `profile-submit`, `color-<argb>`, `banner-field`, `edit-profile`, `dial-N`, `note-field`, `rating-save`, `rating-edit`, `unrated`, `rated-N`, `diary-<albumId>`, `diary-more`, `diary-search`, `diary-filter-all`, `diary-filter-N`, `diary-sort-date`, `diary-sort-score`, `pick-favorites`, `favorites-save`, `fav-option-N`, `pick-artists`, `artist-search`, `artist-result-N`, `artist-selected-N`, `artists-save`, `theme-system`, `theme-light`, `theme-dark`, `back`.
 - Capturar pantalla: `SIM_DEVICE=<id> tool/shot.sh nombre` deja `/tmp/vinilo_shots/nombre_s.png`.
-- Hot reload: `kill -USR1 $(cat /tmp/vinilo.pid)`; hot restart: `kill -USR2 …`.
-- Los finders del driver no ven pestañas ocultas del `IndexedStack`; usar `home N` primero.
+- Hot reload: `kill -USR1 $(cat /tmp/vinilo.pid)`; hot restart: `kill -USR2 …`. Cambiar `test_driver/app.dart` o Swift exige hot restart o relanzar, respectivamente.
+- Los finders del driver no ven pestañas ocultas del `IndexedStack` (usar `home N` primero) ni hijos de slivers fuera de pantalla (hacer `scroll` antes de `tap`).
 - El `tap` del driver se cuelga sobre widgets cuyo centro cae en una portada con `Hero`; `tool/drive.mjs` cae solo a un arrastre de 1 px que el reconocedor trata como toque. Los toques reales funcionan.
-- Manuel suele usar la app en vivo en el iPhone 18 Pro mientras se desarrolla: correr la automatización en el iPhone 18 Pro Max y recargar ambos con `kill -USR1`.
-- Capturas de referencia del 2026-09-21 en `docs/capturas/`.
+- Manuel suele usar la app en vivo en el iPhone 18 Pro mientras se desarrolla, a veces con su propio `flutter run` desde otra sesión: antes de compilar, revisar `pgrep -fl flutter_tools.snapshot` y no cruzar dos builds de Xcode. Correr la automatización en el iPhone 18 Pro Max y recargar ambos con `kill -USR1`.
+- Capturas de referencia: recorrido original del 2026-09-21 en `docs/capturas/*.png`; ronda 2 (barra nativa, bloques 1–3, modo claro) en `docs/capturas/ronda2_*.png`.
 
-## Trampas conocidas (Xcode 27)
+## Trampas conocidas (Xcode 27 / macOS)
 
 - No usar `flutter build ios --simulator`: falla porque el Flutter.framework del simulador no trae `x86_64`. `flutter run` sí funciona.
 - Los comandos de CocoaPods necesitan `export LANG=en_US.UTF-8`.
 - El `Podfile` fuerza `IPHONEOS_DEPLOYMENT_TARGET = 15.0` en todos los pods; no quitarlo.
-- Agregar un paquete nativo nuevo obliga a correr `pod install` y a recompilar los pods de Firebase, que toma unos 20 minutos. Preferir paquetes de Dart puro.
+- Agregar un paquete nativo nuevo obliga a correr `pod install` y a recompilar los pods de Firebase, que toma unos 20 minutos. Preferir paquetes de Dart puro o Swift propio en `ios/Runner` (no dispara esa recompilación).
 - El `bottomNavigationBar` del Scaffold recibe toda la altura de la pantalla: no envolver la barra en `Center` (se queda a media pantalla); usar `Row`.
 - Un `setState(() => campo = future)` dispara el assert "callback argument returned a Future"; usar cuerpo con llaves.
+- En macOS no existe `timeout`; para esperar en shell usar un bucle `until … [ $n -ge N ]`.
+- `flutter run` sin `-d` se lleva el único simulador encendido: si otra sesión lo lanza así, reinstala la app encima y la sesión que la tenía pierde la conexión ("Lost connection to device"). Matar el proceso viejo y relanzar.
+- Un `for (final c in …)` o un `final c = …` local choca con la convención `final c = VColors.of(context);` del tema: usar otro nombre para variables locales.

@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../models/album.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
-import '../util/format.dart';
 import '../widgets/album_strip.dart';
 import '../widgets/feed_card.dart';
 import '../widgets/misc.dart';
-import '../widgets/user_avatar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.onNavigate});
@@ -23,7 +20,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   Stream<List<RatingEntry>>? _feed;
   Stream<List<AlbumStats>>? _recent;
-  Future<AlbumPage>? _fresh;
 
   @override
   void didChangeDependencies() {
@@ -32,20 +28,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final services = ServicesScope.of(context);
     _feed = services.ratings.feed();
     _recent = services.ratings.recentlyRated();
-    _fresh = services.spotify.newAlbums();
-  }
-
-  void _retryFresh() {
-    final future = ServicesScope.of(context).spotify.newAlbums();
-    setState(() {
-      _fresh = future;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final me = CurrentUser.of(context);
-    final year = DateTime.now().year;
+    final c = VColors.of(context);
     return Scaffold(
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
@@ -54,35 +41,12 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Padding(
               padding: EdgeInsets.fromLTRB(
                 VSpace.page,
-                MediaQuery.paddingOf(context).top + 14,
+                MediaQuery.paddingOf(context).top + 10,
                 VSpace.page,
                 0,
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Vinilo', style: VText.display(42, italic: true)),
-                        Text(
-                          '${greeting()}, ${me.name}',
-                          style: VText.ui(14, color: VColors.text2),
-                        ),
-                      ],
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => widget.onNavigate(2),
-                    child: UserAvatar(
-                      name: me.name,
-                      color: me.color,
-                      url: me.avatarUrl,
-                      size: 44,
-                      ring: true,
-                    ),
-                  ),
-                ],
+              child: Center(
+                child: Text('Vinilo', style: VText.display(42, italic: true)),
               ),
             ),
           ),
@@ -98,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SectionHeader(
-                      'Sonando en la comunidad',
+                      'Popular en la comunidad',
                       subtitle: 'Lo último que la gente puso en su diario',
                     ),
                     AlbumStrip(
@@ -111,74 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          FutureBuilder<AlbumPage>(
-            future: _fresh,
-            builder: (context, snap) {
-              if (snap.hasError) {
-                return SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SectionHeader('Lo nuevo de $year'),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '${snap.error}',
-                                style: VText.ui(13, color: VColors.danger),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: _retryFresh,
-                              child: const Text('Reintentar'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              final items = snap.data?.items ?? const <Album>[];
-              if (snap.connectionState != ConnectionState.done) {
-                return SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SectionHeader(
-                        'Lo nuevo de $year',
-                        subtitle: 'Álbumes recién salidos en Spotify',
-                      ),
-                      const AlbumStripSkeleton(),
-                    ],
-                  ),
-                );
-              }
-              if (items.isEmpty) {
-                return const SliverToBoxAdapter(child: SizedBox.shrink());
-              }
-              return SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SectionHeader(
-                      'Lo nuevo de $year',
-                      subtitle: 'Álbumes recién salidos en Spotify',
-                    ),
-                    AlbumStrip(albums: items, heroPrefix: 'fresh'),
-                  ],
-                ),
-              );
-            },
-          ),
-          const SliverToBoxAdapter(
-            child: SectionHeader(
-              'Actividad',
-              subtitle: 'El diario de toda la comunidad',
-            ),
-          ),
+          const SliverToBoxAdapter(child: SectionHeader('Actividad')),
           StreamBuilder<List<RatingEntry>>(
             stream: _feed,
             builder: (context, snap) {
@@ -188,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
                     child: Text(
                       'No se pudo cargar la actividad: ${snap.error}',
-                      style: VText.ui(13, color: VColors.danger),
+                      style: VText.ui(13, color: c.danger),
                     ),
                   ),
                 );

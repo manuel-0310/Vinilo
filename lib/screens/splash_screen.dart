@@ -12,6 +12,7 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return Scaffold(
       body: Center(
         child: Column(
@@ -29,7 +30,7 @@ class SplashScreen extends StatelessWidget {
                 child: Text(
                   'No se pudo iniciar sesión.\n$error',
                   textAlign: TextAlign.center,
-                  style: VText.ui(13, color: VColors.text2),
+                  style: VText.ui(13, color: c.text2),
                 ),
               ),
               const SizedBox(height: 12),

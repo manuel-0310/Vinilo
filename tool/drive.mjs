@@ -9,6 +9,8 @@
 //   scroll key:<k> <dx> <dy> [ms]      (arrastra sobre el widget)
 //   into key:<k>                       (scrollIntoView)
 //   gettext key:<k>
+//   tab <n>                            (cambia de pestaña; sirve con la barra nativa)
+//   msg <texto>                        (requestData al handler de test_driver/app.dart)
 //   health
 //   sleep <ms>
 // Se pueden encadenar varios comandos separando con "--".
@@ -142,11 +144,20 @@ async function run() {
       case 'sleep':
         await sleep(Number(args[0] || 500));
         break;
+      case 'msg': {
+        const r = await driver(isolateId, { command: 'request_data', message: args.join(' ') });
+        console.log('msg ' + args.join(' ') + ' -> ' + JSON.stringify(r.message ?? r));
+        break;
+      }
+      case 'tab':
+        await driver(isolateId, { command: 'request_data', message: 'tab:' + (args[0] || '0') });
+        console.log('tab ' + (args[0] || '0'));
+        break;
       case 'home': {
         // Cierra rutas apiladas (o una hoja) hasta ver la barra de pestañas.
         for (let i = 0; i < 4; i++) {
           try {
-            await driver(isolateId, { command: 'waitFor', ...finder('key:tab-0'), timeout: 1200 });
+            await driver(isolateId, { command: 'waitFor', ...finder('key:tab-bar'), timeout: 1200 });
             break;
           } catch {
             try {
@@ -158,7 +169,8 @@ async function run() {
             await sleep(700);
           }
         }
-        await driver(isolateId, { command: 'tap', ...finder('key:tab-' + (args[0] || '0')), timeout: 3000 });
+        // La barra nativa (iOS 26) no tiene finders: se pide el cambio por mensaje.
+        await driver(isolateId, { command: 'request_data', message: 'tab:' + (args[0] || '0') });
         console.log('home ' + (args[0] || '0'));
         break;
       }

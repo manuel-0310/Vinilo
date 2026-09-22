@@ -25,6 +25,7 @@ class AlbumStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return SizedBox(
       height: size + 50,
       child: ListView.separated(
@@ -72,7 +73,7 @@ class AlbumStrip extends StatelessWidget {
                     album.subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: VText.ui(12, color: VColors.text2, height: 1.3),
+                    style: VText.ui(12, color: c.text2, height: 1.3),
                   ),
                 ],
               ),

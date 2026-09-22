@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,12 +5,26 @@ import 'package:image_picker/image_picker.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/user_avatar.dart';
 
-typedef ProfileSubmit = Future<void> Function(
-  String name,
-  int colorValue,
-  Uint8List? newAvatar,
-  bool removeAvatar,
-);
+/// Lo que devuelve el formulario al guardar.
+class ProfileEdit {
+  const ProfileEdit({
+    required this.name,
+    required this.colorValue,
+    this.avatar,
+    this.removeAvatar = false,
+    this.banner,
+    this.removeBanner = false,
+  });
+
+  final String name;
+  final int colorValue;
+  final Uint8List? avatar;
+  final bool removeAvatar;
+  final Uint8List? banner;
+  final bool removeBanner;
+}
+
+typedef ProfileSubmit = Future<void> Function(ProfileEdit edit);
 
 /// Formulario compartido por el onboarding y la edición de perfil.
 class ProfileForm extends StatefulWidget {
@@ -22,6 +35,8 @@ class ProfileForm extends StatefulWidget {
     this.initialName = '',
     this.initialColor,
     this.initialAvatarUrl,
+    this.initialBannerUrl,
+    this.showBanner = false,
     this.autofocus = false,
   });
 
@@ -30,6 +45,10 @@ class ProfileForm extends StatefulWidget {
   final String initialName;
   final int? initialColor;
   final String? initialAvatarUrl;
+  final String? initialBannerUrl;
+
+  /// Muestra el selector de foto de fondo (solo al editar el perfil).
+  final bool showBanner;
   final bool autofocus;
 
   @override
@@ -42,10 +61,15 @@ class _ProfileFormState extends State<ProfileForm> {
   late int _color = widget.initialColor ?? VColors.avatarPalette.first.toARGB32();
   Uint8List? _picked;
   bool _removed = false;
+  Uint8List? _pickedBanner;
+  bool _removedBanner = false;
   bool _busy = false;
 
   bool get _hasAvatar =>
       _picked != null || (!_removed && widget.initialAvatarUrl != null);
+
+  bool get _hasBanner =>
+      _pickedBanner != null || (!_removedBanner && widget.initialBannerUrl != null);
 
   @override
   void dispose() {
@@ -53,27 +77,41 @@ class _ProfileFormState extends State<ProfileForm> {
     super.dispose();
   }
 
-  Future<void> _pick() async {
+  Future<Uint8List?> _pickImage({required double maxWidth, required double maxHeight}) async {
     try {
       final file = await ImagePicker().pickImage(
         source: ImageSource.gallery,
-        maxWidth: 640,
-        maxHeight: 640,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
         imageQuality: 85,
       );
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
-      if (!mounted) return;
-      setState(() {
-        _picked = bytes;
-        _removed = false;
-      });
+      if (file == null) return null;
+      return file.readAsBytes();
     } on PlatformException catch (e) {
-      if (!mounted) return;
+      if (!mounted) return null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('No se pudo abrir la galería: ${e.message}')),
       );
+      return null;
     }
+  }
+
+  Future<void> _pick() async {
+    final bytes = await _pickImage(maxWidth: 640, maxHeight: 640);
+    if (bytes == null || !mounted) return;
+    setState(() {
+      _picked = bytes;
+      _removed = false;
+    });
+  }
+
+  Future<void> _pickBanner() async {
+    final bytes = await _pickImage(maxWidth: 1600, maxHeight: 1600);
+    if (bytes == null || !mounted) return;
+    setState(() {
+      _pickedBanner = bytes;
+      _removedBanner = false;
+    });
   }
 
   Future<void> _submit() async {
@@ -81,7 +119,16 @@ class _ProfileFormState extends State<ProfileForm> {
     if (name.length < 2 || _busy) return;
     setState(() => _busy = true);
     try {
-      await widget.onSubmit(name, _color, _picked, _removed);
+      await widget.onSubmit(
+        ProfileEdit(
+          name: name,
+          colorValue: _color,
+          avatar: _picked,
+          removeAvatar: _removed,
+          banner: _pickedBanner,
+          removeBanner: _removedBanner,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -94,11 +141,35 @@ class _ProfileFormState extends State<ProfileForm> {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     final color = Color(_color);
     final name = _name.text.trim();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (widget.showBanner) ...[
+          _BannerField(
+            key: const ValueKey('banner-field'),
+            color: color,
+            bytes: _pickedBanner,
+            url: _removedBanner ? null : widget.initialBannerUrl,
+            onTap: _pickBanner,
+          ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: _hasBanner
+                  ? () => setState(() {
+                        _pickedBanner = null;
+                        _removedBanner = true;
+                      })
+                  : _pickBanner,
+              child: Text(_hasBanner ? 'Quitar fondo' : 'Elegir foto de fondo'),
+            ),
+          ),
+          const SizedBox(height: 6),
+        ],
         Center(
           child: GestureDetector(
             onTap: _pick,
@@ -120,14 +191,14 @@ class _ProfileFormState extends State<ProfileForm> {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: VColors.accent,
+                      color: c.accent,
                       shape: BoxShape.circle,
-                      border: Border.all(color: VColors.bg, width: 3),
+                      border: Border.all(color: c.bg, width: 3),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.photo_camera_rounded,
                       size: 16,
-                      color: VColors.onAccent,
+                      color: c.onAccent,
                     ),
                   ),
                 ),
@@ -160,22 +231,22 @@ class _ProfileFormState extends State<ProfileForm> {
           style: VText.ui(17, weight: 600),
           decoration: InputDecoration(
             hintText: '¿Cómo te llamamos?',
-            counterStyle: VText.label(10),
+            counterStyle: VText.label(10, color: c.text3),
           ),
         ),
         const SizedBox(height: 14),
-        Text('TU COLOR', style: VText.label(11)),
+        Text('TU COLOR', style: VText.label(11, color: c.text3)),
         const SizedBox(height: 12),
         Wrap(
           spacing: 10,
           runSpacing: 10,
           children: [
-            for (final c in VColors.avatarPalette)
+            for (final swatch in VColors.avatarPalette)
               GestureDetector(
-                key: ValueKey('color-${c.toARGB32()}'),
+                key: ValueKey('color-${swatch.toARGB32()}'),
                 onTap: () {
                   HapticFeedback.selectionClick();
-                  setState(() => _color = c.toARGB32());
+                  setState(() => _color = swatch.toARGB32());
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
@@ -183,11 +254,11 @@ class _ProfileFormState extends State<ProfileForm> {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: c,
+                    color: swatch,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: c.toARGB32() == _color
-                          ? VColors.text
+                      color: swatch.toARGB32() == _color
+                          ? c.text
                           : Colors.transparent,
                       width: 3,
                     ),
@@ -195,10 +266,10 @@ class _ProfileFormState extends State<ProfileForm> {
                     // interpolación nunca produzca un radio negativo.
                     boxShadow: [
                       BoxShadow(
-                        color: c.withValues(
-                          alpha: c.toARGB32() == _color ? 0.5 : 0,
+                        color: swatch.withValues(
+                          alpha: swatch.toARGB32() == _color ? 0.5 : 0,
                         ),
-                        blurRadius: c.toARGB32() == _color ? 14 : 0,
+                        blurRadius: swatch.toARGB32() == _color ? 14 : 0,
                       ),
                     ],
                   ),
@@ -211,17 +282,80 @@ class _ProfileFormState extends State<ProfileForm> {
           key: const ValueKey('profile-submit'),
           onPressed: name.length < 2 || _busy ? null : _submit,
           child: _busy
-              ? const SizedBox(
+              ? SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: VColors.onAccent,
+                    color: c.onAccent,
                   ),
                 )
               : Text(widget.submitLabel),
         ),
       ],
+    );
+  }
+}
+
+/// Vista previa de la foto de fondo (3:1); sin foto muestra el degradado
+/// del color del perfil, igual que el encabezado.
+class _BannerField extends StatelessWidget {
+  const _BannerField({
+    super.key,
+    required this.color,
+    required this.bytes,
+    required this.url,
+    required this.onTap,
+  });
+
+  final Color color;
+  final Uint8List? bytes;
+  final String? url;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = bytes != null || url != null;
+    return GestureDetector(
+      onTap: onTap,
+      child: AspectRatio(
+        aspectRatio: 3,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.55),
+                      color.withValues(alpha: 0.15),
+                    ],
+                  ),
+                ),
+              ),
+              if (bytes != null)
+                Image.memory(bytes!, fit: BoxFit.cover)
+              else if (url != null)
+                Image.network(url!, fit: BoxFit.cover),
+              if (!hasImage)
+                Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add_photo_alternate_outlined, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Foto de fondo', style: VText.ui(14, weight: 700)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

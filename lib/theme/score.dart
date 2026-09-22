@@ -31,18 +31,30 @@ class Score {
     10: Color(0xFFF7E9B4),
   };
 
-  /// Color de una nota (acepta promedios con decimales).
-  static Color color(num score) {
+  /// Misma escala, más densa, para leerse sobre el papel del tema claro.
+  static const Map<int, Color> _lightStops = {
+    1: Color(0xFFA8443C),
+    3: Color(0xFFB55E2E),
+    5: Color(0xFFB37A1A),
+    7: Color(0xFFA9871B),
+    9: Color(0xFF957B1B),
+    10: Color(0xFF846A17),
+  };
+
+  /// Color de una nota (acepta promedios con decimales). `light` elige la
+  /// variante para fondo claro; sin contexto, preferir `VColors.of(context).score`.
+  static Color color(num score, {bool light = false}) {
+    final stops = light ? _lightStops : _stops;
     final s = score.toDouble().clamp(1.0, 10.0);
-    final keys = _stops.keys.toList()..sort();
+    final keys = stops.keys.toList()..sort();
     for (var i = 0; i < keys.length - 1; i++) {
       final a = keys[i];
       final b = keys[i + 1];
       if (s >= a && s <= b) {
-        return Color.lerp(_stops[a], _stops[b], (s - a) / (b - a))!;
+        return Color.lerp(stops[a], stops[b], (s - a) / (b - a))!;
       }
     }
-    return _stops[10]!;
+    return stops[10]!;
   }
 
   /// "8,4" con coma, como se escribe en español.

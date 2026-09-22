@@ -25,16 +25,17 @@ class AlbumCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     final placeholder = ColoredBox(
-      color: VColors.surface2,
+      color: c.surface2,
       child: Center(
         child: Opacity(
           opacity: 0.55,
           child: FractionallySizedBox(
             widthFactor: 0.42,
-            child: const AspectRatio(
+            child: AspectRatio(
               aspectRatio: 1,
-              child: VinylDisc(size: 40, labelColor: VColors.surface3),
+              child: VinylDisc(size: 40, labelColor: c.surface3),
             ),
           ),
         ),

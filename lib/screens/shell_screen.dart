@@ -1,11 +1,10 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
-import '../widgets/user_avatar.dart';
+import '../widgets/glass_bar.dart';
+import '../widgets/native_tab_bar.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'search_screen.dart';
@@ -13,12 +12,36 @@ import 'search_screen.dart';
 class ShellScreen extends StatefulWidget {
   const ShellScreen({super.key});
 
+  /// Permite cambiar de pestaña desde fuera (lo usa el driver de pruebas,
+  /// que no puede tocar la barra nativa).
+  static final ValueNotifier<int?> tabRequests = ValueNotifier<int?>(null);
+
   @override
   State<ShellScreen> createState() => _ShellScreenState();
 }
 
 class _ShellScreenState extends State<ShellScreen> {
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    ShellScreen.tabRequests.addListener(_onTabRequest);
+  }
+
+  @override
+  void dispose() {
+    ShellScreen.tabRequests.removeListener(_onTabRequest);
+    super.dispose();
+  }
+
+  void _onTabRequest() {
+    final i = ShellScreen.tabRequests.value;
+    if (i != null && mounted) {
+      _select(i);
+      ShellScreen.tabRequests.value = null;
+    }
+  }
 
   void _select(int i) {
     if (i == _index) return;
@@ -39,62 +62,77 @@ class _ShellScreenState extends State<ShellScreen> {
           ProfileScreen(uid: me.uid, isMe: true),
         ],
       ),
-      // Row y no Center: el Scaffold da a esta ranura toda la altura de la
-      // pantalla y un Center la ocuparía entera, dejando la píldora a mitad.
-      bottomNavigationBar: SafeArea(
-        top: false,
-        minimum: const EdgeInsets.only(bottom: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(34),
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-                child: Container(
-                  height: 64,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: VColors.surface.withValues(alpha: 0.78),
-                    borderRadius: BorderRadius.circular(34),
-                    border: Border.all(color: VColors.line),
+      bottomNavigationBar: KeyedSubtree(
+        key: const ValueKey('tab-bar'),
+        child: NativeTabBar.isSupported
+            ? _nativeBar(context)
+            : _glassBar(context),
+      ),
+    );
+  }
+
+  /// iOS 26+: la barra nativa con Liquid Glass.
+  Widget _nativeBar(BuildContext context) {
+    final c = VColors.of(context);
+    return SafeArea(
+      top: false,
+      child: NativeTabBar(
+        items: const [
+          NativeTab(label: 'Inicio', icon: 'house', selectedIcon: 'house.fill'),
+          NativeTab(label: 'Buscar', icon: 'magnifyingglass'),
+          NativeTab(label: 'Perfil', icon: 'person', selectedIcon: 'person.fill'),
+        ],
+        selected: _index,
+        onSelected: _select,
+        tint: c.accent,
+        unselectedTint: c.text2,
+        dark: c.isDark,
+      ),
+    );
+  }
+
+  /// Respaldo en Dart para iOS 15 a 18, Android y web.
+  Widget _glassBar(BuildContext context) {
+    // Row y no Center: el Scaffold da a esta ranura toda la altura de la
+    // pantalla y un Center la ocuparía entera, dejando la píldora a mitad.
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          GlassBar(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _TabItem(
+                    key: const ValueKey('tab-0'),
+                    selected: _index == 0,
+                    label: 'Inicio',
+                    icon: const Icon(Icons.home_rounded, size: 22),
+                    onTap: () => _select(0),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _TabItem(
-                        key: const ValueKey('tab-0'),
-                        selected: _index == 0,
-                        label: 'Inicio',
-                        icon: const Icon(Icons.home_rounded, size: 22),
-                        onTap: () => _select(0),
-                      ),
-                      _TabItem(
-                        key: const ValueKey('tab-1'),
-                        selected: _index == 1,
-                        label: 'Buscar',
-                        icon: const Icon(Icons.search_rounded, size: 23),
-                        onTap: () => _select(1),
-                      ),
-                      _TabItem(
-                        key: const ValueKey('tab-2'),
-                        selected: _index == 2,
-                        label: 'Perfil',
-                        icon: UserAvatar(
-                          name: me.name,
-                          color: me.color,
-                          url: me.avatarUrl,
-                          size: 24,
-                        ),
-                        onTap: () => _select(2),
-                      ),
-                    ],
+                  _TabItem(
+                    key: const ValueKey('tab-1'),
+                    selected: _index == 1,
+                    label: 'Buscar',
+                    icon: const Icon(Icons.search_rounded, size: 23),
+                    onTap: () => _select(1),
                   ),
-                ),
+                  _TabItem(
+                    key: const ValueKey('tab-2'),
+                    selected: _index == 2,
+                    label: 'Perfil',
+                    icon: const Icon(Icons.person_rounded, size: 23),
+                    onTap: () => _select(2),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -116,6 +154,7 @@ class _TabItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -126,7 +165,7 @@ class _TabItem extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: selected ? 18 : 16),
         decoration: BoxDecoration(
           color: selected
-              ? VColors.accent.withValues(alpha: 0.16)
+              ? c.accent.withValues(alpha: 0.16)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(26),
         ),
@@ -135,7 +174,7 @@ class _TabItem extends StatelessWidget {
           children: [
             IconTheme(
               data: IconThemeData(
-                color: selected ? VColors.accent : VColors.text2,
+                color: selected ? c.accent : c.text2,
               ),
               child: icon,
             ),
@@ -148,7 +187,7 @@ class _TabItem extends StatelessWidget {
                       padding: const EdgeInsets.only(left: 8),
                       child: Text(
                         label,
-                        style: VText.ui(13, weight: 700, color: VColors.accent),
+                        style: VText.ui(13, weight: 700, color: c.accent),
                       ),
                     )
                   : const SizedBox.shrink(),

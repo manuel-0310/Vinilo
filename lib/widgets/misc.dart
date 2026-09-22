@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(VSpace.page, top, VSpace.page, 14),
       child: Row(
@@ -34,7 +36,7 @@ class SectionHeader extends StatelessWidget {
                 Text(title, style: VText.display(28, height: 1)),
                 if (subtitle != null) ...[
                   const SizedBox(height: 4),
-                  Text(subtitle!, style: VText.ui(13, color: VColors.text2)),
+                  Text(subtitle!, style: VText.ui(13, color: c.text2)),
                 ],
               ],
             ),
@@ -60,18 +62,19 @@ class Skeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: VColors.surface2,
+        color: c.surface2,
         borderRadius: BorderRadius.circular(radius),
       ),
     )
         .animate(onPlay: (c) => c.repeat())
         .shimmer(
           duration: 1400.ms,
-          color: Colors.white.withValues(alpha: 0.05),
+          color: (c.isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
         );
   }
 }
@@ -82,21 +85,24 @@ class EmptyState extends StatelessWidget {
     required this.title,
     required this.message,
     this.action,
-    this.labelColor = VColors.accent,
+    this.labelColor,
   });
 
   final String title;
   final String message;
   final Widget? action;
-  final Color labelColor;
+
+  /// Color de la etiqueta del vinilo; por defecto el acento del tema.
+  final Color? labelColor;
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(32, 28, 32, 20),
       child: Column(
         children: [
-          VinylDisc(size: 72, labelColor: labelColor)
+          VinylDisc(size: 72, labelColor: labelColor ?? c.accent)
               .animate()
               .fadeIn(duration: 500.ms)
               .scale(begin: const Offset(0.8, 0.8), curve: Curves.easeOutBack),
@@ -110,7 +116,7 @@ class EmptyState extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: VText.ui(14, color: VColors.text2, height: 1.45),
+            style: VText.ui(14, color: c.text2, height: 1.45),
           ),
           if (action != null) ...[const SizedBox(height: 22), action!],
         ],
@@ -133,17 +139,18 @@ class GlassIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return ClipOval(
       child: BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
         child: Material(
-          color: Colors.black.withValues(alpha: 0.32),
+          color: c.scrim.withValues(alpha: c.isDark ? 0.32 : 0.55),
           child: InkWell(
             onTap: onTap,
             child: SizedBox(
               width: size,
               height: size,
-              child: Icon(icon, size: 20, color: VColors.text),
+              child: Icon(icon, size: 20, color: c.text),
             ),
           ),
         ),
@@ -153,32 +160,56 @@ class GlassIconButton extends StatelessWidget {
 }
 
 /// Resplandor radial que tiñe la parte alta de una pantalla con el color
-/// dominante de una portada.
+/// dominante de una portada (o el color de un perfil). Va detrás del
+/// encabezado de un CustomScrollView como hijo Positioned de un Stack
+/// (`top: -AmbientGlow.bleed, bottom: 0`): así sube con el encabezado al
+/// hacer scroll y se desvanece antes de que este termine. `bleed` es lo que
+/// sobresale por arriba para cubrir el rebote del scroll.
 class AmbientGlow extends StatelessWidget {
-  const AmbientGlow({super.key, required this.color, this.height = 520});
+  const AmbientGlow({super.key, required this.color, this.focus = 70});
+
+  static const double bleed = 300;
 
   final Color color;
-  final double height;
+
+  /// Distancia desde el borde superior de la pantalla al centro del resplandor.
+  final double focus;
 
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 900),
-        curve: Curves.easeOut,
-        height: height,
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            center: const Alignment(0, -0.75),
-            radius: 1.15,
-            colors: [
-              color.withValues(alpha: 0.62),
-              color.withValues(alpha: 0.22),
-              VColors.bg.withValues(alpha: 0),
-            ],
-            stops: const [0, 0.42, 1],
-          ),
-        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final h = constraints.maxHeight;
+          final w = constraints.maxWidth;
+          if (!h.isFinite || h <= 0) return const SizedBox.shrink();
+          final centerPx = bleed + focus;
+          final reach = math.max(40.0, h - centerPx);
+          final shortest = math.min(w, h);
+          return TweenAnimationBuilder<Color?>(
+            tween: ColorTween(end: color),
+            duration: const Duration(milliseconds: 900),
+            curve: Curves.easeOut,
+            builder: (context, value, _) {
+              final c = value ?? color;
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(0, 2 * centerPx / h - 1),
+                    radius: reach / shortest,
+                    colors: [
+                      c.withValues(alpha: 0.62),
+                      c.withValues(alpha: 0.22),
+                      c.withValues(alpha: 0),
+                    ],
+                    stops: const [0, 0.42, 1],
+                  ),
+                ),
+                child: const SizedBox.expand(),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -188,20 +219,23 @@ class Pill extends StatelessWidget {
   const Pill({
     super.key,
     required this.child,
-    this.color = VColors.surface2,
+    this.color,
     this.onTap,
     this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
   });
 
   final Widget child;
-  final Color color;
+
+  /// Fondo de la píldora; por defecto la segunda superficie del tema.
+  final Color? color;
   final VoidCallback? onTap;
   final EdgeInsets padding;
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return Material(
-      color: color,
+      color: color ?? c.surface2,
       borderRadius: BorderRadius.circular(999),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

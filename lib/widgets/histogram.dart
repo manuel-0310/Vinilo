@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 
 /// Distribución de notas del 1 al 10 en barras que crecen al aparecer.
@@ -22,6 +21,7 @@ class ScoreHistogram extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     final maxCount = hist.values.fold<int>(0, math.max);
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -49,8 +49,8 @@ class ScoreHistogram extends StatelessWidget {
                           height: math.max(3, v * height),
                           decoration: BoxDecoration(
                             color: highlight == i
-                                ? Score.color(i)
-                                : Score.color(i).withValues(
+                                ? c.score(i)
+                                : c.score(i).withValues(
                                     alpha: (hist[i] ?? 0) == 0 ? 0.14 : 0.5,
                                   ),
                             borderRadius: const BorderRadius.vertical(
@@ -71,8 +71,8 @@ class ScoreHistogram extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('1', style: VText.label(10)),
-                Text('10', style: VText.label(10)),
+                Text('1', style: VText.label(10, color: c.text3)),
+                Text('10', style: VText.label(10, color: c.text3)),
               ],
             ),
           ),

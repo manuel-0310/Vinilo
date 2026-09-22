@@ -14,13 +14,6 @@ import 'theme/vinilo_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarBrightness: Brightness.dark,
-      statusBarIconBrightness: Brightness.light,
-      statusBarColor: Colors.transparent,
-    ),
-  );
   runApp(ViniloApp(services: Services.create()));
 }
 
@@ -34,7 +27,8 @@ class ViniloApp extends StatefulWidget {
 }
 
 class _ViniloAppState extends State<ViniloApp> {
-  late final ThemeData _theme = buildViniloTheme();
+  late final ThemeData _dark = buildViniloTheme(ViniloPalette.dark);
+  late final ThemeData _light = buildViniloTheme(ViniloPalette.light);
   String? _profileUid;
   Stream<UserProfile?>? _profileStream;
   Object? _authError;
@@ -68,7 +62,17 @@ class _ViniloAppState extends State<ViniloApp> {
       child: MaterialApp(
         title: 'Vinilo',
         debugShowCheckedModeBanner: false,
-        theme: _theme,
+        theme: _light,
+        darkTheme: _dark,
+        // Sin perfil (splash, onboarding) la app arranca oscura, que es su
+        // carácter; la preferencia vive en el documento del usuario.
+        themeMode: profile?.themeMode ?? ThemeMode.dark,
+        // La barra de estado sigue al tema; las pantallas con foto de fondo
+        // la sobrescriben con su propia AnnotatedRegion.
+        builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+          value: overlayStyleFor(Theme.of(context).brightness),
+          child: child ?? const SizedBox.shrink(),
+        ),
         home: _HomeSwitcher(child: home),
       ),
     );

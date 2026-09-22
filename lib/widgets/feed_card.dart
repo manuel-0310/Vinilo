@@ -29,9 +29,10 @@ class FeedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Score.color(entry.score);
+    final c = VColors.of(context);
+    final color = c.score(entry.score);
     return Material(
-      color: VColors.surface,
+      color: c.surface,
       borderRadius: BorderRadius.circular(24),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -66,7 +67,7 @@ class FeedCard extends StatelessWidget {
                             ),
                             TextSpan(
                               text: ' calificó',
-                              style: VText.ui(14, color: VColors.text2),
+                              style: VText.ui(14, color: c.text2),
                             ),
                           ],
                         ),
@@ -77,7 +78,7 @@ class FeedCard extends StatelessWidget {
                   ),
                   Text(
                     timeAgo(entry.updatedAt),
-                    style: VText.ui(12, color: VColors.text3),
+                    style: VText.ui(12, color: c.text3),
                   ),
                 ],
               ),
@@ -106,7 +107,7 @@ class FeedCard extends StatelessWidget {
                           entry.album.subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: VText.ui(13, color: VColors.text2),
+                          style: VText.ui(13, color: c.text2),
                         ),
                       ],
                     ),
@@ -148,11 +149,12 @@ class LikeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     final me = CurrentUser.maybeOf(context);
     final liked = me != null && entry.likedByMe(me.uid);
-    final color = liked ? VColors.danger : VColors.text3;
+    final color = liked ? c.danger : c.text3;
     return Material(
-      color: liked ? VColors.danger.withValues(alpha: 0.12) : VColors.surface2,
+      color: liked ? c.danger.withValues(alpha: 0.12) : c.surface2,
       borderRadius: BorderRadius.circular(999),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

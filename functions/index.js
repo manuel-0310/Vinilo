@@ -11,6 +11,7 @@
  *   /album/:id                      → AlbumDetail (con tracks)
  *   /artist/:id/albums?offset=0     → { items: [Album], total, nextOffset }
  *   /new?offset=0                   → { items: [Album] } álbumes del año en curso
+ *   /artists/search?q=texto&offset=0 → { items: [Artist], total, nextOffset }
  *   /                               → { ok: true }
  *
  * Nota: en modo desarrollo Spotify limita cada página a 10 elementos y
@@ -133,6 +134,17 @@ function normalizeAlbum(album) {
   };
 }
 
+function normalizeArtist(artist) {
+  return {
+    id: artist.id,
+    name: artist.name,
+    image: pickImage(artist.images, 300),
+    imageSmall: pickImage(artist.images, 64),
+    genres: artist.genres || [],
+    spotifyUrl: artist.external_urls?.spotify || null,
+  };
+}
+
 function normalizeTrack(track) {
   return {
     id: track.id,
@@ -240,6 +252,22 @@ async function route(req) {
       offset,
     });
     return pageResult(data.albums, offset);
+  }
+
+  if (path === "/artists/search") {
+    const q = String(req.query.q || "").trim();
+    if (q.length < 1) throw new HttpError(400, "Falta q");
+    const offset = clampOffset(req.query.offset);
+    const data = await spotifyGet("/search", {
+      q: q.slice(0, 120),
+      type: "artist",
+      limit: PAGE_SIZE,
+      offset,
+    });
+    const paging = data.artists;
+    const items = (paging?.items || []).filter(Boolean).map(normalizeArtist);
+    const hasMore = Boolean(paging?.next) && offset + PAGE_SIZE < MAX_OFFSET + PAGE_SIZE;
+    return { items, total: paging?.total ?? items.length, nextOffset: hasMore ? offset + PAGE_SIZE : null };
   }
 
   const albumMatch = path.match(/^\/album\/([A-Za-z0-9]+)$/);

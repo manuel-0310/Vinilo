@@ -133,6 +133,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     final me = CurrentUser.of(context);
     final topPad = MediaQuery.paddingOf(context).top;
 
@@ -159,17 +160,17 @@ class _SearchScreenState extends State<SearchScreen> {
                     style: VText.ui(16, weight: 600),
                     decoration: InputDecoration(
                       hintText: 'Álbum o artista',
-                      prefixIcon: const Icon(
+                      prefixIcon: Icon(
                         Icons.search_rounded,
-                        color: VColors.text3,
+                        color: c.text3,
                       ),
                       suffixIcon: _controller.text.isEmpty
                           ? null
                           : IconButton(
                               onPressed: _clear,
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.close_rounded,
-                                color: VColors.text3,
+                                color: c.text3,
                               ),
                             ),
                     ),
@@ -190,7 +191,7 @@ class _SearchScreenState extends State<SearchScreen> {
               child: EmptyState(
                 title: 'Spotify no respondió',
                 message: '$_error',
-                labelColor: VColors.danger,
+                labelColor: c.danger,
                 action: TextButton(
                   onPressed: () => _search(_query),
                   child: const Text('Reintentar'),
@@ -246,7 +247,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       : _page!.nextOffset == null
                           ? Text(
                               _loading ? '' : 'Eso es todo lo que encontró Spotify',
-                              style: VText.ui(12, color: VColors.text3),
+                              style: VText.ui(12, color: c.text3),
                             )
                           : Pill(
                               onTap: _loadMore,
@@ -282,6 +283,7 @@ class _ResultTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -304,7 +306,7 @@ class _ResultTile extends StatelessWidget {
             album.subtitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: VText.ui(12, color: VColors.text2, height: 1.3),
+            style: VText.ui(12, color: c.text2, height: 1.3),
           ),
         ],
       ),
@@ -359,13 +361,14 @@ class _Suggestions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(VSpace.page, 28, VSpace.page, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (recent.isNotEmpty) ...[
-            Text('RECIENTES', style: VText.label(11)),
+            Text('RECIENTES', style: VText.label(11, color: c.text3)),
             const SizedBox(height: 10),
             for (final q in recent)
               InkWell(
@@ -375,19 +378,19 @@ class _Suggestions extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.history_rounded,
                         size: 18,
-                        color: VColors.text3,
+                        color: c.text3,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(q, style: VText.ui(15, weight: 600)),
                       ),
-                      const Icon(
+                      Icon(
                         Icons.north_west_rounded,
                         size: 16,
-                        color: VColors.text3,
+                        color: c.text3,
                       ),
                     ],
                   ),
@@ -395,7 +398,7 @@ class _Suggestions extends StatelessWidget {
               ),
             const SizedBox(height: 26),
           ],
-          Text('PARA EMPEZAR', style: VText.label(11)),
+          Text('PARA EMPEZAR', style: VText.label(11, color: c.text3)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,

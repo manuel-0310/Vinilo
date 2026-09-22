@@ -5,8 +5,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import '../theme/vinilo_theme.dart';
-
 /// Saca un color dominante y agradable de una portada para teñir la pantalla.
 /// No usa paquetes nativos: reutiliza la imagen ya decodificada por Flutter.
 class PaletteService {
@@ -24,7 +22,7 @@ class PaletteService {
       image.dispose();
       if (bytes == null) return null;
       final color = _pick(bytes, width, height);
-      _cache[url] = color;
+      if (color != null) _cache[url] = color;
       return color;
     } catch (_) {
       return null;
@@ -49,7 +47,7 @@ class PaletteService {
     return completer.future.timeout(const Duration(seconds: 12));
   }
 
-  Color _pick(ByteData data, int width, int height) {
+  Color? _pick(ByteData data, int width, int height) {
     const bucketCount = 24;
     final weights = List<double>.filled(bucketCount, 0);
     final reds = List<double>.filled(bucketCount, 0);
@@ -83,7 +81,7 @@ class PaletteService {
         best = i;
       }
     }
-    if (best < 0) return VColors.surface3;
+    if (best < 0) return null;
 
     final mean = Color.fromARGB(
       255,

@@ -3,7 +3,10 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import 'package:flutter/material.dart' show ThemeMode;
+
 import '../models/album.dart';
+import '../models/artist.dart';
 import '../models/rating.dart';
 import '../models/user_profile.dart';
 
@@ -45,12 +48,18 @@ class UserRepo {
   }
 
   /// Actualiza el perfil y propaga nombre/color/foto a todas sus notas,
-  /// que los guardan denormalizados para pintar el feed.
-  Future<void> updateProfile(RaterInfo info) async {
+  /// que los guardan denormalizados para pintar el feed. El banner solo se
+  /// toca si `updateBanner` es true (null borra la foto de fondo).
+  Future<void> updateProfile(
+    RaterInfo info, {
+    String? bannerUrl,
+    bool updateBanner = false,
+  }) async {
     await _users.doc(info.uid).set({
       'name': info.name.trim(),
       'color': info.colorValue,
       'avatarUrl': info.avatarUrl,
+      if (updateBanner) 'bannerUrl': bannerUrl,
     }, SetOptions(merge: true));
 
     final ratings = await _db
@@ -77,10 +86,32 @@ class UserRepo {
     return ref.getDownloadURL();
   }
 
+  Future<String> uploadBanner(String uid, Uint8List bytes) async {
+    final ref = _storage.ref('banners/$uid.jpg');
+    await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
+    return ref.getDownloadURL();
+  }
+
+  static const int maxFavorites = 3;
+
   Future<void> setFavorites(String uid, List<Album> albums) {
     return _users.doc(uid).set({
-      'favorites': albums.take(4).map((a) => a.toMap()).toList(),
+      'favorites': albums.take(maxFavorites).map((a) => a.toMap()).toList(),
     }, SetOptions(merge: true));
+  }
+
+  Future<void> setFavoriteArtists(String uid, List<Artist> artists) {
+    return _users.doc(uid).set({
+      'favoriteArtists':
+          artists.take(maxFavorites).map((a) => a.toMap()).toList(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> setThemeMode(String uid, ThemeMode mode) {
+    return _users.doc(uid).set(
+      {'theme': themeModeKey(mode)},
+      SetOptions(merge: true),
+    );
   }
 
   Future<void> rememberSearch(String uid, String query, List<String> current) {

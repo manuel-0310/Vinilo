@@ -1,18 +1,22 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../models/album.dart';
+import '../models/artist.dart';
 import '../models/rating.dart';
 import '../models/user_profile.dart';
 import '../services/services.dart';
+import '../services/user_repo.dart';
 import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/format.dart';
 import '../widgets/album_cover.dart';
+import '../widgets/diary_row.dart';
 import '../widgets/histogram.dart';
 import '../widgets/misc.dart';
-import '../widgets/score_widgets.dart';
 import '../widgets/user_avatar.dart';
 import 'profile_form.dart';
 import 'routes.dart';
@@ -66,21 +70,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: 'Tu perfil',
         child: ProfileForm(
           submitLabel: 'Guardar',
+          showBanner: true,
           initialName: profile.name,
           initialColor: profile.colorValue,
           initialAvatarUrl: profile.avatarUrl,
-          onSubmit: (name, color, avatar, remove) async {
-            String? url = remove ? null : profile.avatarUrl;
-            if (avatar != null) {
-              url = await services.users.uploadAvatar(profile.uid, avatar);
+          initialBannerUrl: profile.bannerUrl,
+          onSubmit: (edit) async {
+            String? avatarUrl = edit.removeAvatar ? null : profile.avatarUrl;
+            if (edit.avatar != null) {
+              avatarUrl = await services.users.uploadAvatar(profile.uid, edit.avatar!);
+            }
+            String? bannerUrl = edit.removeBanner ? null : profile.bannerUrl;
+            if (edit.banner != null) {
+              bannerUrl = await services.users.uploadBanner(profile.uid, edit.banner!);
             }
             await services.users.updateProfile(
               RaterInfo(
                 uid: profile.uid,
-                name: name,
-                colorValue: color,
-                avatarUrl: url,
+                name: edit.name,
+                colorValue: edit.colorValue,
+                avatarUrl: avatarUrl,
               ),
+              bannerUrl: bannerUrl,
+              updateBanner: edit.banner != null || edit.removeBanner,
             );
             if (ctx.mounted) Navigator.of(ctx).pop();
           },
@@ -101,11 +113,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => _FavoritesPicker(
         ratings: ratings,
-        initial: profile.favorites,
+        initial: profile.favorites.take(UserRepo.maxFavorites).toList(),
       ),
     );
     if (picked == null) return;
     await services.users.setFavorites(profile.uid, picked);
+  }
+
+  Future<void> _pickArtists(UserProfile profile) async {
+    final services = ServicesScope.of(context);
+    final picked = await showModalBottomSheet<List<Artist>>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ArtistPicker(initial: profile.favoriteArtists),
+    );
+    if (picked == null) return;
+    await services.users.setFavoriteArtists(profile.uid, picked);
+  }
+
+  Future<void> _setTheme(UserProfile profile, ThemeMode mode) {
+    HapticFeedback.selectionClick();
+    return ServicesScope.of(context).users.setThemeMode(profile.uid, mode);
   }
 
   @override
@@ -136,6 +166,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPickFavorites: ratings == null
                 ? null
                 : () => _pickFavorites(profile, ratings),
+            onPickArtists: () => _pickArtists(profile),
+            onTheme: (mode) => _setTheme(profile, mode),
           );
         },
       );
@@ -189,6 +221,8 @@ class _ProfileBody extends StatelessWidget {
     required this.mineForAffinity,
     required this.onEdit,
     required this.onPickFavorites,
+    required this.onPickArtists,
+    required this.onTheme,
   });
 
   final UserProfile profile;
@@ -198,9 +232,14 @@ class _ProfileBody extends StatelessWidget {
   final Future<List<RatingEntry>>? mineForAffinity;
   final VoidCallback onEdit;
   final VoidCallback? onPickFavorites;
+  final VoidCallback onPickArtists;
+  final ValueChanged<ThemeMode> onTheme;
+
+  static const int _diaryPreview = 5;
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     final topPad = MediaQuery.paddingOf(context).top;
     final list = ratings ?? const <RatingEntry>[];
     final now = DateTime.now();
@@ -213,155 +252,195 @@ class _ProfileBody extends StatelessWidget {
     final hist = {
       for (var i = 1; i <= 10; i++) i: list.where((r) => r.score == i).length,
     };
+    final banner = profile.bannerUrl;
+    final bannerHeight = topPad + 150;
+    final favorites = profile.favorites.take(UserRepo.maxFavorites).toList();
+    final artists = profile.favoriteArtists.take(UserRepo.maxFavorites).toList();
 
-    return Stack(
+    Widget content = Stack(
       children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: AmbientGlow(
-            color: profile.color.withValues(alpha: 0.55),
-            height: 380,
-          ),
-        ),
         CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
+            // Encabezado con el fondo dentro (foto o resplandor): así sube con
+            // él al hacer scroll y el resto queda sobre el fondo liso.
             SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  VSpace.page,
-                  topPad + (standalone ? 62 : 22),
-                  VSpace.page,
-                  0,
-                ),
-                child: Row(
-                  children: [
-                    UserAvatar(
-                      name: profile.name,
-                      color: profile.color,
-                      url: profile.avatarUrl,
-                      size: 78,
-                      ring: true,
-                    ),
-                    const SizedBox(width: 18),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            profile.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: VText.display(34, height: 1),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            'En Vinilo desde ${monthYear(profile.createdAt).toLowerCase()}',
-                            style: VText.ui(13, color: VColors.text2),
-                          ),
-                        ],
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  if (banner != null)
+                    Positioned(
+                      top: -AmbientGlow.bleed,
+                      left: 0,
+                      right: 0,
+                      height: AmbientGlow.bleed + bannerHeight,
+                      child: _Banner(url: banner, color: profile.color, height: bannerHeight),
+                    )
+                  else
+                    Positioned(
+                      top: -AmbientGlow.bleed,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: AmbientGlow(
+                        color: profile.color.withValues(alpha: 0.55),
+                        focus: 40,
                       ),
                     ),
-                    if (isMe)
-                      IconButton(
-                        onPressed: onEdit,
-                        tooltip: 'Editar perfil',
-                        icon: const Icon(Icons.tune_rounded),
-                        style: IconButton.styleFrom(
-                          backgroundColor: VColors.surface2.withValues(alpha: 0.8),
+                  Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          VSpace.page,
+                          banner != null
+                              ? bannerHeight - 39
+                              : topPad + (standalone ? 62 : 22),
+                          VSpace.page,
+                          0,
+                        ),
+                        child: Row(
+                          crossAxisAlignment: banner != null
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.center,
+                          children: [
+                            UserAvatar(
+                              name: profile.name,
+                              color: profile.color,
+                              url: profile.avatarUrl,
+                              size: 78,
+                              ring: true,
+                            ),
+                            const SizedBox(width: 18),
+                            Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(top: banner != null ? 42 : 0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      profile.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: VText.display(34, height: 1),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      'En Vinilo desde ${monthYear(profile.createdAt).toLowerCase()}',
+                                      style: VText.ui(13, color: c.text2),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            if (isMe)
+                              Padding(
+                                padding: EdgeInsets.only(top: banner != null ? 42 : 0),
+                                child: IconButton(
+                                  key: const ValueKey('edit-profile'),
+                                  onPressed: onEdit,
+                                  tooltip: 'Editar perfil',
+                                  icon: const Icon(Icons.tune_rounded),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: c.surface2.withValues(alpha: 0.8),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                  ],
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(VSpace.page, 24, VSpace.page, 0),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(
-                    color: VColors.surface.withValues(alpha: 0.75),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: VColors.line),
-                  ),
-                  child: Row(
-                    children: [
-                      _Stat(
-                        value: '${list.length}',
-                        label: list.length == 1 ? 'DISCO' : 'DISCOS',
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(VSpace.page, 24, VSpace.page, 0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          decoration: BoxDecoration(
+                            color: c.surface.withValues(alpha: 0.75),
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(color: c.line),
+                          ),
+                          child: Row(
+                            children: [
+                              _Stat(
+                                value: '${list.length}',
+                                label: list.length == 1 ? 'DISCO' : 'DISCOS',
+                              ),
+                              const _StatDivider(),
+                              _Stat(
+                                value: average == null ? '–' : Score.formatAverage(average),
+                                label: 'PROMEDIO',
+                                color: average == null ? null : c.score(average),
+                              ),
+                              const _StatDivider(),
+                              _Stat(value: '$thisMonth', label: 'ESTE MES'),
+                            ],
+                          ),
+                        ),
                       ),
-                      const _StatDivider(),
-                      _Stat(
-                        value: average == null ? '–' : Score.formatAverage(average),
-                        label: 'PROMEDIO',
-                        color: average == null ? null : Score.color(average),
-                      ),
-                      const _StatDivider(),
-                      _Stat(value: '$thisMonth', label: 'ESTE MES'),
+                      if (!isMe && mineForAffinity != null)
+                        _AffinityCard(
+                          theirs: list,
+                          mine: mineForAffinity!,
+                          name: profile.name,
+                        ),
+                      const SizedBox(height: 12),
                     ],
                   ),
-                ),
+                ],
               ),
             ),
-            if (!isMe && mineForAffinity != null)
-              SliverToBoxAdapter(
-                child: _AffinityCard(
-                  theirs: list,
-                  mine: mineForAffinity!,
-                  name: profile.name,
-                ),
-              ),
             SliverToBoxAdapter(
               child: SectionHeader(
                 'Favoritos',
                 subtitle: isMe
-                    ? 'Los cuatro discos que te definen'
-                    : 'Los cuatro discos que le definen',
-                action: isMe && list.isNotEmpty
-                    ? Pill(
-                        key: const ValueKey('pick-favorites'),
-                        onTap: onPickFavorites,
-                        child: Text('Elegir', style: VText.ui(13, weight: 700)),
-                      )
-                    : null,
+                    ? 'Tres discos y tres artistas que te definen'
+                    : 'Tres discos y tres artistas que le definen',
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                child: _FavoritesRow(
-                  favorites: profile.favorites,
-                  uid: profile.uid,
-                  onEmptyTap: isMe && list.isNotEmpty ? onPickFavorites : null,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _MiniHeader(
+                      label: 'DISCOS',
+                      pickKey: 'pick-favorites',
+                      onPick: isMe && list.isNotEmpty ? onPickFavorites : null,
+                    ),
+                    const SizedBox(height: 10),
+                    _FavoritesRow(
+                      favorites: favorites,
+                      uid: profile.uid,
+                      onEmptyTap: isMe && list.isNotEmpty ? onPickFavorites : null,
+                    ),
+                    const SizedBox(height: 20),
+                    _MiniHeader(
+                      label: 'ARTISTAS',
+                      pickKey: 'pick-artists',
+                      onPick: isMe ? onPickArtists : null,
+                    ),
+                    const SizedBox(height: 10),
+                    _ArtistsRow(
+                      artists: artists,
+                      onEmptyTap: isMe ? onPickArtists : null,
+                    ),
+                  ],
                 ),
               ),
             ),
-            if (list.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: SectionHeader(
-                  'Distribución',
-                  subtitle: isMe
-                      ? 'Cómo repartes tus notas'
-                      : 'Cómo reparte sus notas',
-                ),
-              ),
+            if (list.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+                  padding: const EdgeInsets.fromLTRB(VSpace.page, 28, VSpace.page, 0),
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
                     decoration: BoxDecoration(
-                      color: VColors.surface,
+                      color: c.surface,
                       borderRadius: BorderRadius.circular(22),
                     ),
                     child: ScoreHistogram(hist: hist, height: 64),
                   ),
                 ),
               ),
-            ],
             SliverToBoxAdapter(
               child: SectionHeader(
                 'Diario',
@@ -390,7 +469,34 @@ class _ProfileBody extends StatelessWidget {
                 ),
               )
             else
-              _Diary(entries: list),
+              DiaryList(entries: list.take(_diaryPreview).toList()),
+            if (list.length > _diaryPreview)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(VSpace.page, 16, VSpace.page, 0),
+                  child: Center(
+                    child: Pill(
+                      key: const ValueKey('diary-more'),
+                      onTap: () => openDiary(
+                        context,
+                        uid: profile.uid,
+                        name: profile.name,
+                        isMe: isMe,
+                        initial: list,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      child: Text(
+                        'Ver más (${list.length - _diaryPreview})',
+                        style: VText.ui(13, weight: 700),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (isMe)
+              SliverToBoxAdapter(
+                child: _AppearanceSection(mode: profile.themeMode, onChanged: onTheme),
+              ),
             SliverToBoxAdapter(
               child: SizedBox(
                 height: standalone
@@ -412,6 +518,116 @@ class _ProfileBody extends StatelessWidget {
           ),
       ],
     );
+
+    if (banner != null) {
+      // Sobre la foto de fondo la barra de estado siempre va clara.
+      content = AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: content,
+      );
+    }
+    return content;
+  }
+}
+
+/// Foto de fondo del perfil: ocupa la parte alta, se funde con el fondo por
+/// abajo y lleva un velo arriba para que la hora se lea. La franja superior
+/// (la que solo se ve al rebotar el scroll) es del color del perfil.
+class _Banner extends StatelessWidget {
+  const _Banner({required this.url, required this.color, required this.height});
+
+  final String url;
+  final Color color;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final band = Color.alphaBlend(color.withValues(alpha: 0.35), c.bg);
+    return IgnorePointer(
+      child: Column(
+        children: [
+          Expanded(child: ColoredBox(color: band)),
+          SizedBox(
+            height: height,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ColoredBox(color: band),
+                Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.45),
+                        Colors.black.withValues(alpha: 0),
+                      ],
+                      stops: const [0, 0.5],
+                    ),
+                  ),
+                ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        c.bg.withValues(alpha: 0),
+                        c.bg,
+                      ],
+                      stops: const [0.5, 1],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniHeader extends StatelessWidget {
+  const _MiniHeader({
+    required this.label,
+    required this.pickKey,
+    required this.onPick,
+  });
+
+  final String label;
+  final String pickKey;
+  final VoidCallback? onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Row(
+      children: [
+        Text(label, style: VText.label(11, color: c.text3)),
+        const Spacer(),
+        if (onPick != null)
+          GestureDetector(
+            key: ValueKey(pickKey),
+            onTap: onPick,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Text(
+                'Elegir',
+                style: VText.ui(13, weight: 700, color: c.accent),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 
@@ -424,15 +640,16 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return Expanded(
       child: Column(
         children: [
           Text(
             value,
-            style: VText.display(32, height: 1, color: color ?? VColors.text),
+            style: VText.display(32, height: 1, color: color ?? c.text),
           ),
           const SizedBox(height: 4),
-          Text(label, style: VText.label(10)),
+          Text(label, style: VText.label(10, color: c.text3)),
         ],
       ),
     );
@@ -443,8 +660,10 @@ class _StatDivider extends StatelessWidget {
   const _StatDivider();
 
   @override
-  Widget build(BuildContext context) =>
-      Container(width: 1, height: 34, color: VColors.line);
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Container(width: 1, height: 34, color: c.line);
+  }
 }
 
 class _AffinityCard extends StatelessWidget {
@@ -460,6 +679,7 @@ class _AffinityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return FutureBuilder<List<RatingEntry>>(
       future: mine,
       builder: (context, snap) {
@@ -478,13 +698,13 @@ class _AffinityCard extends StatelessWidget {
               common.length;
           affinity = (100 - diff * 10).round().clamp(0, 100);
         }
-        final color = affinity == null ? VColors.text3 : Score.color(affinity / 10);
+        final color = affinity == null ? c.text3 : c.score(affinity / 10);
         return Padding(
           padding: const EdgeInsets.fromLTRB(VSpace.page, 14, VSpace.page, 0),
           child: Container(
             padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
             decoration: BoxDecoration(
-              color: VColors.surface.withValues(alpha: 0.75),
+              color: c.surface.withValues(alpha: 0.75),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
@@ -494,7 +714,7 @@ class _AffinityCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('AFINIDAD MUSICAL', style: VText.label(11)),
+                      Text('AFINIDAD MUSICAL', style: VText.label(11, color: c.text3)),
                       const SizedBox(height: 4),
                       Text(
                         affinity == null ? '–' : '$affinity%',
@@ -505,7 +725,7 @@ class _AffinityCard extends StatelessWidget {
                         common.isEmpty
                             ? 'Todavía no tienen discos en común'
                             : 'Según ${plural(common.length, 'disco en común', 'discos en común')}',
-                        style: VText.ui(13, color: VColors.text2),
+                        style: VText.ui(13, color: c.text2),
                       ),
                     ],
                   ),
@@ -550,10 +770,11 @@ class _FavoritesRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return Row(
       children: [
-        for (var i = 0; i < 4; i++) ...[
-          if (i > 0) const SizedBox(width: 10),
+        for (var i = 0; i < UserRepo.maxFavorites; i++) ...[
+          if (i > 0) const SizedBox(width: 12),
           Expanded(
             child: i < favorites.length
                 ? GestureDetector(
@@ -564,7 +785,7 @@ class _FavoritesRow extends StatelessWidget {
                     ),
                     child: AlbumCover(
                       url: favorites[i].smallCover,
-                      radius: 14,
+                      radius: 16,
                       heroTag: 'fav-$uid-${favorites[i].id}',
                     ),
                   )
@@ -577,15 +798,15 @@ class _FavoritesRow extends StatelessWidget {
                       aspectRatio: 1,
                       child: Container(
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: VColors.line, width: 1.5),
-                          color: VColors.surface.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: c.line, width: 1.5),
+                          color: c.surface.withValues(alpha: 0.4),
                         ),
                         child: onEmptyTap == null
                             ? null
-                            : const Icon(
+                            : Icon(
                                 Icons.add_rounded,
-                                color: VColors.text3,
+                                color: c.text3,
                               ),
                       ),
                     ),
@@ -597,109 +818,198 @@ class _FavoritesRow extends StatelessWidget {
   }
 }
 
-class _Diary extends StatelessWidget {
-  const _Diary({required this.entries});
+class _ArtistsRow extends StatelessWidget {
+  const _ArtistsRow({required this.artists, required this.onEmptyTap});
 
-  final List<RatingEntry> entries;
+  final List<Artist> artists;
+  final VoidCallback? onEmptyTap;
 
   @override
   Widget build(BuildContext context) {
-    final items = <Object>[];
-    String? currentMonth;
-    for (final e in entries) {
-      final key = monthYear(e.createdAt);
-      if (key != currentMonth) {
-        currentMonth = key;
-        items.add(key);
-      }
-      items.add(e);
-    }
-    return SliverList.builder(
-      itemCount: items.length,
-      itemBuilder: (context, i) {
-        final item = items[i];
-        if (item is String) {
-          return Padding(
-            padding: EdgeInsets.fromLTRB(VSpace.page, i == 0 ? 4 : 22, VSpace.page, 8),
-            child: Text(item.toUpperCase(), style: VText.label(11)),
-          );
-        }
-        final e = item as RatingEntry;
-        return _DiaryRow(entry: e)
-            .animate()
-            .fadeIn(delay: (30 * (i % 10)).ms, duration: 350.ms);
-      },
+    final c = VColors.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < UserRepo.maxFavorites; i++) ...[
+          if (i > 0) const SizedBox(width: 12),
+          Expanded(
+            child: i < artists.length
+                ? Column(
+                    children: [
+                      _ArtistAvatar(artist: artists[i]),
+                      const SizedBox(height: 8),
+                      Text(
+                        artists[i].name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: VText.ui(13, weight: 700),
+                      ),
+                    ],
+                  )
+                    .animate()
+                    .fadeIn(delay: (60 * i).ms)
+                    .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack)
+                : GestureDetector(
+                    onTap: onEmptyTap,
+                    child: Column(
+                      children: [
+                        AspectRatio(
+                          aspectRatio: 1,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: c.line, width: 1.5),
+                              color: c.surface.withValues(alpha: 0.4),
+                            ),
+                            child: onEmptyTap == null
+                                ? null
+                                : Icon(
+                                    Icons.add_rounded,
+                                    color: c.text3,
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          onEmptyTap == null ? '' : 'Artista',
+                          style: VText.ui(13, color: c.text3),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ],
     );
   }
 }
 
-class _DiaryRow extends StatelessWidget {
-  const _DiaryRow({required this.entry});
+/// Foto redonda de un artista con la inicial de respaldo.
+class _ArtistAvatar extends StatelessWidget {
+  const _ArtistAvatar({required this.artist, this.size});
 
-  final RatingEntry entry;
+  final Artist artist;
+  final double? size;
 
   @override
   Widget build(BuildContext context) {
-    final heroTag = 'diary-${entry.id}';
-    return InkWell(
-      key: ValueKey('diary-${entry.albumId}'),
-      onTap: () => openAlbum(context, entry.album, heroTag: heroTag),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 8),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 34,
-              child: Column(
-                children: [
-                  Text(
-                    '${entry.createdAt.day}',
-                    style: VText.display(24, height: 1),
-                  ),
-                  Text(
-                    monthShort(entry.createdAt.month).toUpperCase(),
-                    style: VText.label(9),
-                  ),
-                ],
-              ),
+    final c = VColors.of(context);
+    final fallback = Container(
+      color: c.surface2,
+      alignment: Alignment.center,
+      child: FittedBox(
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Text(
+            artist.name.isEmpty ? '?' : artist.name.characters.first.toUpperCase(),
+            style: VText.display(40, color: c.text2, height: 1),
+          ),
+        ),
+      ),
+    );
+    final url = size != null && size! <= 64 ? artist.smallImage : artist.bestImage;
+    Widget child = ClipOval(
+      child: url == null
+          ? fallback
+          : Image.network(
+              url,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              errorBuilder: (_, _, _) => fallback,
             ),
-            const SizedBox(width: 10),
-            AlbumCover(
-              url: entry.album.smallCover,
-              size: 56,
-              radius: 10,
-              heroTag: heroTag,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.album.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: VText.ui(15, weight: 700),
+    );
+    if (size != null) {
+      return SizedBox(width: size, height: size, child: child);
+    }
+    return AspectRatio(aspectRatio: 1, child: child);
+  }
+}
+
+/// Sistema, claro u oscuro. Se guarda en el perfil, así que sigue a la
+/// persona en cualquier dispositivo.
+class _AppearanceSection extends StatelessWidget {
+  const _AppearanceSection({required this.mode, required this.onChanged});
+
+  final ThemeMode mode;
+  final ValueChanged<ThemeMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    const options = [
+      (ThemeMode.system, 'Sistema', Icons.brightness_auto_rounded, 'system'),
+      (ThemeMode.light, 'Claro', Icons.light_mode_rounded, 'light'),
+      (ThemeMode.dark, 'Oscuro', Icons.dark_mode_rounded, 'dark'),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(VSpace.page, 34, VSpace.page, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('APARIENCIA', style: VText.label(11, color: c.text3)),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              for (final (i, o) in options.indexed) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: _ThemeChoice(
+                    key: ValueKey('theme-${o.$4}'),
+                    label: o.$2,
+                    icon: o.$3,
+                    selected: mode == o.$1,
+                    onTap: () => onChanged(o.$1),
                   ),
-                  Text(
-                    entry.album.artist,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: VText.ui(12, color: VColors.text2),
-                  ),
-                  if (entry.hasNote)
-                    Text(
-                      entry.note,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: VText.display(14, italic: true, color: VColors.text3, height: 1.3),
-                    ),
-                ],
-              ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThemeChoice extends StatelessWidget {
+  const _ThemeChoice({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final color = selected ? c.accent : c.text2;
+    return Material(
+      color: selected ? c.accent.withValues(alpha: 0.14) : c.surface2,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected ? c.accent.withValues(alpha: 0.6) : Colors.transparent,
             ),
-            const SizedBox(width: 12),
-            ScoreNumeral(score: entry.score, size: 32),
-          ],
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 20, color: color),
+              const SizedBox(height: 6),
+              Text(label, style: VText.ui(13, weight: 700, color: color)),
+            ],
+          ),
         ),
       ),
     );
@@ -714,15 +1024,16 @@ class _Sheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return AnimatedPadding(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: VColors.surface,
+        decoration: BoxDecoration(
+          color: c.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border(top: BorderSide(color: VColors.line)),
+          border: Border(top: BorderSide(color: c.line)),
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
@@ -730,22 +1041,32 @@ class _Sheet extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: VColors.text3.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const _SheetHandle(),
               const SizedBox(height: 18),
               Text(title, style: VText.display(30)),
               const SizedBox(height: 20),
               child,
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SheetHandle extends StatelessWidget {
+  const _SheetHandle();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Center(
+      child: Container(
+        width: 38,
+        height: 4,
+        decoration: BoxDecoration(
+          color: c.text3.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(2),
         ),
       ),
     );
@@ -763,6 +1084,7 @@ class _FavoritesPicker extends StatefulWidget {
 }
 
 class _FavoritesPickerState extends State<_FavoritesPicker> {
+  static const int _max = UserRepo.maxFavorites;
   late final List<Album> _selected = [...widget.initial];
 
   void _toggle(Album album) {
@@ -770,7 +1092,7 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
     setState(() {
       if (index >= 0) {
         _selected.removeAt(index);
-      } else if (_selected.length < 4) {
+      } else if (_selected.length < _max) {
         HapticFeedback.selectionClick();
         _selected.add(album);
       } else {
@@ -781,6 +1103,7 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     final albums = <String, Album>{};
     for (final r in widget.ratings) {
       albums.putIfAbsent(r.albumId, () => r.album);
@@ -789,22 +1112,15 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
     final height = MediaQuery.sizeOf(context).height * 0.78;
     return Container(
       height: height,
-      decoration: const BoxDecoration(
-        color: VColors.surface,
+      decoration: BoxDecoration(
+        color: c.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        border: Border(top: BorderSide(color: VColors.line)),
+        border: Border(top: BorderSide(color: c.line)),
       ),
       child: Column(
         children: [
           const SizedBox(height: 12),
-          Container(
-            width: 38,
-            height: 4,
-            decoration: BoxDecoration(
-              color: VColors.text3.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          const _SheetHandle(),
           Padding(
             padding: const EdgeInsets.fromLTRB(22, 18, 22, 6),
             child: Row(
@@ -814,18 +1130,18 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Tus favoritos', style: VText.display(30, height: 1)),
+                      Text('Tus discos', style: VText.display(30, height: 1)),
                       const SizedBox(height: 4),
                       Text(
-                        'Elige hasta cuatro, en el orden que quieras.',
-                        style: VText.ui(13, color: VColors.text2),
+                        'Elige hasta tres, en el orden que quieras.',
+                        style: VText.ui(13, color: c.text2),
                       ),
                     ],
                   ),
                 ),
                 Text(
-                  '${_selected.length}/4',
-                  style: VText.display(24, color: VColors.accent),
+                  '${_selected.length}/$_max',
+                  style: VText.display(24, color: c.accent),
                 ),
               ],
             ),
@@ -852,7 +1168,7 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
                     children: [
                       AnimatedOpacity(
                         duration: const Duration(milliseconds: 200),
-                        opacity: selected || _selected.length < 4 ? 1 : 0.4,
+                        opacity: selected || _selected.length < _max ? 1 : 0.4,
                         child: AlbumCover(url: album.smallCover, radius: 12),
                       ),
                       AnimatedContainer(
@@ -860,7 +1176,7 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: selected ? VColors.accent : Colors.transparent,
+                            color: selected ? c.accent : Colors.transparent,
                             width: 3,
                           ),
                         ),
@@ -869,19 +1185,7 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
                         Positioned(
                           top: 8,
                           right: 8,
-                          child: Container(
-                            width: 26,
-                            height: 26,
-                            alignment: Alignment.center,
-                            decoration: const BoxDecoration(
-                              color: VColors.accent,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '${index + 1}',
-                              style: VText.ui(13, weight: 800, color: VColors.onAccent),
-                            ),
-                          ),
+                          child: _OrderBadge(index + 1),
                         ),
                     ],
                   ),
@@ -892,11 +1196,339 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
           Padding(
             padding: const EdgeInsets.fromLTRB(22, 8, 22, 20),
             child: FilledButton(
+              key: const ValueKey('favorites-save'),
               onPressed: () => Navigator.of(context).pop(_selected),
-              child: const Text('Guardar favoritos'),
+              child: const Text('Guardar discos'),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _OrderBadge extends StatelessWidget {
+  const _OrderBadge(this.number);
+
+  final int number;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Container(
+      width: 26,
+      height: 26,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: c.accent,
+        shape: BoxShape.circle,
+      ),
+      child: Text(
+        '$number',
+        style: VText.ui(13, weight: 800, color: c.onAccent),
+      ),
+    );
+  }
+}
+
+/// Buscar artistas en Spotify y elegir hasta tres.
+class _ArtistPicker extends StatefulWidget {
+  const _ArtistPicker({required this.initial});
+
+  final List<Artist> initial;
+
+  @override
+  State<_ArtistPicker> createState() => _ArtistPickerState();
+}
+
+class _ArtistPickerState extends State<_ArtistPicker> {
+  static const int _max = UserRepo.maxFavorites;
+  late final List<Artist> _selected = [...widget.initial.take(_max)];
+  final _controller = TextEditingController();
+  Timer? _debounce;
+  int _requestId = 0;
+  List<Artist>? _results;
+  bool _loading = false;
+  Object? _error;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String text) {
+    _debounce?.cancel();
+    final q = text.trim();
+    if (q.isEmpty) {
+      _requestId++;
+      setState(() {
+        _results = null;
+        _loading = false;
+        _error = null;
+      });
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 380), () => _search(q));
+  }
+
+  Future<void> _search(String q) async {
+    final id = ++_requestId;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final results = await ServicesScope.of(context).spotify.searchArtists(q);
+      if (id != _requestId || !mounted) return;
+      setState(() {
+        _results = results;
+        _loading = false;
+      });
+    } catch (e) {
+      if (id != _requestId || !mounted) return;
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
+    }
+  }
+
+  void _toggle(Artist artist) {
+    final index = _selected.indexWhere((a) => a.id == artist.id);
+    setState(() {
+      if (index >= 0) {
+        _selected.removeAt(index);
+      } else if (_selected.length < _max) {
+        HapticFeedback.selectionClick();
+        _selected.add(artist);
+      } else {
+        HapticFeedback.heavyImpact();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final height = MediaQuery.sizeOf(context).height * 0.85;
+    final results = _results;
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: c.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          border: Border(top: BorderSide(color: c.line)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            const _SheetHandle(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 18, 22, 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Tus artistas', style: VText.display(30, height: 1)),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Busca en Spotify y elige hasta tres.',
+                          style: VText.ui(13, color: c.text2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    '${_selected.length}/$_max',
+                    style: VText.display(24, color: c.accent),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+              child: TextField(
+                key: const ValueKey('artist-search'),
+                controller: _controller,
+                autofocus: true,
+                textInputAction: TextInputAction.search,
+                onChanged: _onChanged,
+                style: VText.ui(16, weight: 600),
+                decoration: InputDecoration(
+                  hintText: 'Nombre del artista',
+                  prefixIcon: Icon(Icons.search_rounded, color: c.text3),
+                ),
+              ),
+            ),
+            if (_selected.isNotEmpty)
+              SizedBox(
+                height: 52,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+                  itemCount: _selected.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) {
+                    final a = _selected[i];
+                    return Pill(
+                      key: ValueKey('artist-selected-$i'),
+                      onTap: () => _toggle(a),
+                      padding: const EdgeInsets.fromLTRB(6, 6, 12, 6),
+                      color: c.accent.withValues(alpha: 0.14),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _ArtistAvatar(artist: a, size: 26),
+                          const SizedBox(width: 8),
+                          Text(a.name, style: VText.ui(13, weight: 700, color: c.accent)),
+                          const SizedBox(width: 6),
+                          Icon(Icons.close_rounded, size: 14, color: c.accent),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            Expanded(
+              child: _error != null
+                  ? EmptyState(
+                      title: 'Spotify no respondió',
+                      message: '$_error',
+                      labelColor: c.danger,
+                      action: TextButton(
+                        onPressed: () => _search(_controller.text.trim()),
+                        child: const Text('Reintentar'),
+                      ),
+                    )
+                  : _loading && results == null
+                      ? ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+                          itemCount: 5,
+                          separatorBuilder: (_, _) => const SizedBox(height: 12),
+                          itemBuilder: (_, _) => const Skeleton(height: 56, radius: 16),
+                        )
+                      : results == null
+                          ? Padding(
+                              padding: const EdgeInsets.fromLTRB(22, 28, 22, 0),
+                              child: Text(
+                                'Escribe el nombre de un artista para buscarlo.',
+                                textAlign: TextAlign.center,
+                                style: VText.ui(14, color: c.text3),
+                              ),
+                            )
+                          : results.isEmpty
+                              ? const EmptyState(
+                                  title: 'Nada por aquí',
+                                  message: 'Prueba con otro nombre.',
+                                )
+                              : ListView.builder(
+                                  padding: const EdgeInsets.fromLTRB(22, 10, 22, 12),
+                                  physics: const BouncingScrollPhysics(),
+                                  keyboardDismissBehavior:
+                                      ScrollViewKeyboardDismissBehavior.onDrag,
+                                  itemCount: results.length,
+                                  itemBuilder: (context, i) {
+                                    final a = results[i];
+                                    final index = _selected.indexWhere((x) => x.id == a.id);
+                                    return _ArtistResultRow(
+                                      key: ValueKey('artist-result-$i'),
+                                      artist: a,
+                                      order: index >= 0 ? index + 1 : null,
+                                      dimmed: index < 0 && _selected.length >= _max,
+                                      onTap: () => _toggle(a),
+                                    );
+                                  },
+                                ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 20),
+              child: FilledButton(
+                key: const ValueKey('artists-save'),
+                onPressed: () => Navigator.of(context).pop(_selected),
+                child: const Text('Guardar artistas'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ArtistResultRow extends StatelessWidget {
+  const _ArtistResultRow({
+    super.key,
+    required this.artist,
+    required this.order,
+    required this.dimmed,
+    required this.onTap,
+  });
+
+  final Artist artist;
+  final int? order;
+  final bool dimmed;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final selected = order != null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: selected ? c.accent.withValues(alpha: 0.12) : c.surface2,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: dimmed ? 0.45 : 1,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Row(
+                children: [
+                  _ArtistAvatar(artist: artist, size: 46),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          artist.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: VText.ui(15, weight: 700),
+                        ),
+                        if (artist.genres.isNotEmpty)
+                          Text(
+                            artist.genres.take(3).join(' · '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: VText.ui(12, color: c.text2),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  if (selected)
+                    _OrderBadge(order!)
+                  else
+                    Icon(Icons.add_circle_outline_rounded, color: c.text3),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

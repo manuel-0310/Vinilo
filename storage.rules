@@ -1,6 +1,7 @@
 rules_version = '2';
 
-// Solo fotos de perfil: cada persona escribe la suya, todo el mundo las lee.
+// Fotos de perfil y de fondo (banner): cada persona escribe las suyas,
+// todo el mundo las lee.
 service firebase.storage {
   match /b/{bucket}/o {
     match /avatars/{uid}.jpg {
@@ -8,6 +9,13 @@ service firebase.storage {
       allow write: if request.auth != null
         && request.auth.uid == uid
         && request.resource.size < 3 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+    match /banners/{uid}.jpg {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 4 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
     }
     match /{allPaths=**} {

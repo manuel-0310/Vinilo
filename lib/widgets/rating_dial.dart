@@ -3,35 +3,65 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 
 /// Selector de nota del 1 al 10 con forma de surcos de vinilo.
 /// Se toca o se arrastra; cada cambio da un tic háptico.
-class RatingDial extends StatelessWidget {
-  const RatingDial({super.key, required this.value, required this.onChanged});
+class RatingDial extends StatefulWidget {
+  const RatingDial({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    this.onCommit,
+  });
 
   final int? value;
   final ValueChanged<int> onChanged;
 
+  /// Se llama al soltar (toque o arrastre) con la nota elegida.
+  final ValueChanged<int>? onCommit;
+
+  @override
+  State<RatingDial> createState() => _RatingDialState();
+}
+
+class _RatingDialState extends State<RatingDial> {
+  int? _last;
+
+  @override
+  void didUpdateWidget(RatingDial old) {
+    super.didUpdateWidget(old);
+    if (widget.value == null) _last = null;
+  }
+
   void _update(Offset local, double width) {
     final slot = ((local.dx / width) * 10).floor().clamp(0, 9) + 1;
-    if (slot != value) {
+    _last = slot;
+    if (slot != widget.value) {
       HapticFeedback.selectionClick();
-      onChanged(slot);
+      widget.onChanged(slot);
     }
+  }
+
+  void _commit() {
+    final v = _last ?? widget.value;
+    if (v != null) widget.onCommit?.call(v);
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final value = widget.value;
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapDown: (d) => _update(d.localPosition, width),
+          onTapUp: (_) => _commit(),
           onHorizontalDragStart: (d) => _update(d.localPosition, width),
           onHorizontalDragUpdate: (d) => _update(d.localPosition, width),
+          onHorizontalDragEnd: (_) => _commit(),
           child: SizedBox(
             height: 104,
             child: Stack(
@@ -53,7 +83,8 @@ class RatingDial extends StatelessWidget {
                     size: Size(width, 104),
                     painter: _DialPainter(
                       position: position,
-                      color: value == null ? VColors.text3 : Score.color(value!),
+                      color: value == null ? c.text3 : c.score(value),
+                      inactive: c.text3,
                     ),
                   ),
                 ),
@@ -67,10 +98,15 @@ class RatingDial extends StatelessWidget {
 }
 
 class _DialPainter extends CustomPainter {
-  _DialPainter({required this.position, required this.color});
+  _DialPainter({
+    required this.position,
+    required this.color,
+    required this.inactive,
+  });
 
   final double position;
   final Color color;
+  final Color inactive;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -92,7 +128,7 @@ class _DialPainter extends CustomPainter {
         ..strokeWidth = 3 + bump * 1.5
         ..color = active
             ? color.withValues(alpha: 0.32 + 0.68 * bump)
-            : VColors.text3.withValues(alpha: 0.32 + 0.3 * bump);
+            : inactive.withValues(alpha: 0.32 + 0.3 * bump);
       canvas.drawLine(Offset(x, baseline - h), Offset(x, baseline), paint);
 
       final selected = bump > 0.6;
@@ -102,7 +138,7 @@ class _DialPainter extends CustomPainter {
           style: VText.ui(
             12,
             weight: selected ? 800 : 600,
-            color: selected ? color : VColors.text3,
+            color: selected ? color : inactive,
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -124,5 +160,5 @@ class _DialPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DialPainter old) =>
-      old.position != position || old.color != color;
+      old.position != position || old.color != color || old.inactive != inactive;
 }

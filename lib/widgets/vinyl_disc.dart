@@ -6,24 +6,31 @@ import '../theme/vinilo_theme.dart';
 
 /// Un vinilo dibujado a mano: disco con surcos, etiqueta de color y agujero.
 class VinylDisc extends StatelessWidget {
-  const VinylDisc({super.key, this.size = 48, this.labelColor = VColors.accent});
+  const VinylDisc({super.key, this.size = 48, this.labelColor, this.holeColor});
 
   final double size;
-  final Color labelColor;
+
+  /// Color de la etiqueta; por defecto el acento del tema.
+  final Color? labelColor;
+
+  /// Color del agujero central; por defecto el fondo del tema.
+  final Color? holeColor;
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     return CustomPaint(
       size: Size.square(size),
-      painter: _VinylPainter(labelColor),
+      painter: _VinylPainter(labelColor ?? c.accent, holeColor ?? c.bg),
     );
   }
 }
 
 class _VinylPainter extends CustomPainter {
-  _VinylPainter(this.labelColor);
+  _VinylPainter(this.labelColor, this.holeColor);
 
   final Color labelColor;
+  final Color holeColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -74,23 +81,24 @@ class _VinylPainter extends CustomPainter {
         ..strokeWidth = r * 0.03
         ..color = Colors.black.withValues(alpha: 0.28),
     );
-    canvas.drawCircle(c, r * 0.045, Paint()..color = VColors.bg);
+    canvas.drawCircle(c, r * 0.045, Paint()..color = holeColor);
   }
 
   @override
-  bool shouldRepaint(covariant _VinylPainter old) => old.labelColor != labelColor;
+  bool shouldRepaint(covariant _VinylPainter old) =>
+      old.labelColor != labelColor || old.holeColor != holeColor;
 }
 
 class SpinningVinyl extends StatefulWidget {
   const SpinningVinyl({
     super.key,
     this.size = 64,
-    this.labelColor = VColors.accent,
+    this.labelColor,
     this.period = const Duration(milliseconds: 2600),
   });
 
   final double size;
-  final Color labelColor;
+  final Color? labelColor;
   final Duration period;
 
   @override

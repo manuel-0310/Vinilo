@@ -12,5 +12,12 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    // Barra de pestañas nativa (Liquid Glass en iOS 26+), ver NativeTabBar.swift.
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "vinilo.tabbar") {
+      registrar.register(
+        NativeTabBarFactory(messenger: registrar.messenger()),
+        withId: "vinilo/tabbar"
+      )
+    }
   }
 }

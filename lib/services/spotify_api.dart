@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/album.dart';
+import '../models/artist.dart';
 
 class SpotifyApiException implements Exception {
   SpotifyApiException(this.message, {this.status});
@@ -28,17 +29,27 @@ class SpotifyApi {
   final http.Client _client = http.Client();
   final Map<String, AlbumDetail> _albums = {};
   final Map<String, AlbumPage> _pages = {};
+  final Map<String, List<Artist>> _artists = {};
 
   bool get isConfigured => baseUrl.isNotEmpty;
 
   Future<AlbumPage> search(String query, {int offset = 0}) =>
       _page('/search', {'q': query, 'offset': '$offset'});
 
-  Future<AlbumPage> newAlbums({int offset = 0}) =>
-      _page('/new', {'offset': '$offset'});
-
   Future<AlbumPage> artistAlbums(String artistId, {int offset = 0}) =>
       _page('/artist/$artistId/albums', {'offset': '$offset'});
+
+  Future<List<Artist>> searchArtists(String query) async {
+    final key = query.trim().toLowerCase();
+    final cached = _artists[key];
+    if (cached != null) return cached;
+    final body = await _get('/artists/search', {'q': query});
+    final items = ((body['items'] as List?) ?? const [])
+        .map((j) => Artist.fromJson(Map<String, dynamic>.from(j as Map)))
+        .toList();
+    _artists[key] = items;
+    return items;
+  }
 
   AlbumDetail? cachedAlbum(String id) => _albums[id];
 

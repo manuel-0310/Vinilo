@@ -37,13 +37,5 @@ String monthYear(DateTime date) =>
 String shortDate(DateTime date) =>
     '${date.day} ${monthShort(date.month)} ${date.year}';
 
-String greeting([DateTime? now]) {
-  final h = (now ?? DateTime.now()).hour;
-  if (h < 6) return 'Buenas noches';
-  if (h < 12) return 'Buenos días';
-  if (h < 19) return 'Buenas tardes';
-  return 'Buenas noches';
-}
-
 String plural(int n, String singular, String pluralForm) =>
     '$n ${n == 1 ? singular : pluralForm}';

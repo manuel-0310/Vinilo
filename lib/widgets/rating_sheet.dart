@@ -15,22 +15,37 @@ Future<RatingSheetResult?> showRatingSheet(
   BuildContext context, {
   required Album album,
   RatingEntry? existing,
+  int? initialScore,
 }) {
   return showModalBottomSheet<RatingSheetResult>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withValues(alpha: 0.6),
-    builder: (_) => RatingSheet(album: album, existing: existing),
+    barrierColor: Colors.black.withValues(
+      alpha: VColors.of(context).isDark ? 0.6 : 0.4,
+    ),
+    builder: (_) => RatingSheet(
+      album: album,
+      existing: existing,
+      initialScore: initialScore,
+    ),
   );
 }
 
 class RatingSheet extends StatefulWidget {
-  const RatingSheet({super.key, required this.album, this.existing});
+  const RatingSheet({
+    super.key,
+    required this.album,
+    this.existing,
+    this.initialScore,
+  });
 
   final Album album;
   final RatingEntry? existing;
+
+  /// Nota preseleccionada (la que se eligió en el dial de la pantalla del disco).
+  final int? initialScore;
 
   @override
   State<RatingSheet> createState() => _RatingSheetState();
@@ -44,7 +59,7 @@ class _RatingSheetState extends State<RatingSheet> {
   @override
   void initState() {
     super.initState();
-    _score = widget.existing?.score;
+    _score = widget.initialScore ?? widget.existing?.score;
     _note = TextEditingController(text: widget.existing?.note ?? '');
   }
 
@@ -80,15 +95,16 @@ class _RatingSheetState extends State<RatingSheet> {
 
   Future<void> _delete() async {
     if (_busy) return;
+    final c = VColors.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VColors.surface2,
+        backgroundColor: c.surface2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Text('¿Borrar tu nota?', style: VText.display(26)),
         content: Text(
           '“${widget.album.name}” saldrá de tu diario y del promedio.',
-          style: VText.ui(14, color: VColors.text2, height: 1.4),
+          style: VText.ui(14, color: c.text2, height: 1.4),
         ),
         actions: [
           TextButton(
@@ -99,7 +115,7 @@ class _RatingSheetState extends State<RatingSheet> {
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               'Borrar',
-              style: VText.ui(14, weight: 700, color: VColors.danger),
+              style: VText.ui(14, weight: 700, color: c.danger),
             ),
           ),
         ],
@@ -124,8 +140,9 @@ class _RatingSheetState extends State<RatingSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     final score = _score;
-    final color = score == null ? VColors.text3 : Score.color(score);
+    final color = score == null ? c.text3 : c.score(score);
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return AnimatedPadding(
@@ -133,10 +150,10 @@ class _RatingSheetState extends State<RatingSheet> {
       curve: Curves.easeOut,
       padding: EdgeInsets.only(bottom: bottomInset),
       child: Container(
-        decoration: const BoxDecoration(
-          color: VColors.surface,
+        decoration: BoxDecoration(
+          color: c.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border(top: BorderSide(color: VColors.line)),
+          border: Border(top: BorderSide(color: c.line)),
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(22, 12, 22, 20),
@@ -149,7 +166,7 @@ class _RatingSheetState extends State<RatingSheet> {
                   width: 38,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: VColors.text3.withValues(alpha: 0.5),
+                    color: c.text3.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -174,7 +191,7 @@ class _RatingSheetState extends State<RatingSheet> {
                           widget.album.subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: VText.ui(13, color: VColors.text2),
+                          style: VText.ui(13, color: c.text2),
                         ),
                       ],
                     ),
@@ -200,7 +217,7 @@ class _RatingSheetState extends State<RatingSheet> {
                         ? Text(
                             '–',
                             key: const ValueKey('none'),
-                            style: VText.display(110, color: VColors.text3),
+                            style: VText.display(110, color: c.text3),
                           )
                         : Text(
                             '$score',
@@ -221,7 +238,7 @@ class _RatingSheetState extends State<RatingSheet> {
                     style: VText.display(
                       24,
                       italic: true,
-                      color: score == null ? VColors.text3 : color,
+                      color: score == null ? c.text3 : color,
                     ),
                   ),
                 ),
@@ -242,7 +259,7 @@ class _RatingSheetState extends State<RatingSheet> {
                 style: VText.ui(15),
                 decoration: InputDecoration(
                   hintText: 'Una línea sobre este disco (opcional)',
-                  counterStyle: VText.label(10),
+                  counterStyle: VText.label(10, color: c.text3),
                 ),
               ),
               const SizedBox(height: 8),
@@ -250,12 +267,12 @@ class _RatingSheetState extends State<RatingSheet> {
                 key: const ValueKey('rating-save'),
                 onPressed: score == null || _busy ? null : _save,
                 child: _busy
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: VColors.onAccent,
+                          color: c.onAccent,
                         ),
                       )
                     : Text(
@@ -271,7 +288,7 @@ class _RatingSheetState extends State<RatingSheet> {
                     onPressed: _busy ? null : _delete,
                     child: Text(
                       'Borrar nota',
-                      style: VText.ui(14, weight: 600, color: VColors.danger),
+                      style: VText.ui(14, weight: 600, color: c.danger),
                     ),
                   ),
                 ),

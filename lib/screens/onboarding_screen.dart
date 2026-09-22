@@ -13,6 +13,7 @@ class OnboardingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     final services = ServicesScope.of(context);
     return Scaffold(
       body: SafeArea(
@@ -29,7 +30,7 @@ class OnboardingScreen extends StatelessWidget {
                     const TextSpan(text: 'Tu diario de '),
                     TextSpan(
                       text: 'discos',
-                      style: VText.display(46, italic: true, color: VColors.accent),
+                      style: VText.display(46, italic: true, color: c.accent),
                     ),
                     const TextSpan(text: ' empieza aquí.'),
                   ],
@@ -39,20 +40,20 @@ class OnboardingScreen extends StatelessWidget {
               const SizedBox(height: 14),
               Text(
                 'Busca un álbum, ponle nota del 1 al 10 y mira lo que opina la comunidad. Sin estrellas: aquí se habla en números.',
-                style: VText.ui(15, color: VColors.text2, height: 1.45),
+                style: VText.ui(15, color: c.text2, height: 1.45),
               ).animate().fadeIn(delay: 150.ms, duration: 500.ms),
               const SizedBox(height: 36),
               ProfileForm(
                 submitLabel: 'Empezar',
-                onSubmit: (name, color, avatar, _) async {
+                onSubmit: (edit) async {
                   String? url;
-                  if (avatar != null) {
-                    url = await services.users.uploadAvatar(uid, avatar);
+                  if (edit.avatar != null) {
+                    url = await services.users.uploadAvatar(uid, edit.avatar!);
                   }
                   await services.users.create(
                     uid: uid,
-                    name: name,
-                    colorValue: color,
+                    name: edit.name,
+                    colorValue: edit.colorValue,
                     avatarUrl: url,
                   );
                 },
