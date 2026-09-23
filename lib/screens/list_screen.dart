@@ -38,6 +38,14 @@ class _ListScreenState extends State<ListScreen> {
   String? _glowFor;
   bool _editing = false;
 
+  // Orden optimista: al soltar (o quitar) un elemento la lista se pinta ya
+  // con el cambio, sin esperar a que vuelva el documento; así no salta un
+  // cuadro al orden viejo. Se descarta en cuanto llega cualquier versión
+  // nueva del documento (la propia escritura o un error que la revierte).
+  MusicList? _raw;
+  List<ListItem>? _optimistic;
+  MusicList? _optimisticBase;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -65,27 +73,41 @@ class _ListScreenState extends State<ListScreen> {
 
   Future<void> _reorder(MusicList list, int oldIndex, int newIndex) async {
     final next = reorder(list.items, oldIndex, newIndex);
-    if (identical(next, list.items)) return;
+    if (_sameOrder(next, list.items)) return;
     HapticFeedback.selectionClick();
-    try {
-      await _services!.lists.setItems(list.id, next);
-    } catch (e) {
-      _snack('No se pudo reordenar: $e');
-    }
+    await _write(list, next, 'No se pudo reordenar');
   }
 
   Future<void> _remove(MusicList list, ListItem item) async {
     HapticFeedback.lightImpact();
+    await _write(list, removeItem(list.items, item.id), 'No se pudo quitar');
+  }
+
+  Future<void> _write(MusicList list, List<ListItem> next, String error) async {
+    setState(() {
+      _optimistic = next;
+      _optimisticBase = _raw;
+    });
     try {
-      await _services!.lists.setItems(list.id, removeItem(list.items, item.id));
+      await _services!.lists.setItems(list.id, next);
     } catch (e) {
-      _snack('No se pudo quitar: $e');
+      if (mounted) setState(() => _optimistic = null);
+      _snack('$error: $e');
     }
+  }
+
+  static bool _sameOrder(List<ListItem> a, List<ListItem> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id) return false;
+    }
+    return true;
   }
 
   Future<void> _add(MusicList list) async {
     final added = await showAddToList(context, list);
-    if (added > 0) _snack('Se agregaron ${list.itemType.count(added)}');
+    if (added == 1) _snack('Se agregó 1 ${list.itemType.one}');
+    if (added > 1) _snack('Se agregaron ${list.itemType.count(added)}');
   }
 
   Future<void> _editMeta(MusicList list) async {
@@ -195,7 +217,16 @@ class _ListScreenState extends State<ListScreen> {
         stream: _stream,
         initialData: widget.initial,
         builder: (context, snap) {
-          final list = snap.data;
+          final raw = snap.data;
+          _raw = raw;
+          if (_optimistic != null && !identical(raw, _optimisticBase)) {
+            _optimistic = null;
+            _optimisticBase = null;
+          }
+          final optimistic = _optimistic;
+          final list = raw == null || optimistic == null
+              ? raw
+              : raw.copyWith(items: optimistic);
           if (snap.connectionState == ConnectionState.waiting && list == null) {
             return Stack(
               children: [

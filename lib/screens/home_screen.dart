@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../models/feed.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/streams.dart';
 import '../widgets/album_strip.dart';
 import '../widgets/bell_button.dart';
 import '../widgets/feed_card.dart';
@@ -20,13 +23,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Stream<List<String>>? _following;
   Stream<List<AlbumStats>>? _recent;
 
-  // La actividad depende de a quién sigo: el stream se rehace solo cuando
-  // cambia esa lista, no en cada reconstrucción.
-  String _feedKey = '';
-  Stream<List<RatingEntry>>? _feed;
+  // La actividad depende de a quién sigo. Es un solo stream que se escucha
+  // una vez: por dentro rehace la consulta cuando cambia esa lista (seguir,
+  // dejar de seguir y volver a seguir no vuelve a escuchar el mismo).
+  Stream<FollowingFeed>? _activity;
 
   @override
   void didChangeDependencies() {
@@ -34,17 +36,15 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_recent != null) return;
     final services = ServicesScope.of(context);
     final me = CurrentUser.of(context);
-    _following = services.follows.followingIds(me.uid);
     _recent = services.ratings.recentlyRated();
-  }
-
-  Stream<List<RatingEntry>> _feedFor(List<String> uids) {
-    final key = uids.join(',');
-    if (key != _feedKey || _feed == null) {
-      _feedKey = key;
-      _feed = ServicesScope.of(context).ratings.feedFor(uids);
-    }
-    return _feed!;
+    _activity = switchLatest(
+      services.follows.followingIds(me.uid).distinct(listEquals),
+      (List<String> uids) => uids.isEmpty
+          ? Stream.value(const FollowingFeed.nobody())
+          : services.ratings
+              .feedFor(uids)
+              .map((e) => FollowingFeed(followsAnyone: true, entries: e)),
+    );
   }
 
   void _findPeople() {
@@ -107,15 +107,13 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: 'Lo que califican las personas que sigues',
             ),
           ),
-          StreamBuilder<List<String>>(
-            stream: _following,
-            builder: (context, followSnap) {
-              if (followSnap.hasError) {
-                return _feedError(c, followSnap.error);
-              }
-              if (!followSnap.hasData) return const _FeedSkeleton();
-              final uids = followSnap.data!;
-              if (uids.isEmpty) {
+          StreamBuilder<FollowingFeed>(
+            stream: _activity,
+            builder: (context, snap) {
+              if (snap.hasError) return _feedError(c, snap.error);
+              if (!snap.hasData) return const _FeedSkeleton();
+              final feed = snap.data!;
+              if (!feed.followsAnyone) {
                 return SliverToBoxAdapter(
                   child: EmptyState(
                     key: const ValueKey('feed-empty-follow'),
@@ -131,41 +129,34 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               }
-              return StreamBuilder<List<RatingEntry>>(
-                stream: _feedFor(uids),
-                builder: (context, snap) {
-                  if (snap.hasError) return _feedError(c, snap.error);
-                  if (!snap.hasData) return const _FeedSkeleton();
-                  final entries = snap.data!;
-                  if (entries.isEmpty) {
-                    return const SliverToBoxAdapter(
-                      child: EmptyState(
-                        key: ValueKey('feed-empty-quiet'),
-                        title: 'Todo tranquilo por aquí',
-                        message:
-                            'Las personas que sigues todavía no han calificado nada. Cuando lo hagan, aparecerá aquí.',
-                      ),
-                    );
-                  }
-                  return SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                    sliver: SliverList.separated(
-                      itemCount: entries.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 14),
-                      itemBuilder: (context, i) {
-                        final entry = entries[i];
-                        return FeedCard(
-                          entry: entry,
-                          heroTag: 'feed-${entry.id}',
-                          index: i,
-                        )
-                            .animate()
-                            .fadeIn(delay: (40 * (i % 8)).ms, duration: 380.ms)
-                            .slideY(begin: 0.05, curve: Curves.easeOutCubic);
-                      },
-                    ),
-                  );
-                },
+              final entries = feed.entries;
+              if (entries.isEmpty) {
+                return const SliverToBoxAdapter(
+                  child: EmptyState(
+                    key: ValueKey('feed-empty-quiet'),
+                    title: 'Todo tranquilo por aquí',
+                    message:
+                        'Las personas que sigues todavía no han calificado nada. Cuando lo hagan, aparecerá aquí.',
+                  ),
+                );
+              }
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+                sliver: SliverList.separated(
+                  itemCount: entries.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 14),
+                  itemBuilder: (context, i) {
+                    final entry = entries[i];
+                    return FeedCard(
+                      entry: entry,
+                      heroTag: 'feed-${entry.id}',
+                      index: i,
+                    )
+                        .animate()
+                        .fadeIn(delay: (40 * (i % 8)).ms, duration: 380.ms)
+                        .slideY(begin: 0.05, curve: Curves.easeOutCubic);
+                  },
+                ),
               );
             },
           ),

@@ -6,6 +6,8 @@ import '../models/user_profile.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/misc.dart';
+import '../widgets/sheet.dart';
+import 'delete_account_sheet.dart';
 import 'profile_form.dart';
 
 /// Configuración de la app: apariencia (sistema, claro u oscuro) y el color
@@ -16,7 +18,10 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    final me = CurrentUser.of(context);
+    // Al borrar la cuenta, esta pantalla puede quedarse un instante sin
+    // perfil antes de cerrarse.
+    final me = CurrentUser.maybeOf(context);
+    if (me == null) return const Scaffold();
     final services = ServicesScope.of(context);
     final topPad = MediaQuery.paddingOf(context).top;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
@@ -88,6 +93,15 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       _AccountCard(profile: me),
+                      const SizedBox(height: 12),
+                      SheetAction(
+                        key: const ValueKey('delete-account'),
+                        icon: Icons.delete_forever_rounded,
+                        label: 'Eliminar cuenta',
+                        hint: 'Borra tu perfil y todo lo tuyo. No se puede deshacer.',
+                        danger: true,
+                        onTap: () => showDeleteAccount(context),
+                      ),
                     ],
                   ),
                 ),

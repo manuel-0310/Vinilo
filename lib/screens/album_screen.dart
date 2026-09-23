@@ -124,6 +124,9 @@ class _AlbumScreenState extends State<AlbumScreen> {
         SnackBar(
           content: Text(text),
           duration: const Duration(seconds: 3),
+          // Con acción, Flutter lo deja fijo hasta cerrarlo a mano y tapa el
+          // botón "Calificar este disco": que se vaya solo.
+          persist: false,
           action: list == null
               ? null
               : SnackBarAction(

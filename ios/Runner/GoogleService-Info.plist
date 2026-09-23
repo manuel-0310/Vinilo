@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.buildday.noRetiene</string>
+	<string>com.manuelcastillo.vinilo</string>
 	<key>PROJECT_ID</key>
 	<string>red-social-c786b</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:409695014933:ios:5d7b29d4d0b3b27605fe1c</string>
+	<string>1:409695014933:ios:637be17ad428bb5c05fe1c</string>
 </dict>
 </plist>

@@ -17,6 +17,13 @@
  *
  * Nota: en modo desarrollo Spotify limita cada página a 10 elementos y
  * bloquea /browse/new-releases y /albums?ids=, por eso no se usan.
+ *
+ * Vinilo — cuenta (función `account`, sin secretos).
+ *
+ *   POST /delete   → { ok: true, deleted: {...} } borra la cuenta de quien
+ *                    manda el token (exige haber escrito la contraseña hace
+ *                    menos de 5 minutos) y todo lo suyo con el Admin SDK.
+ *   GET  /         → { ok: true }
  */
 
 const { onRequest } = require("firebase-functions/https");
@@ -24,6 +31,8 @@ const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const { initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getStorage } = require("firebase-admin/storage");
 
 initializeApp();
 
@@ -330,6 +339,187 @@ exports.spotify = onRequest(
       if (status === 500) logger.error("Unhandled", err);
       if (err.extra?.retryAfter) res.set("Retry-After", String(err.extra.retryAfter));
       res.status(status).json({ error: err.message || "Error interno" });
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Borrar la cuenta
+// ---------------------------------------------------------------------------
+//
+// Todo con el Admin SDK (no pasa por las reglas) y en un orden que se puede
+// repetir: cada paso es idempotente y la cuenta de Auth se borra al final.
+// Si algo falla a mitad, la persona sigue pudiendo entrar y vuelve a pedir el
+// borrado, que retoma donde quedó en lugar de dejar datos a medias.
+
+const RECENT_LOGIN_SECONDS = 5 * 60;
+const BATCH_LIMIT = 400;
+
+/** Aplica `op(batch, doc)` a cada documento, en lotes de 400. */
+async function inBatches(db, docs, op) {
+  for (let i = 0; i < docs.length; i += BATCH_LIMIT) {
+    const batch = db.batch();
+    for (const doc of docs.slice(i, i + BATCH_LIMIT)) op(batch, doc);
+    await batch.commit();
+  }
+  return docs.length;
+}
+
+/**
+ * Borra una nota y la descuenta del disco (cuenta, suma e histograma) en la
+ * misma transacción, igual que `RatingsRepo.remove` en la app.
+ */
+function removeRating(db, ref) {
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return false;
+    const score = Number(snap.get("score")) || 0;
+    const albumId = snap.get("albumId");
+    const albumRef = albumId ? db.collection("albums").doc(albumId) : null;
+    const album = albumRef ? await tx.get(albumRef) : null;
+    if (album && album.exists) {
+      const hist = { ...(album.get("hist") || {}) };
+      const key = String(score);
+      hist[key] = Math.max(0, (Number(hist[key]) || 1) - 1);
+      tx.update(albumRef, {
+        ratingsCount: Math.max(0, (Number(album.get("ratingsCount")) || 1) - 1),
+        ratingsSum: Math.max(0, Number(album.get("ratingsSum") ?? score) - score),
+        hist,
+      });
+    }
+    tx.delete(ref);
+    return true;
+  });
+}
+
+/**
+ * Borra un seguimiento y baja en uno el contador de la otra persona
+ * (`followersCount` de a quién seguía o `followingCount` de quien la seguía).
+ */
+function removeFollow(db, ref, otherUid, counter) {
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return false;
+    const otherRef = db.collection("users").doc(otherUid);
+    const other = await tx.get(otherRef);
+    if (other.exists) {
+      tx.update(otherRef, {
+        [counter]: Math.max(0, (Number(other.get(counter)) || 0) - 1),
+      });
+    }
+    tx.delete(ref);
+    return true;
+  });
+}
+
+async function deleteAccountData(uid) {
+  const db = getFirestore();
+  const deleted = {};
+
+  // 1. Sus notas, ajustando promedios e histogramas de cada disco.
+  const ratings = await db.collection("ratings").where("uid", "==", uid).get();
+  let ratingsRemoved = 0;
+  for (const doc of ratings.docs) {
+    if (await removeRating(db, doc.ref)) ratingsRemoved++;
+  }
+  deleted.ratings = ratingsRemoved;
+
+  // 2. Sus "me gusta" en notas de otras personas.
+  const liked = await db.collection("ratings").where("likedBy", "array-contains", uid).get();
+  deleted.ratingLikes = await inBatches(db, liked.docs, (b, d) =>
+    b.update(d.ref, { likedBy: FieldValue.arrayRemove(uid) }));
+
+  // 3. Sus listas, y sus "me gusta" y guardadas en listas de otras personas.
+  const lists = await db.collection("lists").where("ownerUid", "==", uid).get();
+  deleted.lists = await inBatches(db, lists.docs, (b, d) => b.delete(d.ref));
+  const likedLists = await db.collection("lists").where("likedBy", "array-contains", uid).get();
+  deleted.listLikes = await inBatches(db, likedLists.docs, (b, d) =>
+    b.update(d.ref, { likedBy: FieldValue.arrayRemove(uid) }));
+  const savedLists = await db.collection("lists").where("savedBy", "array-contains", uid).get();
+  deleted.listSaves = await inBatches(db, savedLists.docs, (b, d) =>
+    b.update(d.ref, { savedBy: FieldValue.arrayRemove(uid) }));
+
+  // 4. Seguimientos en los dos sentidos, con los contadores de los demás.
+  const following = await db.collection("follows").where("follower", "==", uid).get();
+  let followsRemoved = 0;
+  for (const doc of following.docs) {
+    if (await removeFollow(db, doc.ref, doc.get("followed"), "followersCount")) followsRemoved++;
+  }
+  const followers = await db.collection("follows").where("followed", "==", uid).get();
+  for (const doc of followers.docs) {
+    if (await removeFollow(db, doc.ref, doc.get("follower"), "followingCount")) followsRemoved++;
+  }
+  deleted.follows = followsRemoved;
+
+  // 5. Notificaciones: las suyas y las que provocó en otras personas.
+  const toMe = await db.collection("notifications").where("to", "==", uid).get();
+  const fromMe = await db.collection("notifications").where("from", "==", uid).get();
+  deleted.notifications =
+    (await inBatches(db, toMe.docs, (b, d) => b.delete(d.ref))) +
+    (await inBatches(db, fromMe.docs, (b, d) => b.delete(d.ref)));
+
+  // 6. Avatar y banner en Storage.
+  const bucket = getStorage().bucket();
+  await Promise.all([
+    bucket.file(`avatars/${uid}.jpg`).delete({ ignoreNotFound: true }),
+    bucket.file(`banners/${uid}.jpg`).delete({ ignoreNotFound: true }),
+  ]);
+
+  // 7. El @usuario reservado y el perfil, juntos.
+  const userRef = db.collection("users").doc(uid);
+  const usernames = await db.collection("usernames").where("uid", "==", uid).get();
+  const batch = db.batch();
+  for (const doc of usernames.docs) batch.delete(doc.ref);
+  batch.delete(userRef);
+  await batch.commit();
+  deleted.usernames = usernames.size;
+
+  // 8. La cuenta de Auth, al final.
+  try {
+    await getAuth().deleteUser(uid);
+  } catch (err) {
+    if (err.code !== "auth/user-not-found") throw err;
+  }
+  return deleted;
+}
+
+exports.account = onRequest(
+  {
+    region: "us-central1",
+    cors: true,
+    maxInstances: 3,
+    memory: "512MiB",
+    timeoutSeconds: 300,
+  },
+  async (req, res) => {
+    try {
+      const path = req.path.replace(/\/+$/, "") || "/";
+      if (path === "/") {
+        res.status(200).json({ ok: true, service: "vinilo-account" });
+        return;
+      }
+      if (path !== "/delete") throw new HttpError(404, "Ruta desconocida");
+      if (req.method !== "POST") throw new HttpError(405, "Solo POST");
+      const user = await requireUser(req);
+      // Firebase pide un inicio de sesión reciente para borrar una cuenta; la
+      // app vuelve a pedir la contraseña justo antes de llamar.
+      const age = Math.floor(Date.now() / 1000) - Number(user.auth_time || 0);
+      if (age > RECENT_LOGIN_SECONDS) {
+        throw new HttpError(401, "Vuelve a escribir tu contraseña para borrar la cuenta.", {
+          code: "requires-recent-login",
+        });
+      }
+      logger.info("Borrando cuenta", { uid: user.uid });
+      const deleted = await deleteAccountData(user.uid);
+      logger.info("Cuenta borrada", { uid: user.uid, deleted });
+      res.status(200).json({ ok: true, deleted });
+    } catch (err) {
+      const status = err instanceof HttpError ? err.status : 500;
+      if (status === 500) logger.error("No se pudo borrar la cuenta", err);
+      res.status(status).json({
+        error: err.message || "Error interno",
+        ...(err.extra?.code ? { code: err.extra.code } : {}),
+      });
     }
   },
 );

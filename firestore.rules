@@ -223,8 +223,12 @@ service cloud.firestore {
           && validNotification(request.resource.data)
           && request.resource.data.to == resource.data.to)
       );
+      // Borrar una que no existe (quitar un "me gusta" cuya notificación ya
+      // se borró) no debe tumbar el lote entero.
       allow delete: if hasAccount()
-        && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+        && (resource == null
+          || resource.data.from == request.auth.uid
+          || resource.data.to == request.auth.uid);
     }
   }
 }

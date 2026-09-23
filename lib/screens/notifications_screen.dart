@@ -33,11 +33,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   void _markRead(List<AppNotification> items) {
-    // Solo la primera vez: se recuerda cuáles estaban sin leer para
-    // pintarlas distinto, y se marcan todas como leídas.
-    if (_wasUnread != null) return;
-    _wasUnread = {for (final n in items) if (!n.read) n.id};
-    if (_wasUnread!.isNotEmpty) {
+    // La primera vez se recuerda cuáles estaban sin leer, para pintarlas
+    // distinto hasta salir. Todo lo que llegue sin leer mientras la pantalla
+    // está abierta también se marca, para que la campana no vuelva a
+    // encender el punto por algo que ya se vio.
+    _wasUnread ??= {for (final n in items) if (!n.read) n.id};
+    if (items.any((n) => !n.read)) {
       ServicesScope.of(context).notifications.markRead(items);
     }
   }

@@ -57,18 +57,17 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBWTRKTQYEd55MygbHSlFmKU4nENRRDDgE',
-    appId: '1:409695014933:android:04e6b2374fc50d3005fe1c',
+    appId: '1:409695014933:android:480a41c47c69bb6b05fe1c',
     messagingSenderId: '409695014933',
     projectId: 'red-social-c786b',
     storageBucket: 'red-social-c786b.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAZYKaYwfCEgnsmUfXB-kU_3GvKQtdhEFY',
-    appId: '1:409695014933:ios:5d7b29d4d0b3b27605fe1c',
+    appId: '1:409695014933:ios:637be17ad428bb5c05fe1c',
     messagingSenderId: '409695014933',
     projectId: 'red-social-c786b',
     storageBucket: 'red-social-c786b.firebasestorage.app',
-    iosBundleId: 'com.buildday.noRetiene',
+    iosBundleId: 'com.manuelcastillo.vinilo',
   );
 }

@@ -111,7 +111,9 @@ class _AddToListState extends State<_AddToList> {
       final outcome = await ServicesScope.of(context).lists.addTo(widget.list.id, items);
       if (!mounted) return;
       HapticFeedback.lightImpact();
-      _present.addAll(items.map((i) => i.id));
+      // Solo lo que de verdad quedó en la lista (lo que no cupo por el tope
+      // no se marca como presente).
+      _present.addAll(outcome.items.map((i) => i.id));
       _totalAdded += outcome.added;
       _showNotice(outcome.message(widget.list.itemType));
     } catch (e) {

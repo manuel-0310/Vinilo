@@ -3,6 +3,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/widgets.dart';
 
 import '../models/user_profile.dart';
+import 'account_service.dart';
 import 'auth_service.dart';
 import 'follow_repo.dart';
 import 'lists_repo.dart';
@@ -22,6 +23,7 @@ class Services {
     required this.follows,
     required this.notifications,
     required this.lists,
+    required this.account,
   });
 
   factory Services.create() {
@@ -42,6 +44,7 @@ class Services {
       follows: follows,
       notifications: notifications,
       lists: lists,
+      account: AccountService(auth: auth, spotifyUrl: SpotifyApi.configuredUrl),
     );
   }
 
@@ -53,6 +56,7 @@ class Services {
   final FollowRepo follows;
   final NotificationsRepo notifications;
   final ListsRepo lists;
+  final AccountService account;
 }
 
 class ServicesScope extends InheritedWidget {

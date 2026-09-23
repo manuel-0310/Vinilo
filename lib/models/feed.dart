@@ -18,3 +18,16 @@ List<RatingEntry> mergeNewestFirst(
     ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
   return out.length > limit ? out.sublist(0, limit) : out;
 }
+
+/// La sección "Actividad" del inicio: si sigo a alguien y lo último que
+/// calificaron las personas que sigo.
+class FollowingFeed {
+  const FollowingFeed({required this.followsAnyone, required this.entries});
+
+  const FollowingFeed.nobody()
+      : followsAnyone = false,
+        entries = const [];
+
+  final bool followsAnyone;
+  final List<RatingEntry> entries;
+}

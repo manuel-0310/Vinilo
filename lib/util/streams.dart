@@ -40,3 +40,44 @@ Stream<List<T>> combineLatestAll<T>(List<Stream<T>> streams) {
   );
   return controller.stream;
 }
+
+/// Cada vez que `source` emite, deja de escuchar el stream anterior y pasa a
+/// escuchar `next(valor)` (como `switchMap`). El stream que devuelve es uno
+/// solo y estable: quien lo pinta lo escucha una vez aunque por dentro la
+/// consulta cambie (por ejemplo, cuando cambia a quién sigo).
+Stream<R> switchLatest<S, R>(Stream<S> source, Stream<R> Function(S) next) {
+  late StreamController<R> controller;
+  StreamSubscription<S>? outer;
+  StreamSubscription<R>? inner;
+  var outerDone = false;
+  var innerDone = true;
+
+  controller = StreamController<R>(
+    onListen: () {
+      outer = source.listen(
+        (value) {
+          inner?.cancel();
+          innerDone = false;
+          inner = next(value).listen(
+            controller.add,
+            onError: controller.addError,
+            onDone: () {
+              innerDone = true;
+              if (outerDone) controller.close();
+            },
+          );
+        },
+        onError: controller.addError,
+        onDone: () {
+          outerDone = true;
+          if (innerDone) controller.close();
+        },
+      );
+    },
+    onCancel: () async {
+      await inner?.cancel();
+      await outer?.cancel();
+    },
+  );
+  return controller.stream;
+}

@@ -45,6 +45,7 @@ class _ViniloAppState extends State<ViniloApp> {
   }
   String? _profileUid;
   Stream<UserProfile?>? _profileStream;
+  UserProfile? _lastProfile;
 
   Stream<UserProfile?> _profileFor(String uid) {
     if (_profileUid != uid) {
@@ -124,7 +125,16 @@ class _ViniloAppState extends State<ViniloApp> {
               if (profileSnap.connectionState == ConnectionState.waiting) {
                 return _app(home: const SplashScreen());
               }
-              final profile = profileSnap.data;
+              var profile = profileSnap.data;
+              // Al borrar la cuenta el perfil desaparece un momento antes de
+              // que se cierre la sesión: mientras tanto se sigue mostrando la
+              // app con el último perfil, para que nada salte a medio borrar.
+              if (profile == null &&
+                  widget.services.account.deleting &&
+                  _lastProfile?.uid == user.uid) {
+                profile = _lastProfile;
+              }
+              _lastProfile = profile;
               return _app(
                 profile: profile,
                 home: _homeFor(user, profile),
