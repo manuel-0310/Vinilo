@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/follow.dart';
 import '../models/music_list.dart';
@@ -8,10 +11,12 @@ import 'notifications_repo.dart';
 
 /// Listas y rankings en `lists/{id}`, con los elementos copiados dentro.
 class ListsRepo {
-  ListsRepo(this._db, this._notifications);
+  ListsRepo(this._db, this._notifications, {FirebaseStorage? storage})
+      : _storage = storage ?? FirebaseStorage.instance;
 
   final FirebaseFirestore _db;
   final NotificationsRepo _notifications;
+  final FirebaseStorage _storage;
 
   CollectionReference<Map<String, dynamic>> get _lists =>
       _db.collection('lists');
@@ -124,7 +129,48 @@ class ListsRepo {
     });
   }
 
-  Future<void> delete(String id) => _lists.doc(id).delete();
+  /// Borra la lista y su portada. La portada va primero: la regla de
+  /// Storage comprueba la autora leyendo el documento, que todavía existe.
+  Future<void> delete(MusicList list) async {
+    await _deleteCoverFile(list.coverPath);
+    await _lists.doc(list.id).delete();
+  }
+
+  /// Portada nueva (JPEG cuadrado ya recortado). Cada una va a una ruta
+  /// distinta (`lists/{id}/{marca}.jpg`) para que la URL cambie y no se vea
+  /// la anterior desde la caché de imágenes; la anterior se borra al final.
+  Future<void> setCover(MusicList list, Uint8List bytes) async {
+    final path = 'lists/${list.id}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final ref = _storage.ref(path);
+    await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
+    final url = await ref.getDownloadURL();
+    await _lists.doc(list.id).update({
+      'coverUrl': url,
+      'coverPath': path,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    if (list.coverPath != path) await _deleteCoverFile(list.coverPath);
+  }
+
+  /// Vuelve al mosaico.
+  Future<void> removeCover(MusicList list) async {
+    await _lists.doc(list.id).update({
+      'coverUrl': null,
+      'coverPath': null,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    await _deleteCoverFile(list.coverPath);
+  }
+
+  Future<void> _deleteCoverFile(String? path) async {
+    if (path == null || path.isEmpty) return;
+    try {
+      await _storage.ref(path).delete();
+    } on FirebaseException catch (e) {
+      // Ya no estaba: nada que borrar.
+      if (e.code != 'object-not-found') rethrow;
+    }
+  }
 
   String _notificationId(MusicList list, NotificationType type, String me) =>
       AppNotification.idFor(to: list.ownerUid, type: type, from: me, target: list.id);

@@ -87,10 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionHeader(
-                      'Popular en la comunidad',
-                      subtitle: 'Lo último que la gente puso en su diario',
-                    ),
+                    const SectionHeader('Popular'),
                     AlbumStrip(
                       albums: albums.map((a) => a.album).toList(),
                       averages: {for (final a in albums) a.album.id: a.average},
@@ -104,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SliverToBoxAdapter(
             child: SectionHeader(
               'Actividad',
-              subtitle: 'Lo que califican las personas que sigues',
+              subtitle: 'De tus amigos',
             ),
           ),
           StreamBuilder<FollowingFeed>(

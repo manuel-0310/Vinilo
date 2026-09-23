@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/music_list.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
-import '../widgets/list_strip.dart';
+import '../widgets/list_row_tile.dart';
 import '../widgets/misc.dart';
 import '../widgets/sheet.dart';
 import 'list_form_sheet.dart';

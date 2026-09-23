@@ -44,18 +44,25 @@ class UserAvatar extends StatelessWidget {
       );
     }
 
-    return Container(
-      width: size,
-      height: size,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
+    Widget avatar = ClipOval(
+      child: ColoredBox(
         color: color.withValues(alpha: 0.2),
-        border: ring
-            ? Border.all(color: color.withValues(alpha: 0.9), width: 2)
-            : null,
+        child: SizedBox.expand(child: child),
       ),
-      child: child,
     );
+    if (ring) {
+      // El anillo se pinta encima de la foto. Como borde de la decoración
+      // normal encogía la imagen hacia dentro y dejaba ver el fondo claro
+      // alrededor (los "espacios en blanco" del encabezado del perfil).
+      avatar = DecoratedBox(
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: color.withValues(alpha: 0.9), width: 2),
+        ),
+        child: avatar,
+      );
+    }
+    return SizedBox(width: size, height: size, child: avatar);
   }
 }

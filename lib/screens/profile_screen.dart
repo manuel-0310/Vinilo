@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,16 +15,16 @@ import '../services/user_repo.dart';
 import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/format.dart';
+import '../util/search_text.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/artist_avatar.dart';
 import '../widgets/diary_row.dart';
 import '../widgets/follow_button.dart';
 import '../widgets/histogram.dart';
-import '../widgets/list_strip.dart';
+import '../widgets/list_row_tile.dart';
 import '../widgets/misc.dart';
 import '../widgets/user_avatar.dart';
 import 'list_form_sheet.dart';
-import 'profile_form.dart';
 import 'routes.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -44,7 +45,11 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
+/// Las dos secciones del perfil: favoritos, gráfica y diario, o listas.
+enum _ProfileSection { perfil, listas }
+
 class _ProfileScreenState extends State<ProfileScreen> {
+  _ProfileSection _section = _ProfileSection.perfil;
   Stream<UserProfile?>? _profile;
   Stream<List<RatingEntry>>? _ratings;
   Stream<List<MusicList>>? _lists;
@@ -66,61 +71,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _mineForAffinity = services.ratings.fetchUserRatings(me.uid);
       }
     }
-  }
-
-  Future<void> _edit(UserProfile profile) async {
-    final services = ServicesScope.of(context);
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _Sheet(
-        title: 'Tu perfil',
-        child: ProfileForm(
-          submitLabel: 'Guardar',
-          showBanner: true,
-          showUsername: true,
-          initialName: profile.name,
-          initialColor: profile.colorValue,
-          initialUsername: profile.username,
-          forUid: profile.uid,
-          initialAvatarUrl: profile.avatarUrl,
-          initialBannerUrl: profile.bannerUrl,
-          onSubmit: (edit) async {
-            // Primero el @usuario: si ya lo tomó alguien, falla aquí y no se
-            // guarda nada más.
-            if (edit.username != null && edit.username != profile.username) {
-              await services.users.setUsername(
-                profile.uid,
-                edit.username!,
-                previous: profile.username,
-              );
-            }
-            String? avatarUrl = edit.removeAvatar ? null : profile.avatarUrl;
-            if (edit.avatar != null) {
-              avatarUrl = await services.users.uploadAvatar(profile.uid, edit.avatar!);
-            }
-            String? bannerUrl = edit.removeBanner ? null : profile.bannerUrl;
-            if (edit.banner != null) {
-              bannerUrl = await services.users.uploadBanner(profile.uid, edit.banner!);
-            }
-            await services.users.updateProfile(
-              RaterInfo(
-                uid: profile.uid,
-                name: edit.name,
-                colorValue: edit.colorValue,
-                avatarUrl: avatarUrl,
-              ),
-              bannerUrl: bannerUrl,
-              updateBanner: edit.banner != null || edit.removeBanner,
-              username: edit.username ?? profile.username,
-            );
-            if (ctx.mounted) Navigator.of(ctx).pop();
-          },
-        ),
-      ),
-    );
   }
 
   Future<void> _pickFavorites(
@@ -200,8 +150,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             saved: _saved,
             isMe: widget.isMe,
             standalone: widget.standalone,
+            section: _section,
+            onSection: (section) => setState(() => _section = section),
             mineForAffinity: _mineForAffinity,
-            onEdit: () => _edit(profile),
             onNewList: () => _newList(profile),
             onPickFavorites: ratings == null
                 ? null
@@ -259,8 +210,9 @@ class _ProfileBody extends StatelessWidget {
     required this.saved,
     required this.isMe,
     required this.standalone,
+    required this.section,
+    required this.onSection,
     required this.mineForAffinity,
-    required this.onEdit,
     required this.onNewList,
     required this.onPickFavorites,
     required this.onPickArtists,
@@ -274,8 +226,9 @@ class _ProfileBody extends StatelessWidget {
   final Stream<List<MusicList>>? saved;
   final bool isMe;
   final bool standalone;
+  final _ProfileSection section;
+  final ValueChanged<_ProfileSection> onSection;
   final Future<List<RatingEntry>>? mineForAffinity;
-  final VoidCallback onEdit;
   final VoidCallback onNewList;
   final VoidCallback? onPickFavorites;
   final VoidCallback onPickArtists;
@@ -287,10 +240,6 @@ class _ProfileBody extends StatelessWidget {
     final c = VColors.of(context);
     final topPad = MediaQuery.paddingOf(context).top;
     final list = ratings ?? const <RatingEntry>[];
-    final now = DateTime.now();
-    final thisMonth = list
-        .where((r) => r.createdAt.year == now.year && r.createdAt.month == now.month)
-        .length;
     final average = list.isEmpty
         ? null
         : list.fold<int>(0, (s, r) => s + r.score) / list.length;
@@ -377,15 +326,7 @@ class _ProfileBody extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                         style: VText.ui(13, weight: 700, color: c.text2),
                                       ),
-                                      const SizedBox(height: 2),
                                     ],
-                                    Text(
-                                      'En Vinilo desde ${monthYear(profile.createdAt).toLowerCase()}',
-                                      style: VText.ui(
-                                        profile.username == null ? 13 : 12,
-                                        color: profile.username == null ? c.text2 : c.text3,
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -393,23 +334,12 @@ class _ProfileBody extends StatelessWidget {
                             if (isMe)
                               Padding(
                                 padding: EdgeInsets.only(top: banner != null ? 42 : 0),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _HeaderButton(
-                                      key: const ValueKey('edit-profile'),
-                                      icon: Icons.tune_rounded,
-                                      tooltip: 'Editar perfil',
-                                      onTap: onEdit,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _HeaderButton(
-                                      key: const ValueKey('settings'),
-                                      icon: Icons.settings_rounded,
-                                      tooltip: 'Configuración',
-                                      onTap: () => openSettings(context),
-                                    ),
-                                  ],
+                                // Editar el perfil vive dentro de Configuración.
+                                child: _HeaderButton(
+                                  key: const ValueKey('settings'),
+                                  icon: Icons.settings_rounded,
+                                  tooltip: 'Configuración',
+                                  onTap: () => openSettings(context),
                                 ),
                               )
                             else
@@ -448,8 +378,6 @@ class _ProfileBody extends StatelessWidget {
                                 label: 'PROMEDIO',
                                 color: average == null ? null : c.score(average),
                               ),
-                              const _StatDivider(),
-                              _Stat(value: '$thisMonth', label: 'ESTE MES'),
                             ],
                           ),
                         ),
@@ -466,149 +394,165 @@ class _ProfileBody extends StatelessWidget {
                 ],
               ),
             ),
-            SliverToBoxAdapter(
-              child: SectionHeader(
-                'Favoritos',
-                subtitle: isMe
-                    ? 'Tres discos y tres artistas que te definen'
-                    : 'Tres discos y tres artistas que le definen',
-              ),
-            ),
+            // Dos secciones: "Perfil" (favoritos, gráfica y diario) y
+            // "Listas" (las suyas y, en el propio, las guardadas).
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _MiniHeader(
-                      label: 'DISCOS',
-                      pickKey: 'pick-favorites',
-                      onPick: isMe && list.isNotEmpty ? onPickFavorites : null,
-                    ),
-                    const SizedBox(height: 10),
-                    _FavoritesRow(
-                      favorites: favorites,
-                      uid: profile.uid,
-                      onEmptyTap: isMe && list.isNotEmpty ? onPickFavorites : null,
-                    ),
-                    const SizedBox(height: 20),
-                    _MiniHeader(
-                      label: 'ARTISTAS',
-                      pickKey: 'pick-artists',
-                      onPick: isMe ? onPickArtists : null,
-                    ),
-                    const SizedBox(height: 10),
-                    _ArtistsRow(
-                      artists: artists,
-                      onEmptyTap: isMe ? onPickArtists : null,
-                    ),
-                  ],
+                padding: const EdgeInsets.fromLTRB(VSpace.page, 8, VSpace.page, 0),
+                child: SectionSwitch(
+                  labels: const ['Perfil', 'Listas'],
+                  keys: const ['profile-section-perfil', 'profile-section-listas'],
+                  selected: section.index,
+                  onChanged: (i) => onSection(_ProfileSection.values[i]),
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: _ListsSection(
-                title: 'Listas',
-                stream: lists,
-                keyPrefix: 'list',
-                subtitle: isMe
-                    ? 'Tus listas y rankings de canciones o discos'
-                    : 'Listas y rankings de ${profile.name}',
-                action: isMe
-                    ? GestureDetector(
-                        key: const ValueKey('new-list'),
-                        behavior: HitTestBehavior.opaque,
-                        onTap: onNewList,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 4, 0, 4),
+            if (section == _ProfileSection.perfil) ...[
+                SliverToBoxAdapter(
+                  child: SectionHeader(
+                    'Favoritos',
+                    subtitle: isMe
+                        ? 'Tres discos y tres artistas que te definen'
+                        : 'Tres discos y tres artistas que le definen',
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _MiniHeader(
+                          label: 'DISCOS',
+                          pickKey: 'pick-favorites',
+                          onPick: isMe && list.isNotEmpty ? onPickFavorites : null,
+                        ),
+                        const SizedBox(height: 10),
+                        _FavoritesRow(
+                          favorites: favorites,
+                          uid: profile.uid,
+                          onEmptyTap: isMe && list.isNotEmpty ? onPickFavorites : null,
+                        ),
+                        const SizedBox(height: 20),
+                        _MiniHeader(
+                          label: 'ARTISTAS',
+                          pickKey: 'pick-artists',
+                          onPick: isMe ? onPickArtists : null,
+                        ),
+                        const SizedBox(height: 10),
+                        _ArtistsRow(
+                          artists: artists,
+                          onEmptyTap: isMe ? onPickArtists : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (list.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(VSpace.page, 28, VSpace.page, 0),
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+                        decoration: BoxDecoration(
+                          color: c.surface,
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: ScoreHistogram(hist: hist, height: 64),
+                      ),
+                    ),
+                  ),
+                SliverToBoxAdapter(
+                  child: SectionHeader(
+                    'Diario',
+                    subtitle: ratings == null
+                        ? 'Cargando…'
+                        : plural(list.length, 'disco calificado', 'discos calificados'),
+                  ),
+                ),
+                if (ratings == null)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+                    sliver: SliverList.separated(
+                      itemCount: 4,
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (_, _) => const Skeleton(height: 60, radius: 14),
+                    ),
+                  )
+                else if (list.isEmpty)
+                  SliverToBoxAdapter(
+                    child: EmptyState(
+                      title: isMe ? 'Tu diario está vacío' : 'Aún no hay notas',
+                      message: isMe
+                          ? 'Busca un disco y ponle nota. Aquí quedará tu historial, mes a mes.'
+                          : 'Cuando ${profile.name} califique algo, aparecerá aquí.',
+                      labelColor: profile.color,
+                    ),
+                  )
+                else
+                  DiaryList(entries: list.take(_diaryPreview).toList()),
+                if (list.length > _diaryPreview)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(VSpace.page, 16, VSpace.page, 0),
+                      child: Center(
+                        child: Pill(
+                          key: const ValueKey('diary-more'),
+                          onTap: () => openDiary(
+                            context,
+                            uid: profile.uid,
+                            name: profile.name,
+                            isMe: isMe,
+                            initial: list,
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                           child: Text(
-                            'Nueva lista',
-                            style: VText.ui(13, weight: 700, color: c.accent),
+                            'Ver más (${list.length - _diaryPreview})',
+                            style: VText.ui(13, weight: 700),
                           ),
                         ),
-                      )
-                    : null,
-                emptyText: isMe
-                    ? 'Todavía no tienes listas. Crea una con "Nueva lista" o desde la pantalla de un disco.'
-                    : 'Todavía no tiene listas.',
-              ),
-            ),
-            if (isMe && saved != null)
-              SliverToBoxAdapter(
-                child: _ListsSection(
-                  title: 'Guardadas',
-                  stream: saved,
-                  keyPrefix: 'saved',
-                  subtitle: 'Listas de otras personas que guardaste. Solo tú las ves aquí.',
-                  emptyText: 'Guarda listas de otras personas y aparecerán aquí.',
-                ),
-              ),
-            if (list.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(VSpace.page, 28, VSpace.page, 0),
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
-                    decoration: BoxDecoration(
-                      color: c.surface,
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                    child: ScoreHistogram(hist: hist, height: 64),
-                  ),
-                ),
-              ),
-            SliverToBoxAdapter(
-              child: SectionHeader(
-                'Diario',
-                subtitle: ratings == null
-                    ? 'Cargando…'
-                    : plural(list.length, 'disco calificado', 'discos calificados'),
-              ),
-            ),
-            if (ratings == null)
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                sliver: SliverList.separated(
-                  itemCount: 4,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (_, _) => const Skeleton(height: 60, radius: 14),
-                ),
-              )
-            else if (list.isEmpty)
-              SliverToBoxAdapter(
-                child: EmptyState(
-                  title: isMe ? 'Tu diario está vacío' : 'Aún no hay notas',
-                  message: isMe
-                      ? 'Busca un disco y ponle nota. Aquí quedará tu historial, mes a mes.'
-                      : 'Cuando ${profile.name} califique algo, aparecerá aquí.',
-                  labelColor: profile.color,
-                ),
-              )
-            else
-              DiaryList(entries: list.take(_diaryPreview).toList()),
-            if (list.length > _diaryPreview)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(VSpace.page, 16, VSpace.page, 0),
-                  child: Center(
-                    child: Pill(
-                      key: const ValueKey('diary-more'),
-                      onTap: () => openDiary(
-                        context,
-                        uid: profile.uid,
-                        name: profile.name,
-                        isMe: isMe,
-                        initial: list,
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                      child: Text(
-                        'Ver más (${list.length - _diaryPreview})',
-                        style: VText.ui(13, weight: 700),
                       ),
                     ),
                   ),
+            ] else ...[
+                SliverToBoxAdapter(
+                  child: _ListsSection(
+                    title: isMe ? 'Tus listas' : 'Listas de ${profile.name}',
+                    stream: lists,
+                    keyPrefix: 'list',
+                    subtitle: isMe
+                        ? 'Listas y rankings de canciones o discos'
+                        : 'Sus listas y rankings',
+                    action: isMe
+                        ? GestureDetector(
+                            key: const ValueKey('new-list'),
+                            behavior: HitTestBehavior.opaque,
+                            onTap: onNewList,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 4, 0, 4),
+                              child: Text(
+                                'Nueva lista',
+                                style: VText.ui(13, weight: 700, color: c.accent),
+                              ),
+                            ),
+                          )
+                        : null,
+                    emptyText: isMe
+                        ? 'Todavía no tienes listas. Crea una con "Nueva lista" o desde la pantalla de un disco.'
+                        : 'Todavía no tiene listas.',
+                  ),
                 ),
-              ),
+                if (isMe && saved != null)
+                  SliverToBoxAdapter(
+                    child: _ListsSection(
+                      title: 'Guardadas',
+                      stream: saved,
+                      keyPrefix: 'saved',
+                      subtitle: 'Listas de otras personas que guardaste. Solo tú las ves aquí.',
+                      emptyText: 'Guarda listas de otras personas y aparecerán aquí.',
+                    ),
+                  ),
+            ],
             SliverToBoxAdapter(
               child: SizedBox(
                 height: standalone
@@ -748,7 +692,7 @@ class _ListsSection extends StatelessWidget {
             if (lists == null)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: VSpace.page),
-                child: Skeleton(height: 132, radius: 16),
+                child: Skeleton(height: 70, radius: 18),
               )
             else if (lists.isEmpty)
               Padding(
@@ -760,7 +704,26 @@ class _ListsSection extends StatelessWidget {
                 ),
               )
             else
-              ListStrip(lists: lists, keyPrefix: keyPrefix),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+                child: Column(
+                  children: [
+                    for (final (i, list) in lists.indexed)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: ListRowTile(
+                          key: ValueKey('$keyPrefix-$i'),
+                          list: list,
+                          onTap: () => openList(context, listId: list.id, initial: list),
+                          trailing: Icon(Icons.chevron_right_rounded, color: c.text3),
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(delay: (40 * i).ms, duration: 320.ms)
+                          .slideY(begin: 0.08, curve: Curves.easeOutCubic),
+                  ],
+                ),
+              ),
           ],
         );
       },
@@ -1144,44 +1107,6 @@ class _ArtistsRow extends StatelessWidget {
   }
 }
 
-class _Sheet extends StatelessWidget {
-  const _Sheet({required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: Container(
-        decoration: BoxDecoration(
-          color: c.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border(top: BorderSide(color: c.line)),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const _SheetHandle(),
-              const SizedBox(height: 18),
-              Text(title, style: VText.display(30)),
-              const SizedBox(height: 20),
-              child,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _SheetHandle extends StatelessWidget {
   const _SheetHandle();
 
@@ -1215,6 +1140,17 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
   static const int _max = UserRepo.maxFavorites;
   late final List<Album> _selected = [...widget.initial];
 
+  /// Filtra la cuadrícula por disco o artista, sin tildes ni mayúsculas. La
+  /// selección no cambia al filtrar.
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
   void _toggle(Album album) {
     final index = _selected.indexWhere((a) => a.id == album.id);
     setState(() {
@@ -1236,100 +1172,147 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
     for (final r in widget.ratings) {
       albums.putIfAbsent(r.albumId, () => r.album);
     }
-    final list = albums.values.toList();
-    final height = MediaQuery.sizeOf(context).height * 0.78;
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        border: Border(top: BorderSide(color: c.line)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          const _SheetHandle(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 18, 22, 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Tus discos', style: VText.display(30, height: 1)),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Elige hasta tres, en el orden que quieras.',
-                        style: VText.ui(13, color: c.text2),
-                      ),
-                    ],
+    final list = albums.values.where((a) => albumMatches(a, _query)).toList();
+    // Con el teclado abierto (buscando) la hoja sube y se encoge para que el
+    // botón de guardar siga a la vista.
+    final screen = MediaQuery.sizeOf(context).height;
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final height = math.min(screen * 0.78, screen - keyboard - 40);
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: keyboard),
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: c.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          border: Border(top: BorderSide(color: c.line)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            const _SheetHandle(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 18, 22, 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Tus discos', style: VText.display(30, height: 1)),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Elige hasta tres, en el orden que quieras.',
+                          style: VText.ui(13, color: c.text2),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  '${_selected.length}/$_max',
-                  style: VText.display(24, color: c.accent),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.fromLTRB(22, 12, 22, 12),
-              physics: const BouncingScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
+                  Text(
+                    '${_selected.length}/$_max',
+                    style: VText.display(24, color: c.accent),
+                  ),
+                ],
               ),
-              itemCount: list.length,
-              itemBuilder: (context, i) {
-                final album = list[i];
-                final index = _selected.indexWhere((a) => a.id == album.id);
-                final selected = index >= 0;
-                return GestureDetector(
-                  key: ValueKey('fav-option-$i'),
-                  onTap: () => _toggle(album),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      AnimatedOpacity(
-                        duration: const Duration(milliseconds: 200),
-                        opacity: selected || _selected.length < _max ? 1 : 0.4,
-                        child: AlbumCover(url: album.smallCover, radius: 12),
-                      ),
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: selected ? c.accent : Colors.transparent,
-                            width: 3,
-                          ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
+              child: TextField(
+                key: const ValueKey('favorites-search'),
+                controller: _search,
+                onChanged: (v) => setState(() => _query = v),
+                textInputAction: TextInputAction.search,
+                style: VText.ui(16, weight: 600),
+                decoration: InputDecoration(
+                  hintText: 'Buscar en tus discos',
+                  prefixIcon: Icon(Icons.search_rounded, color: c.text3),
+                  suffixIcon: _query.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Borrar',
+                          onPressed: () {
+                            _search.clear();
+                            setState(() => _query = '');
+                          },
+                          icon: Icon(Icons.close_rounded, color: c.text3),
                         ),
-                      ),
-                      if (selected)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: _OrderBadge(index + 1),
-                        ),
-                    ],
+                ),
+              ),
+            ),
+            if (list.isEmpty)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 28, 22, 0),
+                  child: Text(
+                    'Ningún disco de tu diario coincide con "${_query.trim()}".',
+                    key: const ValueKey('favorites-no-match'),
+                    textAlign: TextAlign.center,
+                    style: VText.ui(14, color: c.text3, height: 1.4),
                   ),
-                );
-              },
+                ),
+              )
+            else
+              Expanded(
+                child: GridView.builder(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(22, 12, 22, 12),
+                  physics: const BouncingScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                  ),
+                  itemCount: list.length,
+                  itemBuilder: (context, i) {
+                    final album = list[i];
+                    final index = _selected.indexWhere((a) => a.id == album.id);
+                    final selected = index >= 0;
+                    return GestureDetector(
+                      key: ValueKey('fav-option-$i'),
+                      onTap: () => _toggle(album),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          AnimatedOpacity(
+                            duration: const Duration(milliseconds: 200),
+                            opacity: selected || _selected.length < _max ? 1 : 0.4,
+                            child: AlbumCover(url: album.smallCover, radius: 12),
+                          ),
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: selected ? c.accent : Colors.transparent,
+                                width: 3,
+                              ),
+                            ),
+                          ),
+                          if (selected)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: _OrderBadge(index + 1),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 20),
+              child: FilledButton(
+                key: const ValueKey('favorites-save'),
+                onPressed: () => Navigator.of(context).pop(_selected),
+                child: const Text('Guardar discos'),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 8, 22, 20),
-            child: FilledButton(
-              key: const ValueKey('favorites-save'),
-              onPressed: () => Navigator.of(context).pop(_selected),
-              child: const Text('Guardar discos'),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

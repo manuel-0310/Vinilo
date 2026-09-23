@@ -170,6 +170,8 @@ class MusicList {
     required this.updatedAt,
     this.likedBy = const [],
     this.savedBy = const [],
+    this.coverUrl,
+    this.coverPath,
   });
 
   /// Tope de elementos por lista: caben de sobra en un documento (≈ 100 KB).
@@ -189,6 +191,14 @@ class MusicList {
   final DateTime updatedAt;
   final List<String> likedBy;
   final List<String> savedBy;
+
+  /// Portada elegida por su autora (Storage `lists/{id}/{marca}.jpg`). Null:
+  /// se muestra el mosaico con las portadas de los elementos.
+  final String? coverUrl;
+
+  /// Ruta en Storage de la portada, para borrarla al cambiarla o al borrar
+  /// la lista.
+  final String? coverPath;
 
   int get count => items.length;
   int get likes => likedBy.length;
@@ -233,6 +243,8 @@ class MusicList {
       updatedAt: dateFrom(d['updatedAt']),
       likedBy: List<String>.from((d['likedBy'] as List?) ?? const []),
       savedBy: List<String>.from((d['savedBy'] as List?) ?? const []),
+      coverUrl: d['coverUrl'] as String?,
+      coverPath: d['coverPath'] as String?,
     );
   }
 
@@ -254,6 +266,8 @@ class MusicList {
         updatedAt: updatedAt,
         likedBy: likedBy,
         savedBy: savedBy,
+        coverUrl: coverUrl,
+        coverPath: coverPath,
       );
 }
 
@@ -349,3 +363,13 @@ List<T> reorder<T>(List<T> items, int oldIndex, int newIndex) {
 
 List<ListItem> removeItem(List<ListItem> items, String id) =>
     items.where((i) => i.id != id).toList();
+
+/// Devuelve `item` a la posición `index` (para "Deshacer" al quitar). Si ya
+/// está en la lista no hace nada, y si la lista cambió mientras tanto, la
+/// posición se ajusta a los límites.
+List<ListItem> insertItemAt(List<ListItem> items, ListItem item, int index) {
+  if (items.any((i) => i.id == item.id)) return [...items];
+  final out = [...items];
+  out.insert(index.clamp(0, out.length), item);
+  return out;
+}

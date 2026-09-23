@@ -11,6 +11,7 @@ import '../theme/vinilo_theme.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/list_mosaic.dart';
 import '../widgets/misc.dart';
+import '../widgets/photo_picker.dart';
 import '../widgets/sheet.dart';
 import '../widgets/user_avatar.dart';
 import 'add_to_list_sheet.dart';
@@ -57,7 +58,9 @@ class _ListScreenState extends State<ListScreen> {
   }
 
   Future<void> _loadGlow(MusicList list) async {
-    final first = list.covers.isEmpty ? null : list.covers.first;
+    // El resplandor sale de la portada elegida o, sin ella, de la primera
+    // carátula del mosaico.
+    final first = list.coverUrl ?? (list.covers.isEmpty ? null : list.covers.first);
     if (first == null || first == _glowFor) return;
     _glowFor = first;
     final color = await _services!.palette.dominant(first);
@@ -80,7 +83,30 @@ class _ListScreenState extends State<ListScreen> {
 
   Future<void> _remove(MusicList list, ListItem item) async {
     HapticFeedback.lightImpact();
+    final index = list.items.indexWhere((i) => i.id == item.id);
     await _write(list, removeItem(list.items, item.id), 'No se pudo quitar');
+    if (!mounted || index < 0) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Quitaste "${item.name}"'),
+          duration: const Duration(seconds: 4),
+          // Con acción, Flutter lo dejaría fijo hasta cerrarlo a mano.
+          persist: false,
+          action: SnackBarAction(
+            key: const ValueKey('list-undo'),
+            label: 'Deshacer',
+            onPressed: () {
+              // Vuelve a su posición sobre la lista tal como esté ahora.
+              final current = _raw;
+              if (current == null || !mounted) return;
+              final shown = _optimistic ?? current.items;
+              _write(current, insertItemAt(shown, item, index), 'No se pudo deshacer');
+            },
+          ),
+        ),
+      );
   }
 
   Future<void> _write(MusicList list, List<ListItem> next, String error) async {
@@ -154,10 +180,38 @@ class _ListScreenState extends State<ListScreen> {
     );
     if (ok != true || !mounted) return;
     try {
-      await _services!.lists.delete(list.id);
+      await _services!.lists.delete(list);
       if (mounted) Navigator.of(context).maybePop();
     } catch (e) {
       _snack('No se pudo borrar: $e');
+    }
+  }
+
+  Future<void> _changeCover(MusicList list) async {
+    final pick = await pickPhoto(
+      context,
+      aspectRatio: 1,
+      outputWidth: 1000,
+      title: 'Portada de la lista',
+    );
+    final bytes = pick?.bytes;
+    if (bytes == null || !mounted) return;
+    _snack('Subiendo portada…');
+    try {
+      await _services!.lists.setCover(list, bytes);
+      _glowFor = null;
+      if (mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    } catch (e) {
+      _snack('No se pudo cambiar la portada: $e');
+    }
+  }
+
+  Future<void> _removeCover(MusicList list) async {
+    try {
+      await _services!.lists.removeCover(list);
+      _glowFor = null;
+    } catch (e) {
+      _snack('No se pudo quitar la portada: $e');
     }
   }
 
@@ -190,6 +244,30 @@ class _ListScreenState extends State<ListScreen> {
                 _add(list);
               },
             ),
+            const SizedBox(height: 10),
+            SheetAction(
+              key: const ValueKey('list-menu-cover'),
+              icon: Icons.image_rounded,
+              label: list.coverUrl == null ? 'Elegir portada' : 'Cambiar portada',
+              hint: 'Una foto en lugar del mosaico',
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _changeCover(list);
+              },
+            ),
+            if (list.coverUrl != null) ...[
+              const SizedBox(height: 10),
+              SheetAction(
+                key: const ValueKey('list-menu-cover-remove'),
+                icon: Icons.grid_view_rounded,
+                label: 'Quitar portada',
+                hint: 'Vuelve el mosaico con las portadas de la lista',
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _removeCover(list);
+                },
+              ),
+            ],
             const SizedBox(height: 10),
             SheetAction(
               key: const ValueKey('list-menu-delete'),
@@ -342,6 +420,7 @@ class _ListScreenState extends State<ListScreen> {
                     Center(
                       child: ListMosaic(
                         covers: list.covers,
+                        coverUrl: list.coverUrl,
                         size: mosaicSize,
                         radius: 20,
                         shadow: true,

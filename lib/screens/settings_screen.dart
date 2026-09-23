@@ -7,7 +7,9 @@ import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/misc.dart';
 import '../widgets/sheet.dart';
+import '../widgets/user_avatar.dart';
 import 'delete_account_sheet.dart';
+import 'edit_profile_sheet.dart';
 import 'profile_form.dart';
 
 /// Configuración de la app: apariencia (sistema, claro u oscuro) y el color
@@ -53,6 +55,13 @@ class SettingsScreen extends StatelessWidget {
                         style: VText.ui(13, color: c.text2),
                       ),
                       const SizedBox(height: 30),
+                      Text(
+                        'PERFIL',
+                        style: VText.label(11, color: c.text3),
+                      ),
+                      const SizedBox(height: 10),
+                      _ProfileRow(profile: me),
+                      const SizedBox(height: 34),
                       Text(
                         'APARIENCIA',
                         style: VText.label(11, color: c.text3),
@@ -270,6 +279,71 @@ class _AccentPreview extends StatelessWidget {
         ],
       ),
     ).animate(key: ValueKey(profile.colorValue)).fadeIn(duration: 350.ms);
+  }
+}
+
+/// Tu foto, tu nombre y tu @usuario; al tocarla se edita el perfil (antes
+/// era un botón aparte en el encabezado del perfil).
+class _ProfileRow extends StatelessWidget {
+  const _ProfileRow({required this.profile});
+
+  final UserProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Material(
+      color: c.surface.withValues(alpha: 0.75),
+      borderRadius: BorderRadius.circular(22),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: const ValueKey('edit-profile'),
+        onTap: () => showEditProfile(context, profile),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: c.line),
+          ),
+          child: Row(
+            children: [
+              UserAvatar(
+                name: profile.name,
+                color: profile.color,
+                url: profile.avatarUrl,
+                size: 48,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: VText.ui(16, weight: 700),
+                    ),
+                    if (profile.username != null)
+                      Text(
+                        profile.handle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: VText.ui(13, color: c.text2),
+                      ),
+                  ],
+                ),
+              ),
+              Text(
+                'Editar perfil',
+                style: VText.ui(14, weight: 700, color: c.accent),
+              ),
+              Icon(Icons.chevron_right_rounded, color: c.accent),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

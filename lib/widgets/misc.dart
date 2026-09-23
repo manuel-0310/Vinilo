@@ -245,3 +245,65 @@ class Pill extends StatelessWidget {
     );
   }
 }
+
+/// Selector de secciones en píldoras (en el perfil: "Perfil" y "Listas").
+/// La elegida va rellena con el color de énfasis. `keys` da una llave a
+/// cada píldora para el driver de pruebas.
+class SectionSwitch extends StatelessWidget {
+  const SectionSwitch({
+    super.key,
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+    this.keys,
+  });
+
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onChanged;
+  final List<String>? keys;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: c.surface.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: c.line),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            Expanded(
+              child: GestureDetector(
+                key: keys == null ? null : ValueKey(keys![i]),
+                behavior: HitTestBehavior.opaque,
+                onTap: i == selected ? null : () => onChanged(i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: i == selected ? c.accent : Colors.transparent,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Center(
+                    child: Text(
+                      labels[i],
+                      style: VText.ui(
+                        14,
+                        weight: 700,
+                        color: i == selected ? c.onAccent : c.text2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

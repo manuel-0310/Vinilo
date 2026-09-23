@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 import '../theme/vinilo_theme.dart';
 import 'vinyl_disc.dart';
 
-/// Portada de una lista: hasta cuatro carátulas en mosaico. Con una sola
-/// ocupa todo; con dos, mitades; con tres, una grande y dos apiladas; con
-/// cuatro, una cuadrícula. Sin portadas, un vinilo.
+/// Portada de una lista. Si su autora eligió una (`coverUrl`), esa; si no,
+/// hasta cuatro carátulas en mosaico: con una sola ocupa todo; con dos,
+/// mitades; con tres, una grande y dos apiladas; con cuatro, una cuadrícula.
+/// Sin portadas, un vinilo.
 class ListMosaic extends StatelessWidget {
   const ListMosaic({
     super.key,
     required this.covers,
+    this.coverUrl,
     this.size,
     this.radius = 14,
     this.shadow = false,
@@ -17,6 +19,7 @@ class ListMosaic extends StatelessWidget {
   });
 
   final List<String> covers;
+  final String? coverUrl;
   final double? size;
   final double radius;
   final bool shadow;
@@ -33,67 +36,78 @@ class ListMosaic extends StatelessWidget {
         );
 
     Widget grid;
-    switch (covers.length) {
-      case 0:
-        grid = ColoredBox(
-          color: c.surface2,
-          child: Center(
-            child: Opacity(
-              opacity: 0.55,
-              child: FractionallySizedBox(
-                widthFactor: 0.42,
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: VinylDisc(size: 40, labelColor: c.surface3),
+    final chosen = coverUrl;
+    if (chosen != null && chosen.isNotEmpty) {
+      // Si la portada elegida no carga, vuelve al mosaico.
+      grid = Image.network(
+        chosen,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (_, _, _) => ListMosaic(covers: covers, radius: 0),
+      );
+    } else {
+      switch (covers.length) {
+        case 0:
+          grid = ColoredBox(
+            color: c.surface2,
+            child: Center(
+              child: Opacity(
+                opacity: 0.55,
+                child: FractionallySizedBox(
+                  widthFactor: 0.42,
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: VinylDisc(size: 40, labelColor: c.surface3),
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      case 1:
-        grid = cell(covers[0]);
-      case 2:
-        grid = Row(
-          children: [
-            Expanded(child: cell(covers[0])),
-            Expanded(child: cell(covers[1])),
-          ],
-        );
-      case 3:
-        grid = Row(
-          children: [
-            Expanded(child: cell(covers[0])),
-            Expanded(
-              child: Column(
-                children: [
-                  Expanded(child: cell(covers[1])),
-                  Expanded(child: cell(covers[2])),
-                ],
+          );
+        case 1:
+          grid = cell(covers[0]);
+        case 2:
+          grid = Row(
+            children: [
+              Expanded(child: cell(covers[0])),
+              Expanded(child: cell(covers[1])),
+            ],
+          );
+        case 3:
+          grid = Row(
+            children: [
+              Expanded(child: cell(covers[0])),
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(child: cell(covers[1])),
+                    Expanded(child: cell(covers[2])),
+                  ],
+                ),
               ),
-            ),
-          ],
-        );
-      default:
-        grid = Column(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(child: cell(covers[0])),
-                  Expanded(child: cell(covers[1])),
-                ],
+            ],
+          );
+        default:
+          grid = Column(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(child: cell(covers[0])),
+                    Expanded(child: cell(covers[1])),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(child: cell(covers[2])),
-                  Expanded(child: cell(covers[3])),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(child: cell(covers[2])),
+                    Expanded(child: cell(covers[3])),
+                  ],
+                ),
               ),
-            ),
-          ],
-        );
+            ],
+          );
+      }
     }
 
     Widget out = ClipRRect(

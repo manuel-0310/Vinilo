@@ -4,6 +4,7 @@ import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/format.dart';
+import '../util/search_text.dart';
 import '../widgets/diary_row.dart';
 import '../widgets/misc.dart';
 
@@ -49,12 +50,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 
   List<RatingEntry> _filter(List<RatingEntry> all) {
-    final q = _query.trim().toLowerCase();
     final out = all.where((e) {
       if (_score != null && e.score != _score) return false;
-      if (q.isEmpty) return true;
-      return e.album.name.toLowerCase().contains(q) ||
-          e.album.artist.toLowerCase().contains(q);
+      return albumMatches(e.album, _query);
     }).toList();
     if (_sort == DiarySort.score) {
       out.sort((a, b) {

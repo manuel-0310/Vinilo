@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../services/user_repo.dart';
 import '../theme/vinilo_theme.dart';
-import '../widgets/image_cropper.dart';
+import '../widgets/photo_picker.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/username_field.dart';
 
@@ -109,68 +108,37 @@ class _ProfileFormState extends State<ProfileForm> {
     super.dispose();
   }
 
-  /// Abre la galería y luego el recortador. La galería entrega una copia
-  /// ya reducida (para que el recortador no cargue una foto de 12 MP) y el
-  /// recortador devuelve el JPEG final, listo para subir.
-  Future<Uint8List?> _pickImage({
-    required double aspectRatio,
-    required int outputWidth,
-    required bool circle,
-    required String title,
-  }) async {
-    Uint8List bytes;
-    try {
-      final file = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 2048,
-        maxHeight: 2048,
-        imageQuality: 92,
-      );
-      if (file == null) return null;
-      bytes = await file.readAsBytes();
-    } on PlatformException catch (e) {
-      if (!mounted) return null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo abrir la galería: ${e.message}')),
-      );
-      return null;
-    }
-    if (!mounted) return null;
-    return showImageCropper(
-      context,
-      bytes: bytes,
-      aspectRatio: aspectRatio,
-      outputWidth: outputWidth,
-      circle: circle,
-      title: title,
-    );
-  }
-
+  /// Pregunta "Tomar foto" o "Elegir de la galería" (y "Quitar foto" si ya
+  /// hay una) y pasa por el recortador.
   Future<void> _pick() async {
-    final bytes = await _pickImage(
+    final pick = await pickPhoto(
+      context,
       aspectRatio: 1,
       outputWidth: avatarSize,
       circle: true,
       title: 'Tu foto de perfil',
+      canRemove: _hasAvatar,
     );
-    if (bytes == null || !mounted) return;
+    if (pick == null || !mounted) return;
     setState(() {
-      _picked = bytes;
-      _removed = false;
+      _picked = pick.bytes;
+      _removed = pick.remove;
     });
   }
 
   Future<void> _pickBanner() async {
-    final bytes = await _pickImage(
+    final pick = await pickPhoto(
+      context,
       aspectRatio: bannerAspect,
       outputWidth: bannerWidth,
-      circle: false,
       title: 'Tu foto de fondo',
+      canRemove: _hasBanner,
+      removeLabel: 'Quitar fondo',
     );
-    if (bytes == null || !mounted) return;
+    if (pick == null || !mounted) return;
     setState(() {
-      _pickedBanner = bytes;
-      _removedBanner = false;
+      _pickedBanner = pick.bytes;
+      _removedBanner = pick.remove;
     });
   }
 
@@ -226,13 +194,8 @@ class _ProfileFormState extends State<ProfileForm> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: _hasBanner
-                  ? () => setState(() {
-                        _pickedBanner = null;
-                        _removedBanner = true;
-                      })
-                  : _pickBanner,
-              child: Text(_hasBanner ? 'Quitar fondo' : 'Elegir foto de fondo'),
+              onPressed: _pickBanner,
+              child: Text(_hasBanner ? 'Cambiar fondo' : 'Elegir foto de fondo'),
             ),
           ),
           const SizedBox(height: 6),
@@ -276,13 +239,8 @@ class _ProfileFormState extends State<ProfileForm> {
         const SizedBox(height: 6),
         Center(
           child: TextButton(
-            onPressed: _hasAvatar
-                ? () => setState(() {
-                      _picked = null;
-                      _removed = true;
-                    })
-                : _pick,
-            child: Text(_hasAvatar ? 'Quitar foto' : 'Elegir una foto'),
+            onPressed: _pick,
+            child: Text(_hasAvatar ? 'Cambiar foto' : 'Elegir una foto'),
           ),
         ),
         const SizedBox(height: 18),

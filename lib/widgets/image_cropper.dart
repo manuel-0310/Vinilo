@@ -167,10 +167,11 @@ class _ImageCropperState extends State<ImageCropper> {
     try {
       final outW = widget.outputWidth;
       final outH = (outW / widget.aspectRatio).round();
-      final factor = outW / _frame.width;
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
-      canvas.scale(factor);
+      // Escala por eje: si el marco tiene decimales, un solo factor dejaba
+      // una franja sin cubrir en el borde de la foto final.
+      canvas.scale(outW / _frame.width, outH / _frame.height);
       canvas.drawImageRect(
         image,
         Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),

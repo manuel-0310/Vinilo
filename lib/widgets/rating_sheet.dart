@@ -9,6 +9,8 @@ import '../theme/vinilo_theme.dart';
 import 'album_cover.dart';
 import 'rating_dial.dart';
 
+/// `deleted`: la persona pidió borrar su nota; todavía no se ha borrado (lo
+/// hace quien abrió la hoja, con "Deshacer").
 enum RatingSheetResult { saved, deleted }
 
 Future<RatingSheetResult?> showRatingSheet(
@@ -93,49 +95,14 @@ class _RatingSheetState extends State<RatingSheet> {
     }
   }
 
-  Future<void> _delete() async {
+  /// "Borrar nota" no pregunta ni borra aquí: devuelve `deleted` y quien
+  /// abrió la hoja muestra "Deshacer" y borra de verdad cuando el aviso se
+  /// cierra sin deshacer (así la nota vuelve tal cual y los promedios del
+  /// disco solo se mueven una vez).
+  void _delete() {
     if (_busy) return;
-    final c = VColors.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: c.surface2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        title: Text('¿Borrar tu nota?', style: VText.display(26)),
-        content: Text(
-          '“${widget.album.name}” saldrá de tu diario y del promedio.',
-          style: VText.ui(14, color: c.text2, height: 1.4),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              'Borrar',
-              style: VText.ui(14, weight: 700, color: c.danger),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-    final services = ServicesScope.of(context);
-    final me = CurrentUser.of(context);
-    setState(() => _busy = true);
-    try {
-      await services.ratings.remove(uid: me.uid, albumId: widget.album.id);
-      HapticFeedback.lightImpact();
-      if (mounted) Navigator.of(context).pop(RatingSheetResult.deleted);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo borrar: $e')),
-      );
-    }
+    HapticFeedback.lightImpact();
+    Navigator.of(context).pop(RatingSheetResult.deleted);
   }
 
   @override
@@ -285,6 +252,7 @@ class _RatingSheetState extends State<RatingSheet> {
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: TextButton(
+                    key: const ValueKey('rating-delete'),
                     onPressed: _busy ? null : _delete,
                     child: Text(
                       'Borrar nota',

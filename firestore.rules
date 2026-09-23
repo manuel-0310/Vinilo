@@ -178,7 +178,10 @@ service cloud.firestore {
         && d.items is list
         && d.items.size() <= 300
         && d.likedBy is list
-        && d.savedBy is list;
+        && d.savedBy is list
+        // Portada elegida por la autora (Storage lists/{id}/…); null = mosaico.
+        && (!('coverUrl' in d) || d.coverUrl == null || d.coverUrl is string)
+        && (!('coverPath' in d) || d.coverPath == null || d.coverPath is string);
     }
 
     match /lists/{listId} {

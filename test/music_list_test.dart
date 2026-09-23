@@ -154,6 +154,51 @@ void main() {
     expect(list.typeLabel, 'Ranking de canciones');
     expect(list.count, 6);
   });
+
+  group('insertItemAt', () {
+    ListItem it(String id) => ListItem(id: id, name: id, artist: 'A');
+    List<String> ids(List<ListItem> l) => l.map((i) => i.id).toList();
+
+    test('devuelve el elemento a su posición original', () {
+      final original = [it('a'), it('b'), it('c')];
+      final removed = removeItem(original, 'b');
+      expect(ids(insertItemAt(removed, it('b'), 1)), ['a', 'b', 'c']);
+    });
+
+    test('al principio y al final', () {
+      expect(ids(insertItemAt([it('b')], it('a'), 0)), ['a', 'b']);
+      expect(ids(insertItemAt([it('a')], it('b'), 1)), ['a', 'b']);
+    });
+
+    test('si la lista se acortó mientras tanto, lo pone al final', () {
+      expect(ids(insertItemAt([it('a')], it('z'), 7)), ['a', 'z']);
+      expect(ids(insertItemAt([it('a')], it('z'), -3)), ['z', 'a']);
+    });
+
+    test('si ya está, no lo duplica', () {
+      expect(ids(insertItemAt([it('a'), it('b')], it('a'), 1)), ['a', 'b']);
+    });
+  });
+
+  test('la portada elegida se conserva al editar nombre o elementos', () {
+    final list = MusicList(
+      id: 'l',
+      ownerUid: 'u',
+      owner: const PersonInfoStub().info,
+      name: 'Top',
+      description: '',
+      kind: ListKind.list,
+      itemType: ListItemType.albums,
+      items: const [],
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+      coverUrl: 'https://x/portada.jpg',
+      coverPath: 'lists/l/1.jpg',
+    );
+    final edited = list.copyWith(name: 'Otro', items: [ListItem(id: 'a', name: 'a', artist: 'b')]);
+    expect(edited.coverUrl, 'https://x/portada.jpg');
+    expect(edited.coverPath, 'lists/l/1.jpg');
+  });
 }
 
 class PersonInfoStub {

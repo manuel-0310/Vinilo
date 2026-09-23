@@ -126,46 +126,52 @@ class _ArtistScreenState extends State<ArtistScreen> {
                             left: 0,
                             right: 0,
                             bottom: 0,
-                            child: AmbientGlow(color: glow, focus: 110),
+                            child: AmbientGlow(color: glow),
                           ),
+                          // Todo el ancho: dentro del Stack, un Column suelto
+                          // queda arriba a la izquierda con el ancho de su hijo
+                          // más ancho, y con nombres cortos se descentraba.
                           Padding(
                             padding: EdgeInsets.only(top: topPad + 66),
-                            child: Column(
-                              children: [
-                                ArtistAvatar(artist: artist, size: 168, shadowColor: glow),
-                                const SizedBox(height: 22),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 28),
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        artist.name,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: VText.display(38, height: 1),
-                                      ),
-                                      if (artist.genres.isNotEmpty) ...[
-                                        const SizedBox(height: 8),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: Column(
+                                children: [
+                                  ArtistAvatar(artist: artist, size: 168, shadowColor: glow),
+                                  const SizedBox(height: 22),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                                    child: Column(
+                                      children: [
                                         Text(
-                                          artist.genres.take(4).join(' · '),
+                                          artist.name,
                                           textAlign: TextAlign.center,
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
-                                          style: VText.ui(13, color: c.text2),
+                                          style: VText.display(38, height: 1),
                                         ),
-                                      ] else if (_detail != null || _detailError != null) ...[
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Artista',
-                                          style: VText.ui(13, color: c.text3),
-                                        ),
+                                        if (artist.genres.isNotEmpty) ...[
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            artist.genres.take(4).join(' · '),
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: VText.ui(13, color: c.text2),
+                                          ),
+                                        ] else if (_detail != null || _detailError != null) ...[
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Artista',
+                                            style: VText.ui(13, color: c.text3),
+                                          ),
+                                        ],
                                       ],
-                                    ],
-                                  ),
-                                ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.06),
-                                const SizedBox(height: 26),
-                              ],
+                                    ),
+                                  ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.06),
+                                  const SizedBox(height: 26),
+                                ],
+                              ),
                             ),
                           ),
                         ],

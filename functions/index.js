@@ -431,6 +431,11 @@ async function deleteAccountData(uid) {
 
   // 3. Sus listas, y sus "me gusta" y guardadas en listas de otras personas.
   const lists = await db.collection("lists").where("ownerUid", "==", uid).get();
+  // Primero las portadas (Storage lists/{id}/…), luego los documentos.
+  const listsBucket = getStorage().bucket();
+  for (const doc of lists.docs) {
+    await listsBucket.deleteFiles({ prefix: `lists/${doc.id}/` });
+  }
   deleted.lists = await inBatches(db, lists.docs, (b, d) => b.delete(d.ref));
   const likedLists = await db.collection("lists").where("likedBy", "array-contains", uid).get();
   deleted.listLikes = await inBatches(db, likedLists.docs, (b, d) =>

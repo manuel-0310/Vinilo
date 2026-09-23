@@ -9,6 +9,16 @@
 //   "banner:URL"    fija la foto de fondo del perfil actual ("banner:" la quita),
 //                   porque el driver no puede manejar la galería nativa.
 //   "comments:ALBUM_ID" abre la pantalla de todos los comentarios de un disco.
+//   "seed-fake-people" / "delete-fake-people"
+//                   crea (o completa) o borra los perfiles de prueba de
+//                   fake_people.dart en segundo plano; "seed-status" dice
+//                   cómo va y el log lleva el prefijo SEED.
+//   "manuel-snapshot"
+//                   seguidores, seguidos, notas y "me gusta" de Manuel, para
+//                   comparar antes y después de sembrar o borrar.
+//   "crop-list-cover:URL"
+//                   igual, para la portada de mi lista más reciente (la
+//                   sube con ListsRepo.setCover al confirmar).
 //   "crop-avatar:URL" / "crop-banner:URL"
 //                   descarga la imagen y abre el recortador como si viniera de
 //                   la galería; al confirmar, sube el resultado a Storage y lo
@@ -49,6 +59,8 @@ import 'package:no_retiene/services/lists_repo.dart';
 import 'package:no_retiene/services/notifications_repo.dart';
 import 'package:no_retiene/services/user_repo.dart';
 import 'package:no_retiene/widgets/image_cropper.dart';
+
+import 'seed.dart';
 
 bool _isTestEmail(String email) => email.endsWith('@vinilo.test');
 
@@ -109,6 +121,32 @@ Future<String> _setFollow(String otherUid, {required bool follow}) async {
   } catch (e) {
     return 'error $e';
   }
+}
+
+Future<String> _cropListCover(String url) async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return 'no-user';
+  final db = FirebaseFirestore.instance;
+  final repo = ListsRepo(db, NotificationsRepo(db));
+  final lists = await repo.fetchOwnedBy(uid);
+  if (lists.isEmpty) return 'no-lists';
+  final list = lists.first;
+  final res = await http.get(Uri.parse(url));
+  if (res.statusCode != 200) return 'download-${res.statusCode}';
+  ShellScreen.actionRequests.value = (context) async {
+    final bytes = await showImageCropper(
+      context,
+      bytes: res.bodyBytes,
+      aspectRatio: 1,
+      outputWidth: 1000,
+      title: 'Portada de la lista',
+    );
+    if (bytes == null) return;
+    await repo.setCover(list, bytes);
+    // ignore: avoid_print
+    print('COVER_RESULT list=${list.id} bytes=${bytes.length}');
+  };
+  return 'ok ${list.id}';
 }
 
 Future<String> _crop(String url, {required bool avatar}) async {
@@ -311,6 +349,13 @@ void main() {
     if (message == 'notifications') {
       ShellScreen.actionRequests.value = (context) => openNotifications(context);
       return 'ok';
+    }
+    if (message == 'seed-fake-people') return startSeed();
+    if (message == 'delete-fake-people') return startDeleteFakePeople();
+    if (message == 'seed-status') return seedStatus;
+    if (message == 'manuel-snapshot') return manuelSnapshot();
+    if (message != null && message.startsWith('crop-list-cover:')) {
+      return _cropListCover(message.substring(16));
     }
     if (message != null && message.startsWith('crop-avatar:')) {
       return _crop(message.substring(12), avatar: true);

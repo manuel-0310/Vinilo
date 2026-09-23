@@ -27,11 +27,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Para tomar fotos y grabar videos que quieras publicar.</string>
+	<string>Para tomar tu foto de perfil, tu foto de fondo o la portada de una lista.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Para grabar el audio de los videos que publiques.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Para elegir fotos y videos que quieras publicar.</string>
+	<string>Para elegir tu foto de perfil, tu foto de fondo o la portada de una lista.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
