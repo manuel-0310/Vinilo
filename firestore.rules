@@ -1,9 +1,12 @@
 rules_version = '2';
 
 // Reglas de Vinilo. Reemplazan el modo de prueba, que vence a los 30 días.
-// Todo requiere sesión (la app usa Auth anónimo). Cada persona solo escribe
-// su perfil y sus notas; los agregados de álbumes los actualiza la misma
-// transacción que guarda la nota, así que cualquier sesión puede tocarlos.
+// Leer exige sesión; escribir exige una cuenta de verdad (correo y
+// contraseña). Las sesiones anónimas que quedaron de antes solo pueden leer
+// hasta que se vinculan a un correo (mismo uid). Cada persona solo escribe
+// su perfil, su @usuario y sus notas; los agregados de álbumes los actualiza
+// la misma transacción que guarda la nota, así que cualquier cuenta puede
+// tocarlos.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -11,22 +14,66 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function hasAccount() {
+      return signedIn()
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
     function isOwner(uid) {
-      return signedIn() && request.auth.uid == uid;
+      return hasAccount() && request.auth.uid == uid;
+    }
+
+    function validName(data) {
+      return data.name is string
+        && data.name.size() >= 2
+        && data.name.size() <= 24;
+    }
+
+    // Minúsculas, de 3 a 20, solo letras, números, punto y guion bajo.
+    function validUsername(u) {
+      return u is string && u.matches('^[a-z0-9._]{3,20}$');
+    }
+
+    // El @usuario del perfil tiene que quedar reservado a nombre de quien
+    // escribe, en la misma transacción (getAfter mira el estado final).
+    function ownsUsernameAfter(u) {
+      return getAfter(/databases/$(database)/documents/usernames/$(u)).data.uid
+        == request.auth.uid;
     }
 
     match /users/{uid} {
       allow read: if signedIn();
-      allow create, update: if isOwner(uid)
-        && request.resource.data.name is string
-        && request.resource.data.name.size() >= 2
-        && request.resource.data.name.size() <= 24;
+      allow create: if isOwner(uid)
+        && validName(request.resource.data)
+        && validUsername(request.resource.data.username)
+        && ownsUsernameAfter(request.resource.data.username);
+      // Si el @usuario no cambia no hace falta volver a comprobarlo (los
+      // perfiles de antes pueden no tenerlo todavía).
+      allow update: if isOwner(uid)
+        && validName(request.resource.data)
+        && (
+          request.resource.data.get('username', null)
+            == resource.data.get('username', null)
+          || (validUsername(request.resource.data.username)
+            && ownsUsernameAfter(request.resource.data.username))
+        );
       allow delete: if false;
+    }
+
+    // Reserva de cada @usuario: el documento es el nombre, el dato el uid.
+    match /usernames/{username} {
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.uid)
+        && validUsername(username)
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username
+          == username;
+      allow update: if false;
+      allow delete: if isOwner(resource.data.uid);
     }
 
     match /albums/{albumId} {
       allow read: if signedIn();
-      allow create, update: if signedIn()
+      allow create, update: if hasAccount()
         && request.resource.data.ratingsCount is int
         && request.resource.data.ratingsCount >= 0;
       allow delete: if false;
@@ -34,7 +81,7 @@ service cloud.firestore {
 
     match /ratings/{ratingId} {
       allow read: if signedIn();
-      allow create: if signedIn()
+      allow create: if hasAccount()
         && ratingId == request.auth.uid + '_' + request.resource.data.albumId
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.score is int
@@ -42,8 +89,8 @@ service cloud.firestore {
         && request.resource.data.score <= 10
         && request.resource.data.note is string
         && request.resource.data.note.size() <= 180;
-      // La dueña edita su nota; cualquier sesión puede dar o quitar su "me gusta".
-      allow update: if signedIn() && (
+      // La dueña edita su nota; cualquier cuenta puede dar o quitar su "me gusta".
+      allow update: if hasAccount() && (
         (resource.data.uid == request.auth.uid
           && request.resource.data.uid == resource.data.uid
           && request.resource.data.albumId == resource.data.albumId
@@ -54,7 +101,7 @@ service cloud.firestore {
           && request.resource.data.note.size() <= 180)
         || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy'])
       );
-      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow delete: if hasAccount() && resource.data.uid == request.auth.uid;
     }
   }
 }

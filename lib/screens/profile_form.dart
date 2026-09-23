@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../services/user_repo.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/image_cropper.dart';
 import '../widgets/user_avatar.dart';
+import '../widgets/username_field.dart';
 
 /// Lo que devuelve el formulario al guardar.
 class ProfileEdit {
   const ProfileEdit({
     required this.name,
     required this.colorValue,
+    this.username,
     this.avatar,
     this.removeAvatar = false,
     this.banner,
@@ -19,6 +22,10 @@ class ProfileEdit {
 
   final String name;
   final int colorValue;
+
+  /// @usuario válido y (según la última consulta) libre; null si el
+  /// formulario no lo pedía.
+  final String? username;
   final Uint8List? avatar;
   final bool removeAvatar;
   final Uint8List? banner;
@@ -47,6 +54,9 @@ class ProfileForm extends StatefulWidget {
     this.initialBannerUrl,
     this.showBanner = false,
     this.showColor = false,
+    this.showUsername = false,
+    this.initialUsername,
+    this.forUid,
     this.autofocus = false,
   });
 
@@ -63,6 +73,13 @@ class ProfileForm extends StatefulWidget {
   /// Muestra el selector de color. Solo en el onboarding: después el color
   /// vive en Configuración, porque es el énfasis de toda la app.
   final bool showColor;
+
+  /// Muestra el campo del @usuario (onboarding y edición del perfil).
+  final bool showUsername;
+  final String? initialUsername;
+
+  /// Uid de la persona, para que su propio @usuario cuente como libre.
+  final String? forUid;
   final bool autofocus;
 
   @override
@@ -73,6 +90,7 @@ class _ProfileFormState extends State<ProfileForm> {
   late final TextEditingController _name =
       TextEditingController(text: widget.initialName);
   late int _color = widget.initialColor ?? VColors.accentPalette.first.toARGB32();
+  late String? _username = widget.initialUsername;
   Uint8List? _picked;
   bool _removed = false;
   Uint8List? _pickedBanner;
@@ -156,15 +174,18 @@ class _ProfileFormState extends State<ProfileForm> {
     });
   }
 
+  bool get _usernameReady => !widget.showUsername || _username != null;
+
   Future<void> _submit() async {
     final name = _name.text.trim();
-    if (name.length < 2 || _busy) return;
+    if (name.length < 2 || _busy || !_usernameReady) return;
     setState(() => _busy = true);
     try {
       await widget.onSubmit(
         ProfileEdit(
           name: name,
           colorValue: _color,
+          username: widget.showUsername ? _username : null,
           avatar: _picked,
           removeAvatar: _removed,
           banner: _pickedBanner,
@@ -174,7 +195,11 @@ class _ProfileFormState extends State<ProfileForm> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Algo falló: $e')),
+        SnackBar(
+          content: Text(
+            e is UsernameTakenException ? e.message : 'Algo falló: $e',
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -276,6 +301,16 @@ class _ProfileFormState extends State<ProfileForm> {
             counterStyle: VText.label(10, color: c.text3),
           ),
         ),
+        if (widget.showUsername) ...[
+          const SizedBox(height: 14),
+          Text('TU @USUARIO', style: VText.label(11, color: c.text3)),
+          const SizedBox(height: 10),
+          UsernameField(
+            initial: widget.initialUsername ?? '',
+            forUid: widget.forUid,
+            onChanged: (v) => setState(() => _username = v),
+          ),
+        ],
         if (widget.showColor) ...[
           const SizedBox(height: 14),
           Text('TU COLOR', style: VText.label(11, color: c.text3)),
@@ -288,7 +323,7 @@ class _ProfileFormState extends State<ProfileForm> {
         const SizedBox(height: 30),
         FilledButton(
           key: const ValueKey('profile-submit'),
-          onPressed: name.length < 2 || _busy ? null : _submit,
+          onPressed: name.length < 2 || _busy || !_usernameReady ? null : _submit,
           child: _busy
               ? SizedBox(
                   width: 20,

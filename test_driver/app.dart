@@ -13,6 +13,15 @@
 //                   descarga la imagen y abre el recortador como si viniera de
 //                   la galería; al confirmar, sube el resultado a Storage y lo
 //                   guarda en el perfil (el mismo camino que la edición real).
+//   "auth"          uid, correo, si es anónima y proveedores de la sesión.
+//   "signout"       cierra la sesión (vuelve a la bienvenida).
+//   "anon-with-profile"
+//                   crea una sesión anónima con un perfil de prueba, como las
+//                   que quedaron de antes, para probar "Guarda tu cuenta".
+//   "delete-test-account"
+//                   borra la cuenta actual con su perfil y su @usuario. Solo
+//                   acepta correos @vinilo.test o la sesión anónima de prueba:
+//                   nunca la cuenta de Manuel.
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -72,6 +81,54 @@ void main() {
         SetOptions(merge: true),
       );
       return 'ok';
+    }
+    if (message == 'auth') {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return 'no-user';
+      final providers = user.providerData.map((p) => p.providerId).join(',');
+      return 'uid=${user.uid} email=${user.email} anonymous=${user.isAnonymous} providers=$providers';
+    }
+    if (message == 'signout') {
+      await FirebaseAuth.instance.signOut();
+      return 'ok';
+    }
+    if (message == 'anon-with-profile') {
+      final auth = FirebaseAuth.instance;
+      if (auth.currentUser != null) await auth.signOut();
+      final cred = await auth.signInAnonymously();
+      final uid = cred.user!.uid;
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'name': 'Prueba Anónima',
+        'color': 0xFF5FA8D3,
+        'avatarUrl': null,
+        'createdAt': FieldValue.serverTimestamp(),
+        'ratingsCount': 0,
+        'ratingsSum': 0,
+        'favorites': <Map<String, dynamic>>[],
+        'recentSearches': <String>[],
+      });
+      return 'uid=$uid';
+    }
+    if (message == 'delete-test-account') {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return 'no-user';
+      final users = FirebaseFirestore.instance.collection('users');
+      final doc = await users.doc(user.uid).get();
+      final name = doc.data()?['name'];
+      final email = user.email ?? '';
+      final isTest = email.endsWith('@vinilo.test') ||
+          (user.isAnonymous && name == 'Prueba Anónima');
+      if (!isTest) return 'refused: email=$email name=$name';
+      final username = doc.data()?['username'] as String?;
+      if (username != null) {
+        await FirebaseFirestore.instance
+            .collection('usernames')
+            .doc(username)
+            .delete();
+      }
+      if (doc.exists) await users.doc(user.uid).delete();
+      await user.delete();
+      return 'deleted uid=${user.uid} username=$username';
     }
     if (message == 'whoami') {
       final user = FirebaseAuth.instance.currentUser;

@@ -24,6 +24,7 @@ class UserProfile {
     required this.name,
     required this.colorValue,
     required this.createdAt,
+    this.username,
     this.avatarUrl,
     this.bannerUrl,
     this.ratingsCount = 0,
@@ -37,6 +38,11 @@ class UserProfile {
   final String uid;
   final String name;
   final int colorValue;
+
+  /// @usuario único (minúsculas, 3 a 20, letras, números, punto y guion
+  /// bajo). Null solo en perfiles creados antes de que existiera: la app
+  /// pide elegirlo antes de entrar.
+  final String? username;
   final String? avatarUrl;
 
   /// Foto de fondo del perfil (como en X). Null: degradado del color.
@@ -52,6 +58,9 @@ class UserProfile {
   final ThemeMode themeMode;
 
   Color get color => Color(colorValue);
+
+  /// "@usuario", o vacío si todavía no lo eligió.
+  String get handle => username == null ? '' : '@$username';
   String get initial => name.isEmpty ? '?' : name.characters.first.toUpperCase();
   double? get average => ratingsCount == 0 ? null : ratingsSum / ratingsCount;
 
@@ -68,6 +77,7 @@ class UserProfile {
       uid: doc.id,
       name: (d['name'] ?? '') as String,
       colorValue: (d['color'] as num?)?.toInt() ?? 0xFFE8A04B,
+      username: d['username'] as String?,
       avatarUrl: d['avatarUrl'] as String?,
       bannerUrl: d['bannerUrl'] as String?,
       createdAt: dateFrom(d['createdAt']),

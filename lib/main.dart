@@ -5,9 +5,12 @@ import 'package:flutter/services.dart';
 
 import 'firebase_options.dart';
 import 'models/user_profile.dart';
+import 'screens/link_account_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/shell_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/username_screen.dart';
+import 'screens/welcome_screen.dart';
 import 'services/services.dart';
 import 'theme/vinilo_theme.dart';
 
@@ -42,22 +45,6 @@ class _ViniloAppState extends State<ViniloApp> {
   }
   String? _profileUid;
   Stream<UserProfile?>? _profileStream;
-  Object? _authError;
-
-  @override
-  void initState() {
-    super.initState();
-    _signIn();
-  }
-
-  Future<void> _signIn() async {
-    setState(() => _authError = null);
-    try {
-      await widget.services.auth.ensureSignedIn();
-    } catch (e) {
-      if (mounted) setState(() => _authError = e);
-    }
-  }
 
   Stream<UserProfile?> _profileFor(String uid) {
     if (_profileUid != uid) {
@@ -76,8 +63,8 @@ class _ViniloAppState extends State<ViniloApp> {
         debugShowCheckedModeBanner: false,
         theme: light,
         darkTheme: dark,
-        // Sin perfil (splash, onboarding) la app arranca oscura, que es su
-        // carácter; la preferencia vive en el documento del usuario.
+        // Sin perfil (splash, bienvenida, onboarding) la app arranca oscura,
+        // que es su carácter; la preferencia vive en el documento del usuario.
         themeMode: profile?.themeMode ?? ThemeMode.dark,
         // La barra de estado sigue al tema; las pantallas con foto de fondo
         // la sobrescriben con su propia AnnotatedRegion.
@@ -90,6 +77,25 @@ class _ViniloAppState extends State<ViniloApp> {
     );
   }
 
+  /// Qué pantalla toca según la sesión y el perfil:
+  /// - sin sesión → bienvenida (crear cuenta o iniciar sesión);
+  /// - sesión anónima de antes con perfil → guardar la cuenta (vincular
+  ///   correo y contraseña, mismo uid);
+  /// - sesión anónima sin perfil → no tiene nada que perder: bienvenida;
+  /// - cuenta sin perfil → onboarding;
+  /// - perfil sin @usuario → elegirlo;
+  /// - todo listo → la app.
+  Widget _homeFor(User user, UserProfile? profile) {
+    if (profile == null) {
+      return user.isAnonymous
+          ? const WelcomeScreen()
+          : OnboardingScreen(uid: user.uid);
+    }
+    if (user.isAnonymous) return LinkAccountScreen(profile: profile);
+    if (profile.username == null) return UsernameScreen(profile: profile);
+    return const ShellScreen();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ServicesScope(
@@ -97,11 +103,12 @@ class _ViniloAppState extends State<ViniloApp> {
       child: StreamBuilder<User?>(
         stream: widget.services.auth.changes,
         builder: (context, authSnap) {
+          if (authSnap.connectionState == ConnectionState.waiting) {
+            return _app(home: const SplashScreen());
+          }
           final user = authSnap.data;
           if (user == null) {
-            return _app(
-              home: SplashScreen(error: _authError, onRetry: _signIn),
-            );
+            return _app(home: const WelcomeScreen());
           }
           return StreamBuilder<UserProfile?>(
             stream: _profileFor(user.uid),
@@ -120,9 +127,7 @@ class _ViniloAppState extends State<ViniloApp> {
               final profile = profileSnap.data;
               return _app(
                 profile: profile,
-                home: profile == null
-                    ? OnboardingScreen(uid: user.uid)
-                    : const ShellScreen(),
+                home: _homeFor(user, profile),
               );
             },
           );

@@ -81,6 +81,13 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 22),
                       _AccentPreview(profile: me),
+                      const SizedBox(height: 34),
+                      Text(
+                        'CUENTA',
+                        style: VText.label(11, color: c.text3),
+                      ),
+                      const SizedBox(height: 10),
+                      _AccountCard(profile: me),
                     ],
                   ),
                 ),
@@ -249,5 +256,95 @@ class _AccentPreview extends StatelessWidget {
         ],
       ),
     ).animate(key: ValueKey(profile.colorValue)).fadeIn(duration: 350.ms);
+  }
+}
+
+/// Con qué cuenta se entró y cerrar sesión. Las notas y el perfil se quedan
+/// en la cuenta; se vuelve a la bienvenida.
+class _AccountCard extends StatelessWidget {
+  const _AccountCard({required this.profile});
+
+  final UserProfile profile;
+
+  Future<void> _signOut(BuildContext context) async {
+    final services = ServicesScope.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final c = VColors.of(ctx);
+        return AlertDialog(
+          title: Text('¿Cerrar sesión?', style: VText.display(28)),
+          content: Text(
+            'Tu perfil y tus notas se quedan en tu cuenta. Para volver, entra con tu correo y tu contraseña.',
+            style: VText.ui(14, color: c.text2, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              key: const ValueKey('sign-out-confirm'),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(
+                'Cerrar sesión',
+                style: VText.ui(14, weight: 700, color: c.danger),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    if (ok != true || !context.mounted) return;
+    // Se quitan las rutas empujadas (esta pantalla) para que la bienvenida
+    // quede a la vista cuando la sesión se cierre.
+    Navigator.of(context).popUntil((r) => r.isFirst);
+    await services.auth.signOut();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final email = ServicesScope.of(context).auth.email;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 12, 10),
+      decoration: BoxDecoration(
+        color: c.surface.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: c.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            profile.username == null ? profile.name : profile.handle,
+            key: const ValueKey('account-handle'),
+            style: VText.ui(16, weight: 700),
+          ),
+          if (email != null) ...[
+            const SizedBox(height: 3),
+            Text(
+              email,
+              key: const ValueKey('account-email'),
+              style: VText.ui(13, color: c.text2),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Divider(color: c.line),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              key: const ValueKey('sign-out'),
+              onPressed: () => _signOut(context),
+              icon: Icon(Icons.logout_rounded, size: 18, color: c.text),
+              label: Text(
+                'Cerrar sesión',
+                style: VText.ui(14, weight: 700, color: c.text),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

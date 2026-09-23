@@ -72,11 +72,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: ProfileForm(
           submitLabel: 'Guardar',
           showBanner: true,
+          showUsername: true,
           initialName: profile.name,
           initialColor: profile.colorValue,
+          initialUsername: profile.username,
+          forUid: profile.uid,
           initialAvatarUrl: profile.avatarUrl,
           initialBannerUrl: profile.bannerUrl,
           onSubmit: (edit) async {
+            // Primero el @usuario: si ya lo tomó alguien, falla aquí y no se
+            // guarda nada más.
+            if (edit.username != null && edit.username != profile.username) {
+              await services.users.setUsername(
+                profile.uid,
+                edit.username!,
+                previous: profile.username,
+              );
+            }
             String? avatarUrl = edit.removeAvatar ? null : profile.avatarUrl;
             if (edit.avatar != null) {
               avatarUrl = await services.users.uploadAvatar(profile.uid, edit.avatar!);
@@ -317,9 +329,22 @@ class _ProfileBody extends StatelessWidget {
                                       style: VText.display(34, height: 1),
                                     ),
                                     const SizedBox(height: 5),
+                                    if (profile.username != null) ...[
+                                      Text(
+                                        profile.handle,
+                                        key: const ValueKey('profile-handle'),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: VText.ui(13, weight: 700, color: c.text2),
+                                      ),
+                                      const SizedBox(height: 2),
+                                    ],
                                     Text(
                                       'En Vinilo desde ${monthYear(profile.createdAt).toLowerCase()}',
-                                      style: VText.ui(13, color: c.text2),
+                                      style: VText.ui(
+                                        profile.username == null ? 13 : 12,
+                                        color: profile.username == null ? c.text2 : c.text3,
+                                      ),
                                     ),
                                   ],
                                 ),

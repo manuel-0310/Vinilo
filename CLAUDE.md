@@ -53,7 +53,7 @@ Firestore y Storage siguen en **modo de prueba** (vencen ~30 días después del 
 
 ## Correr la app
 
-- iOS: `flutter run -d 9B5FCCD2-D3ED-4B32-AD82-D6764E4A46B4 --dart-define=SPOTIFY_FN_URL=https://us-central1-red-social-c786b.cloudfunctions.net/spotify` (iPhone 18 Pro). El iPhone 18 Pro Max ya no existe (se borró el 2026-09-22); para automatización quedan el iPhone 17 `8E9F7053-3D64-48B2-A5B1-921741C44257` (mismo tamaño que el Pro) y el iPhone Air `D42C6F53-4C04-4EE1-AE6D-2AD7E69C15A0`. Todos con iOS 27.0 (también hay runtime iOS 26.3; no hay simulador con iOS < 26 para probar el respaldo `GlassBar`). En Xcode 27 el simulador se ve desde DeviceHub.app.
+- iOS: `flutter run -d <UDID> --dart-define=SPOTIFY_FN_URL=https://us-central1-red-social-c786b.cloudfunctions.net/spotify`. **El 2026-09-22 se borraron todos los simuladores**, así que los UDID de antes ya no sirven. Crear los que hagan falta con `xcrun simctl create "<nombre>" "<tipo>" com.apple.CoreSimulator.SimRuntime.iOS-27-0` (ver tipos con `xcrun simctl list devicetypes`) y usar el UDID que devuelve. Quedan los runtimes iOS 27.0 y 26.3.1; no hay runtime con iOS < 26 para probar el respaldo `GlassBar`. En Xcode 27 el simulador se ve desde DeviceHub.app.
 - Web: `flutter run -d chrome --dart-define=SPOTIFY_FN_URL=…`.
 - Sin `SPOTIFY_FN_URL` la app arranca pero la búsqueda muestra un error explicando qué falta.
 
@@ -67,7 +67,7 @@ Firestore y Storage siguen en **modo de prueba** (vencen ~30 días después del 
 - Hot reload: `kill -USR1 $(cat /tmp/vinilo.pid)`; hot restart: `kill -USR2 …`. Cambiar `test_driver/app.dart` o Swift exige hot restart o relanzar, respectivamente.
 - Los finders del driver no ven pestañas ocultas del `IndexedStack` (usar `home N` primero) ni hijos de slivers fuera de pantalla (hacer `scroll` antes de `tap`).
 - El `tap` del driver se cuelga sobre widgets cuyo centro cae en una portada con `Hero`; `tool/drive.mjs` cae solo a un arrastre de 1 px que el reconocedor trata como toque. Los toques reales funcionan.
-- Manuel suele usar la app en vivo en el iPhone 18 Pro mientras se desarrolla, a veces con su propio `flutter run` desde otra sesión: antes de compilar, revisar `pgrep -fl flutter_tools.snapshot` y no cruzar dos builds de Xcode. Correr la automatización en otro simulador (iPhone 17 o iPhone Air), con su propio `--pid-file`, y recargar cada sesión con `kill -USR1`. Si hay otra sesión de Claude trabajando en paralelo, usar simuladores distintos: un `flutter run` en el mismo dispositivo reinstala la app y desconecta al otro.
+- Manuel suele usar la app en vivo en el iPhone 18 Pro mientras se desarrolla, a veces con su propio `flutter run` desde otra sesión: antes de compilar, revisar `pgrep -fl flutter_tools.snapshot` y no cruzar dos builds de Xcode. Correr la automatización en otro simulador distinto al de Manuel, con su propio `--pid-file`, y recargar cada sesión con `kill -USR1`. Si hay otra sesión de Claude trabajando en paralelo, usar simuladores distintos: un `flutter run` en el mismo dispositivo reinstala la app y desconecta al otro.
 - Pruebas unitarias en `test/`: `ranking_test.dart` (comentarios), `theme_test.dart` (énfasis por tema, contraste, escala de notas), `artist_stats_test.dart` (media ponderada). Correr con `flutter test`.
 
 ## Trampas conocidas (Xcode 27 / macOS)
