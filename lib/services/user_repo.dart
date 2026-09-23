@@ -7,8 +7,12 @@ import 'package:flutter/material.dart' show ThemeMode;
 
 import '../models/album.dart';
 import '../models/artist.dart';
+import '../models/follow.dart';
 import '../models/rating.dart';
 import '../models/user_profile.dart';
+import '../util/username.dart';
+import 'follow_repo.dart';
+import 'lists_repo.dart';
 
 /// Alguien más tiene ese @usuario.
 class UsernameTakenException implements Exception {
@@ -23,10 +27,14 @@ class UsernameTakenException implements Exception {
 }
 
 class UserRepo {
-  UserRepo(this._db, this._storage);
+  UserRepo(this._db, this._storage, {FollowRepo? follows, ListsRepo? lists})
+      : _follows = follows,
+        _lists = lists;
 
   final FirebaseFirestore _db;
   final FirebaseStorage _storage;
+  final FollowRepo? _follows;
+  final ListsRepo? _lists;
 
   CollectionReference<Map<String, dynamic>> get _users =>
       _db.collection('users');
@@ -84,6 +92,7 @@ class UserRepo {
       await _reserveUsername(tx, uid, username);
       tx.set(_users.doc(uid), {
         'name': name.trim(),
+        'nameLower': UserProfile.searchKey(name),
         'username': username,
         'color': colorValue,
         'avatarUrl': avatarUrl,
@@ -92,8 +101,57 @@ class UserRepo {
         'ratingsSum': 0,
         'favorites': <Map<String, dynamic>>[],
         'recentSearches': <String>[],
+        'followersCount': 0,
+        'followingCount': 0,
       });
     });
+  }
+
+  /// Completa `nameLower` en los perfiles creados antes de que existiera la
+  /// búsqueda de personas.
+  Future<void> ensureSearchFields(UserProfile profile) {
+    final key = UserProfile.searchKey(profile.name);
+    if (profile.nameLower == key) return Future.value();
+    return _users.doc(profile.uid).set({'nameLower': key}, SetOptions(merge: true));
+  }
+
+  /// Personas cuyo nombre o @usuario empieza por `query` (sin distinguir
+  /// mayúsculas). Con "@" delante busca solo por @usuario. Nunca devuelve a
+  /// `excludeUid` (uno mismo).
+  Future<List<PersonInfo>> searchPeople(
+    String query, {
+    String? excludeUid,
+    int limit = 10,
+  }) async {
+    final raw = query.trim().toLowerCase();
+    if (raw.isEmpty) return const [];
+    final onlyUsername = raw.startsWith('@');
+    final username = normalizeUsername(raw);
+    final futures = <Future<QuerySnapshot<Map<String, dynamic>>>>[];
+    if (username.isNotEmpty && usernameProblem(username) != UsernameProblem.badChars) {
+      futures.add(_users
+          .where('username', isGreaterThanOrEqualTo: username)
+          .where('username', isLessThan: '$username\uf8ff')
+          .limit(limit)
+          .get());
+    }
+    if (!onlyUsername) {
+      futures.add(_users
+          .where('nameLower', isGreaterThanOrEqualTo: raw)
+          .where('nameLower', isLessThan: '$raw\uf8ff')
+          .limit(limit)
+          .get());
+    }
+    final found = <String, PersonInfo>{};
+    for (final snap in await Future.wait(futures)) {
+      for (final doc in snap.docs) {
+        if (doc.id == excludeUid) continue;
+        found.putIfAbsent(doc.id, () => UserProfile.fromDoc(doc).person);
+      }
+    }
+    final out = found.values.toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return out.take(limit).toList();
   }
 
   /// Cambia (o fija por primera vez) el @usuario, liberando el anterior en
@@ -111,16 +169,20 @@ class UserRepo {
     });
   }
 
-  /// Actualiza el perfil y propaga nombre/color/foto a todas sus notas,
-  /// que los guardan denormalizados para pintar el feed. El banner solo se
-  /// toca si `updateBanner` es true (null borra la foto de fondo).
+  /// Actualiza el perfil y propaga nombre/color/foto a todas sus notas y
+  /// seguimientos, que los guardan denormalizados para pintar el feed y las
+  /// listas de personas. El banner solo se toca si `updateBanner` es true
+  /// (null borra la foto de fondo). `username` es el @usuario ya guardado,
+  /// para copiarlo en los seguimientos.
   Future<void> updateProfile(
     RaterInfo info, {
     String? bannerUrl,
     bool updateBanner = false,
+    String? username,
   }) async {
     await _users.doc(info.uid).set({
       'name': info.name.trim(),
+      'nameLower': UserProfile.searchKey(info.name),
       'color': info.colorValue,
       'avatarUrl': info.avatarUrl,
       if (updateBanner) 'bannerUrl': bannerUrl,
@@ -142,6 +204,16 @@ class UserRepo {
       }
     }
     if (pending > 0) await batch.commit();
+
+    final person = PersonInfo(
+      uid: info.uid,
+      name: info.name.trim(),
+      colorValue: info.colorValue,
+      username: username,
+      avatarUrl: info.avatarUrl,
+    );
+    await _follows?.propagatePerson(person);
+    await _lists?.propagateOwner(person);
   }
 
   /// Cambia el color de la persona (avatar, resplandor y énfasis de su app)
@@ -154,6 +226,7 @@ class UserRepo {
         colorValue: colorValue,
         avatarUrl: profile.avatarUrl,
       ),
+      username: profile.username,
     );
   }
 

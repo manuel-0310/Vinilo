@@ -5,11 +5,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../models/album.dart';
 import '../models/artist.dart';
+import '../models/follow.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/artist_avatar.dart';
 import '../widgets/misc.dart';
+import '../widgets/person_row.dart';
 import 'routes.dart';
 
 const _suggestions = [
@@ -26,6 +28,10 @@ const _suggestions = [
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
+  /// Pide al buscador que tome el foco y sugiera buscar personas (lo usa el
+  /// inicio cuando todavía no sigues a nadie).
+  static final ValueNotifier<bool> focusRequests = ValueNotifier(false);
+
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
@@ -39,16 +45,33 @@ class _SearchScreenState extends State<SearchScreen> {
   String _query = '';
   AlbumPage? _page;
   List<Artist>? _artists;
+  List<PersonInfo>? _people;
   bool _loading = false;
   bool _loadingMore = false;
   Object? _error;
 
   @override
+  void initState() {
+    super.initState();
+    SearchScreen.focusRequests.addListener(_onFocusRequest);
+  }
+
+  @override
   void dispose() {
+    SearchScreen.focusRequests.removeListener(_onFocusRequest);
     _debounce?.cancel();
     _controller.dispose();
     _focus.dispose();
     super.dispose();
+  }
+
+  void _onFocusRequest() {
+    if (!SearchScreen.focusRequests.value || !mounted) return;
+    SearchScreen.focusRequests.value = false;
+    // La pestaña acaba de cambiar; el campo necesita un cuadro para existir.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focus.requestFocus();
+    });
   }
 
   void _onChanged(String text) {
@@ -60,6 +83,7 @@ class _SearchScreenState extends State<SearchScreen> {
         _query = '';
         _page = null;
         _artists = null;
+        _people = null;
         _error = null;
         _loading = false;
       });
@@ -77,17 +101,36 @@ class _SearchScreenState extends State<SearchScreen> {
       _error = null;
     });
     try {
-      // Álbumes y artistas a la vez; si solo falla la búsqueda de artistas,
-      // se muestran los álbumes igual.
-      final spotify = ServicesScope.of(context).spotify;
+      // Álbumes, artistas y personas a la vez; si solo falla la búsqueda de
+      // artistas o de personas, se muestran los álbumes igual. Con "@"
+      // delante solo se buscan personas.
+      final services = ServicesScope.of(context);
+      final me = CurrentUser.maybeOf(context);
+      final people = services.users
+          .searchPeople(q, excludeUid: me?.uid)
+          .catchError((_) => <PersonInfo>[]);
+      if (q.startsWith('@')) {
+        final foundPeople = await people;
+        if (id != _requestId || !mounted) return;
+        setState(() {
+          _page = const AlbumPage(items: [], total: 0);
+          _artists = const [];
+          _people = foundPeople;
+          _loading = false;
+        });
+        return;
+      }
+      final spotify = services.spotify;
       final albums = spotify.search(q);
       final artists = spotify.searchArtists(q).catchError((_) => <Artist>[]);
       final result = await albums;
       final found = await artists;
+      final foundPeople = await people;
       if (id != _requestId || !mounted) return;
       setState(() {
         _page = result;
         _artists = found;
+        _people = foundPeople;
         _loading = false;
       });
     } catch (e) {
@@ -170,7 +213,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     onSubmitted: _submit,
                     style: VText.ui(16, weight: 600),
                     decoration: InputDecoration(
-                      hintText: 'Álbum o artista',
+                      hintText: 'Álbum, artista o @persona',
                       prefixIcon: Icon(
                         Icons.search_rounded,
                         color: c.text3,
@@ -213,20 +256,40 @@ class _SearchScreenState extends State<SearchScreen> {
             const _GridSkeleton()
           else if (_page != null &&
               _page!.items.isEmpty &&
-              (_artists?.isEmpty ?? true))
-            const SliverToBoxAdapter(
+              (_artists?.isEmpty ?? true) &&
+              (_people?.isEmpty ?? true))
+            SliverToBoxAdapter(
               child: EmptyState(
                 title: 'Nada por aquí',
-                message: 'Prueba con otro nombre, o busca por el artista.',
+                message: _query.startsWith('@')
+                    ? 'Nadie tiene un @usuario que empiece así.'
+                    : 'Prueba con otro nombre, o busca por el artista.',
               ),
             )
           else if (_page != null) ...[
+            if (_people != null && _people!.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionHeader('Personas', top: 22),
+                    for (final (i, p) in _people!.indexed)
+                      PersonRow(key: ValueKey('person-hit-$i'), person: p)
+                          .animate()
+                          .fadeIn(delay: (40 * i).ms, duration: 380.ms)
+                          .slideX(begin: 0.05, curve: Curves.easeOutCubic),
+                  ],
+                ),
+              ),
             if (_artists != null && _artists!.isNotEmpty)
               SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionHeader('Artistas', top: 22),
+                    SectionHeader(
+                      'Artistas',
+                      top: _people != null && _people!.isNotEmpty ? 26 : 22,
+                    ),
                     _ArtistStrip(artists: _artists!),
                   ],
                 ),
@@ -235,7 +298,10 @@ class _SearchScreenState extends State<SearchScreen> {
               SliverToBoxAdapter(
                 child: SectionHeader(
                   'Álbumes',
-                  top: _artists != null && _artists!.isNotEmpty ? 26 : 22,
+                  top: (_artists != null && _artists!.isNotEmpty) ||
+                          (_people != null && _people!.isNotEmpty)
+                      ? 26
+                      : 22,
                 ),
               ),
             SliverPadding(

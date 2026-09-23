@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../models/album.dart';
+import '../models/music_list.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/score.dart';
@@ -17,6 +19,9 @@ import '../widgets/histogram.dart';
 import '../widgets/misc.dart';
 import '../widgets/rating_sheet.dart';
 import '../widgets/score_widgets.dart';
+import '../widgets/sheet.dart';
+import 'list_form_sheet.dart';
+import 'list_picker_sheet.dart';
 import 'routes.dart';
 
 class AlbumScreen extends StatefulWidget {
@@ -38,6 +43,10 @@ class _AlbumScreenState extends State<AlbumScreen> {
   Stream<AlbumStats?>? _stats;
   Stream<RatingEntry?>? _mine;
   Stream<List<RatingEntry>>? _community;
+
+  /// Selección de canciones para agregarlas a una lista.
+  bool _selecting = false;
+  final Set<String> _selected = {};
 
   Album get _album => _detail ?? widget.album;
 
@@ -107,6 +116,157 @@ class _AlbumScreenState extends State<AlbumScreen> {
     );
   }
 
+  void _snack(String text, {MusicList? list}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(text),
+          duration: const Duration(seconds: 3),
+          action: list == null
+              ? null
+              : SnackBarAction(
+                  label: 'Ver lista',
+                  onPressed: () => openList(context, listId: list.id, initial: list),
+                ),
+        ),
+      );
+  }
+
+  /// Hoja con las tres acciones de listas de este disco.
+  Future<void> _listActions() {
+    final album = _album;
+    final hasTracks = _detail != null && _detail!.tracks.isNotEmpty;
+    return showVSheet<void>(
+      context,
+      (ctx) => SheetScaffold(
+        title: album.name,
+        subtitle: album.artist,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SheetAction(
+              key: const ValueKey('add-album-to-list'),
+              icon: Icons.album_rounded,
+              label: 'Agregar el disco a una lista',
+              hint: 'A una de tus listas de discos, o a una nueva',
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _addAlbumToList();
+              },
+            ),
+            const SizedBox(height: 10),
+            SheetAction(
+              key: const ValueKey('select-tracks'),
+              icon: Icons.checklist_rounded,
+              label: 'Agregar canciones a una lista',
+              hint: hasTracks ? 'Elige cuáles' : 'Espera a que carguen las canciones',
+              enabled: hasTracks,
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _startSelecting();
+              },
+            ),
+            const SizedBox(height: 10),
+            SheetAction(
+              key: const ValueKey('create-list-from-album'),
+              icon: Icons.playlist_add_rounded,
+              label: 'Crear lista con este disco',
+              hint: hasTracks
+                  ? 'Todas sus canciones, en orden, listas para ordenar'
+                  : 'Espera a que carguen las canciones',
+              enabled: hasTracks,
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _createListFromAlbum();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addAlbumToList() async {
+    final list = await showListPicker(context, itemType: ListItemType.albums);
+    if (list == null || !mounted) return;
+    try {
+      final outcome = await _services!.lists.addTo(list.id, [ListItem.fromAlbum(_album)]);
+      _snack('${outcome.message(ListItemType.albums)} · ${list.name}', list: list);
+    } catch (e) {
+      _snack('No se pudo agregar: $e');
+    }
+  }
+
+  Future<void> _createListFromAlbum() async {
+    final detail = _detail;
+    if (detail == null) return;
+    final draft = await showListForm(
+      context,
+      title: 'Lista con este disco',
+      initialName: detail.name,
+      fixedItemType: ListItemType.tracks,
+      submitLabel: 'Crear lista',
+    );
+    if (draft == null || !mounted) return;
+    try {
+      final me = CurrentUser.of(context);
+      final list = await _services!.lists.create(
+        owner: me,
+        name: draft.name,
+        description: draft.description,
+        kind: draft.kind,
+        itemType: ListItemType.tracks,
+        items: [for (final t in detail.tracks) ListItem.fromTrack(t, detail)],
+      );
+      if (mounted) openList(context, listId: list.id, initial: list);
+    } catch (e) {
+      _snack('No se pudo crear la lista: $e');
+    }
+  }
+
+  void _startSelecting({String? first}) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _selecting = true;
+      _selected.clear();
+      if (first != null) _selected.add(first);
+    });
+  }
+
+  void _stopSelecting() {
+    setState(() {
+      _selecting = false;
+      _selected.clear();
+    });
+  }
+
+  void _toggleTrack(String id) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      if (!_selected.add(id)) _selected.remove(id);
+    });
+  }
+
+  Future<void> _addSelectedToList() async {
+    final detail = _detail;
+    if (detail == null || _selected.isEmpty) return;
+    final list = await showListPicker(context, itemType: ListItemType.tracks);
+    if (list == null || !mounted) return;
+    final items = [
+      for (final t in detail.tracks)
+        if (_selected.contains(t.id)) ListItem.fromTrack(t, detail),
+    ];
+    try {
+      final outcome = await _services!.lists.addTo(list.id, items);
+      _stopSelecting();
+      _snack('${outcome.message(ListItemType.tracks)} · ${list.name}', list: list);
+    } catch (e) {
+      _snack('No se pudo agregar: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
@@ -129,7 +289,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
         builder: (context, mineSnap) {
           final mine = mineSnap.data;
           final waitingMine = mineSnap.connectionState == ConnectionState.waiting;
-          final showRateButton = !waitingMine && mine == null;
+          final showRateButton = !waitingMine && mine == null && !_selecting;
           return Stack(
             children: [
               CustomScrollView(
@@ -250,8 +410,25 @@ class _AlbumScreenState extends State<AlbumScreen> {
                     SliverToBoxAdapter(
                       child: SectionHeader(
                         'Canciones',
-                        subtitle:
-                            '${plural(detail.tracks.length, 'canción', 'canciones')} · ${detail.totalDurationLabel}',
+                        subtitle: _selecting
+                            ? 'Toca las que quieras agregar'
+                            : '${plural(detail.tracks.length, 'canción', 'canciones')} · ${detail.totalDurationLabel}',
+                        action: _selecting
+                            ? TextButton(
+                                key: const ValueKey('select-all'),
+                                onPressed: () => setState(() {
+                                  if (_selected.length == detail.tracks.length) {
+                                    _selected.clear();
+                                  } else {
+                                    _selected.addAll(detail.tracks.map((t) => t.id));
+                                  }
+                                }),
+                                child: Text(
+                                  _selected.length == detail.tracks.length ? 'Ninguna' : 'Todas',
+                                  style: VText.ui(13, weight: 700, color: c.accent),
+                                ),
+                              )
+                            : null,
                       ),
                     ),
                     SliverList.separated(
@@ -261,8 +438,14 @@ class _AlbumScreenState extends State<AlbumScreen> {
                         child: Divider(),
                       ),
                       itemBuilder: (_, i) => _TrackRow(
+                        key: ValueKey('track-$i'),
                         track: detail.tracks[i],
                         albumArtist: detail.artist,
+                        selected: _selecting ? _selected.contains(detail.tracks[i].id) : null,
+                        onToggle: () => _toggleTrack(detail.tracks[i].id),
+                        onLongPress: _selecting
+                            ? null
+                            : () => _startSelecting(first: detail.tracks[i].id),
                       ),
                     ),
                   ],
@@ -349,7 +532,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                         VSpace.page,
                         34,
                         VSpace.page,
-                        bottomPad + 30 + (showRateButton ? _rateButtonClearance : 0),
+                        bottomPad + 30 + (showRateButton || _selecting ? _rateButtonClearance : 0),
                       ),
                       child: Text(
                         [
@@ -374,8 +557,18 @@ class _AlbumScreenState extends State<AlbumScreen> {
                   onTap: () => Navigator.of(context).maybePop(),
                 ),
               ),
+              Positioned(
+                top: topPad + 8,
+                right: 16,
+                child: GlassIconButton(
+                  key: const ValueKey('list-actions'),
+                  icon: Icons.playlist_add_rounded,
+                  onTap: _listActions,
+                ),
+              ),
               // Botón fijo abajo mientras el disco no tenga nota mía. Al guardar
               // se va deslizándose hacia abajo y aparece la fila "Tu nota".
+              // Al seleccionar canciones, en su lugar va la barra de selección.
               Positioned(
                 left: VSpace.page,
                 right: VSpace.page,
@@ -394,12 +587,19 @@ class _AlbumScreenState extends State<AlbumScreen> {
                       child: child,
                     ),
                   ),
-                  child: showRateButton
-                      ? _RateButton(
-                          key: const ValueKey('rate-button'),
-                          onTap: () => _rate(null),
+                  child: _selecting
+                      ? _SelectionBar(
+                          key: const ValueKey('selection-bar'),
+                          count: _selected.length,
+                          onAdd: _addSelectedToList,
+                          onCancel: _stopSelecting,
                         )
-                      : const SizedBox.shrink(key: ValueKey('no-rate-button')),
+                      : showRateButton
+                          ? _RateButton(
+                              key: const ValueKey('rate-button'),
+                              onTap: () => _rate(null),
+                            )
+                          : const SizedBox.shrink(key: ValueKey('no-rate-button')),
                 ),
               ),
             ],
@@ -473,6 +673,69 @@ class _RateButton extends StatelessWidget {
         onPressed: onTap,
         icon: const Icon(Icons.album_rounded, size: 20),
         label: const Text('Calificar este disco'),
+      ),
+    );
+  }
+}
+
+/// Barra fija abajo mientras se eligen canciones: cuántas van, agregar y
+/// cancelar.
+class _SelectionBar extends StatelessWidget {
+  const _SelectionBar({
+    super.key,
+    required this.count,
+    required this.onAdd,
+    required this.onCancel,
+  });
+
+  final int count;
+  final VoidCallback onAdd;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: c.line),
+        boxShadow: [
+          BoxShadow(
+            color: c.scrim.withValues(alpha: c.isDark ? 0.5 : 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            key: const ValueKey('cancel-select'),
+            tooltip: 'Cancelar',
+            onPressed: onCancel,
+            icon: Icon(Icons.close_rounded, color: c.text2),
+          ),
+          Expanded(
+            child: Text(
+              count == 0
+                  ? 'Elige canciones'
+                  : '$count ${count == 1 ? 'canción' : 'canciones'}',
+              key: const ValueKey('selection-count'),
+              style: VText.ui(14, weight: 700),
+            ),
+          ),
+          FilledButton(
+            key: const ValueKey('add-selected'),
+            onPressed: count == 0 ? null : onAdd,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 44),
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+            ),
+            child: const Text('Agregar a lista'),
+          ),
+        ],
       ),
     );
   }
@@ -622,25 +885,49 @@ class _CommunityBlock extends StatelessWidget {
 }
 
 class _TrackRow extends StatelessWidget {
-  const _TrackRow({required this.track, required this.albumArtist});
+  const _TrackRow({
+    super.key,
+    required this.track,
+    required this.albumArtist,
+    this.selected,
+    this.onToggle,
+    this.onLongPress,
+  });
 
   final Track track;
   final String albumArtist;
+
+  /// Null cuando no se están eligiendo canciones; si no, si esta va.
+  final bool? selected;
+  final VoidCallback? onToggle;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
     final showArtists = track.artists.isNotEmpty && track.artists != albumArtist;
-    return Padding(
+    final selecting = selected != null;
+    return InkWell(
+      onTap: selecting ? onToggle : null,
+      onLongPress: onLongPress,
+      child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 11),
       child: Row(
         children: [
           SizedBox(
             width: 32,
-            child: Text(
-              '${track.number}',
-              style: VText.ui(13, color: c.text3),
-            ),
+            child: selecting
+                ? Icon(
+                    selected!
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    size: 20,
+                    color: selected! ? c.accent : c.text3,
+                  )
+                : Text(
+                    '${track.number}',
+                    style: VText.ui(13, color: c.text3),
+                  ),
           ),
           Expanded(
             child: Column(
@@ -676,6 +963,7 @@ class _TrackRow extends StatelessWidget {
             ),
           Text(track.duration, style: VText.ui(13, color: c.text3)),
         ],
+      ),
       ),
     );
   }

@@ -22,6 +22,18 @@
 //                   borra la cuenta actual con su perfil y su @usuario. Solo
 //                   acepta correos @vinilo.test o la sesión anónima de prueba:
 //                   nunca la cuenta de Manuel.
+//   "signup:EMAIL:PASS" / "signin:EMAIL:PASS"
+//                   crea o entra con una cuenta de prueba (solo @vinilo.test)
+//                   sin pasar por el teclado. Devuelve el uid o el error.
+//   "profile:NOMBRE:USUARIO"
+//                   crea el perfil de la sesión actual (como el onboarding).
+//   "follow:UID" / "unfollow:UID"
+//                   sigue o deja de seguir a esa persona con la sesión actual.
+//   "people:TEXTO"  busca personas como el buscador y devuelve sus nombres.
+//   "open-list:latest" / "open-list:ID"
+//                   abre mi lista más reciente (o una por id).
+//   "notifications" abre la pantalla de notificaciones.
+//   "open-user:UID" abre el perfil de esa persona.
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -32,7 +44,72 @@ import 'package:no_retiene/models/album.dart';
 import 'package:no_retiene/screens/profile_form.dart';
 import 'package:no_retiene/screens/routes.dart';
 import 'package:no_retiene/screens/shell_screen.dart';
+import 'package:no_retiene/services/follow_repo.dart';
+import 'package:no_retiene/services/lists_repo.dart';
+import 'package:no_retiene/services/notifications_repo.dart';
+import 'package:no_retiene/services/user_repo.dart';
 import 'package:no_retiene/widgets/image_cropper.dart';
+
+bool _isTestEmail(String email) => email.endsWith('@vinilo.test');
+
+Future<String> _signUpOrIn(String rest, {required bool create}) async {
+  final sep = rest.indexOf(':');
+  if (sep < 0) return 'usage email:password';
+  final email = rest.substring(0, sep);
+  final password = rest.substring(sep + 1);
+  if (!_isTestEmail(email)) return 'refused: solo cuentas @vinilo.test';
+  final auth = FirebaseAuth.instance;
+  try {
+    if (auth.currentUser != null) await auth.signOut();
+    final cred = create
+        ? await auth.createUserWithEmailAndPassword(email: email, password: password)
+        : await auth.signInWithEmailAndPassword(email: email, password: password);
+    return 'uid=${cred.user?.uid}';
+  } on FirebaseAuthException catch (e) {
+    return 'error ${e.code}: ${e.message}';
+  }
+}
+
+Future<String> _createProfile(String rest) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return 'no-user';
+  final sep = rest.indexOf(':');
+  if (sep < 0) return 'usage nombre:usuario';
+  final repo = UserRepo(FirebaseFirestore.instance, FirebaseStorage.instance);
+  try {
+    await repo.create(
+      uid: user.uid,
+      name: rest.substring(0, sep),
+      colorValue: 0xFF5FA8D3,
+      username: rest.substring(sep + 1),
+    );
+    return 'ok uid=${user.uid}';
+  } catch (e) {
+    return 'error $e';
+  }
+}
+
+Future<String> _setFollow(String otherUid, {required bool follow}) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return 'no-user';
+  final db = FirebaseFirestore.instance;
+  final repo = UserRepo(db, FirebaseStorage.instance);
+  final me = await repo.fetch(user.uid);
+  final other = await repo.fetch(otherUid);
+  if (me == null || other == null) return 'no-profile';
+  try {
+    await FollowRepo(db, NotificationsRepo(db)).setFollowing(
+      me: me,
+      other: other.person,
+      follow: follow,
+    );
+    final after = await repo.fetch(user.uid);
+    final target = await repo.fetch(otherUid);
+    return 'ok following=${after?.followingCount} theirFollowers=${target?.followersCount}';
+  } catch (e) {
+    return 'error $e';
+  }
+}
 
 Future<String> _crop(String url, {required bool avatar}) async {
   final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -166,6 +243,73 @@ void main() {
             album: target,
             initial: const [],
           );
+      return 'ok';
+    }
+    if (message != null && message.startsWith('signup:')) {
+      return _signUpOrIn(message.substring(7), create: true);
+    }
+    if (message != null && message.startsWith('signin:')) {
+      return _signUpOrIn(message.substring(7), create: false);
+    }
+    if (message != null && message.startsWith('profile:')) {
+      return _createProfile(message.substring(8));
+    }
+    if (message != null && message.startsWith('follow:')) {
+      return _setFollow(message.substring(7), follow: true);
+    }
+    if (message != null && message.startsWith('unfollow:')) {
+      return _setFollow(message.substring(9), follow: false);
+    }
+    if (message != null && message.startsWith('people:')) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final repo = UserRepo(FirebaseFirestore.instance, FirebaseStorage.instance);
+      final found = await repo.searchPeople(message.substring(7), excludeUid: uid);
+      return found.map((p) => '${p.name}(${p.handle})').join(', ');
+    }
+    if (message != null && message.startsWith('doc:')) {
+      // "doc:users/abc" devuelve el documento tal cual está en el servidor.
+      try {
+        final snap = await FirebaseFirestore.instance
+            .doc(message.substring(4))
+            .get(const GetOptions(source: Source.server));
+        return snap.exists ? '${snap.data()}' : 'MISSING';
+      } catch (e) {
+        return 'error $e';
+      }
+    }
+    if (message != null && message.startsWith('col:')) {
+      // "col:follows:follower:UID" lista los documentos que cumplen el filtro.
+      final parts = message.substring(4).split(':');
+      try {
+        Query<Map<String, dynamic>> q = FirebaseFirestore.instance.collection(parts[0]);
+        if (parts.length >= 3) q = q.where(parts[1], isEqualTo: parts[2]);
+        final snap = await q.limit(20).get(const GetOptions(source: Source.server));
+        return snap.docs.map((d) => '${d.id}=${d.data()}').join(' | ');
+      } catch (e) {
+        return 'error $e';
+      }
+    }
+    if (message != null && message.startsWith('open-user:')) {
+      final uid = message.substring(10);
+      ShellScreen.actionRequests.value = (context) => openUser(context, uid);
+      return 'ok';
+    }
+    if (message != null && message.startsWith('open-list:')) {
+      var id = message.substring(10);
+      if (id == 'latest') {
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid == null) return 'no-user';
+        final db = FirebaseFirestore.instance;
+        final lists = await ListsRepo(db, NotificationsRepo(db)).fetchOwnedBy(uid);
+        if (lists.isEmpty) return 'no-lists';
+        id = lists.first.id;
+      }
+      final target = id;
+      ShellScreen.actionRequests.value = (context) => openList(context, listId: target);
+      return 'ok $id';
+    }
+    if (message == 'notifications') {
+      ShellScreen.actionRequests.value = (context) => openNotifications(context);
       return 'ok';
     }
     if (message != null && message.startsWith('crop-avatar:')) {

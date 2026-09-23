@@ -4,9 +4,10 @@ rules_version = '2';
 // Leer exige sesión; escribir exige una cuenta de verdad (correo y
 // contraseña). Las sesiones anónimas que quedaron de antes solo pueden leer
 // hasta que se vinculan a un correo (mismo uid). Cada persona solo escribe
-// su perfil, su @usuario y sus notas; los agregados de álbumes los actualiza
-// la misma transacción que guarda la nota, así que cualquier cuenta puede
-// tocarlos.
+// su perfil, su @usuario, sus notas, sus seguimientos y sus listas; los
+// agregados de álbumes los actualiza la misma transacción que guarda la
+// nota, así que cualquier cuenta puede tocarlos. Borrar una cuenta lo hace
+// la Cloud Function `account` con el Admin SDK, que no pasa por aquí.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -41,22 +42,56 @@ service cloud.firestore {
         == request.auth.uid;
     }
 
+    // Una lista de uids solo cambió en que quien escribe se agregó o se
+    // quitó a sí misma (arrayUnion / arrayRemove con su propio uid).
+    function onlyToggledSelf(before, after) {
+      return before == after
+        || (after.size() == before.size() + 1
+          && after.hasAll(before)
+          && after.removeAll(before) == [request.auth.uid])
+        || (before.size() == after.size() + 1
+          && before.hasAll(after)
+          && before.removeAll(after) == [request.auth.uid]);
+    }
+
+    function followDocAfter(follower, followed) {
+      return existsAfter(/databases/$(database)/documents/follows/$(follower + '_' + followed));
+    }
+
+    function followDocBefore(follower, followed) {
+      return exists(/databases/$(database)/documents/follows/$(follower + '_' + followed));
+    }
+
     match /users/{uid} {
       allow read: if signedIn();
       allow create: if isOwner(uid)
         && validName(request.resource.data)
         && validUsername(request.resource.data.username)
         && ownsUsernameAfter(request.resource.data.username);
-      // Si el @usuario no cambia no hace falta volver a comprobarlo (los
-      // perfiles de antes pueden no tenerlo todavía).
-      allow update: if isOwner(uid)
-        && validName(request.resource.data)
-        && (
-          request.resource.data.get('username', null)
-            == resource.data.get('username', null)
-          || (validUsername(request.resource.data.username)
-            && ownsUsernameAfter(request.resource.data.username))
-        );
+      // La dueña edita su perfil (si el @usuario no cambia no hace falta
+      // volver a comprobarlo). Otra persona solo puede mover
+      // `followersCount` en uno, y solo en la misma transacción en la que
+      // crea o borra su seguimiento hacia este perfil.
+      allow update: if hasAccount() && (
+        (request.auth.uid == uid
+          && validName(request.resource.data)
+          && (
+            request.resource.data.get('username', null)
+              == resource.data.get('username', null)
+            || (validUsername(request.resource.data.username)
+              && ownsUsernameAfter(request.resource.data.username))
+          ))
+        || (request.auth.uid != uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followersCount'])
+          && (
+            (request.resource.data.followersCount == resource.data.get('followersCount', 0) + 1
+              && !followDocBefore(request.auth.uid, uid)
+              && followDocAfter(request.auth.uid, uid))
+            || (request.resource.data.followersCount == resource.data.get('followersCount', 0) - 1
+              && followDocBefore(request.auth.uid, uid)
+              && !followDocAfter(request.auth.uid, uid))
+          ))
+      );
       allow delete: if false;
     }
 
@@ -79,29 +114,117 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    function validRating(d) {
+      return d.score is int
+        && d.score >= 1
+        && d.score <= 10
+        && d.note is string
+        && d.note.size() <= 180;
+    }
+
     match /ratings/{ratingId} {
       allow read: if signedIn();
       allow create: if hasAccount()
         && ratingId == request.auth.uid + '_' + request.resource.data.albumId
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.score is int
-        && request.resource.data.score >= 1
-        && request.resource.data.score <= 10
-        && request.resource.data.note is string
-        && request.resource.data.note.size() <= 180;
-      // La dueña edita su nota; cualquier cuenta puede dar o quitar su "me gusta".
+        && validRating(request.resource.data);
+      // La dueña edita su nota; cualquier cuenta da o quita su "me gusta".
       allow update: if hasAccount() && (
         (resource.data.uid == request.auth.uid
           && request.resource.data.uid == resource.data.uid
           && request.resource.data.albumId == resource.data.albumId
-          && request.resource.data.score is int
-          && request.resource.data.score >= 1
-          && request.resource.data.score <= 10
-          && request.resource.data.note is string
-          && request.resource.data.note.size() <= 180)
-        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy'])
+          && validRating(request.resource.data))
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy'])
+          && onlyToggledSelf(resource.data.get('likedBy', []), request.resource.data.likedBy))
       );
       allow delete: if hasAccount() && resource.data.uid == request.auth.uid;
+    }
+
+    // Seguimientos: `{follower}_{followed}`. Cada persona crea o borra solo
+    // los suyos (donde ella sigue); nadie se sigue a sí misma. Los datos
+    // copiados de cada lado los actualiza su propia dueña.
+    match /follows/{followId} {
+      allow read: if signedIn();
+      allow create: if hasAccount()
+        && request.resource.data.follower == request.auth.uid
+        && request.resource.data.followed is string
+        && request.resource.data.followed != request.auth.uid
+        && followId == request.auth.uid + '_' + request.resource.data.followed;
+      allow update: if hasAccount()
+        && request.resource.data.follower == resource.data.follower
+        && request.resource.data.followed == resource.data.followed
+        && (
+          (resource.data.follower == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerInfo']))
+          || (resource.data.followed == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followedInfo']))
+        );
+      allow delete: if hasAccount() && resource.data.follower == request.auth.uid;
+    }
+
+    // Listas y rankings. Solo quien la creó cambia su contenido; las demás
+    // personas solo se agregan o se quitan a sí mismas de `likedBy` y
+    // `savedBy`. Los elementos van copiados dentro del documento, con un
+    // tope para que quepa en uno solo.
+    function validList(d) {
+      return d.ownerUid is string
+        && d.name is string
+        && d.name.size() >= 1
+        && d.name.size() <= 60
+        && d.description is string
+        && d.description.size() <= 300
+        && d.kind in ['list', 'ranking']
+        && d.itemType in ['tracks', 'albums']
+        && d.items is list
+        && d.items.size() <= 300
+        && d.likedBy is list
+        && d.savedBy is list;
+    }
+
+    match /lists/{listId} {
+      allow read: if signedIn();
+      allow create: if isOwner(request.resource.data.ownerUid)
+        && validList(request.resource.data)
+        && request.resource.data.likedBy.size() == 0
+        && request.resource.data.savedBy.size() == 0;
+      allow update: if hasAccount() && (
+        (resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && validList(request.resource.data)
+          && request.resource.data.likedBy == resource.data.likedBy
+          && request.resource.data.savedBy == resource.data.savedBy)
+        || (resource.data.ownerUid != request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'savedBy'])
+          && onlyToggledSelf(resource.data.likedBy, request.resource.data.likedBy)
+          && onlyToggledSelf(resource.data.savedBy, request.resource.data.savedBy))
+      );
+      allow delete: if hasAccount() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Notificaciones dentro de la app. Solo se crean a nombre propio
+    // (`from` = quien escribe) y nunca para uno mismo; la destinataria las
+    // lee y las marca como leídas; quien la provocó puede refrescarla o
+    // quitarla (al quitar su "me gusta" o dejar de seguir).
+    function validNotification(d) {
+      return d.from == request.auth.uid
+        && d.to is string
+        && d.to != request.auth.uid
+        && d.type in ['follow', 'likeRating', 'likeList', 'saveList']
+        && d.read == false;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && resource.data.to == request.auth.uid;
+      allow create: if hasAccount() && validNotification(request.resource.data);
+      allow update: if hasAccount() && (
+        (resource.data.to == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']))
+        || (resource.data.from == request.auth.uid
+          && validNotification(request.resource.data)
+          && request.resource.data.to == resource.data.to)
+      );
+      allow delete: if hasAccount()
+        && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
     }
   }
 }

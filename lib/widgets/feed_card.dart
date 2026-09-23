@@ -162,7 +162,7 @@ class LikeButton extends StatelessWidget {
             ? null
             : () {
                 HapticFeedback.lightImpact();
-                ServicesScope.of(context).ratings.toggleLike(entry, me.uid);
+                ServicesScope.of(context).ratings.toggleLike(entry, me);
               },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),

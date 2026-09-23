@@ -1,10 +1,17 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 
 import '../models/album.dart';
+import '../models/feed.dart';
+import '../models/notification.dart';
 import '../models/rating.dart';
 import '../models/user_profile.dart';
+import '../util/chunks.dart';
+import '../util/streams.dart';
+import 'notifications_repo.dart';
 
 /// Notas y agregados por álbum en Firestore.
 ///
@@ -15,9 +22,10 @@ import '../models/user_profile.dart';
 /// Los agregados se mantienen con una transacción para que promedio e
 /// histograma siempre cuadren con las notas.
 class RatingsRepo {
-  RatingsRepo(this._db);
+  RatingsRepo(this._db, this._notifications);
 
   final FirebaseFirestore _db;
+  final NotificationsRepo _notifications;
 
   CollectionReference<Map<String, dynamic>> get _ratings =>
       _db.collection('ratings');
@@ -40,6 +48,63 @@ class RatingsRepo {
       .limit(limit)
       .snapshots()
       .map(_entries);
+
+  /// Actividad de las personas seguidas: una consulta `in` por cada 30 uids
+  /// (tope de Firestore), ordenadas por `updatedAt` (índice compuesto
+  /// `uid` + `updatedAt`) y juntadas en el cliente. Sin uids emite una lista
+  /// vacía.
+  Stream<List<RatingEntry>> feedFor(List<String> uids, {int limit = 30}) {
+    if (uids.isEmpty) return Stream.value(const []);
+    final pages = [
+      for (final chunk in chunked(uids, firestoreInLimit))
+        _chunkFeed(chunk, limit),
+    ];
+    return combineLatestAll(pages)
+        .map((lists) => mergeNewestFirst(lists, limit: limit));
+  }
+
+  /// Un trozo de la actividad. Si el índice compuesto todavía no está
+  /// desplegado (`failed-precondition`), cae a la misma consulta sin orden y
+  /// ordena en el cliente para que el inicio no se quede en blanco.
+  Stream<List<RatingEntry>> _chunkFeed(List<String> chunk, int limit) {
+    late StreamController<List<RatingEntry>> controller;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? sub;
+
+    void listenUnordered() {
+      sub = _ratings
+          .where('uid', whereIn: chunk)
+          .snapshots()
+          .listen(
+            (s) => controller.add(_newestFirst(s).take(limit).toList()),
+            onError: controller.addError,
+          );
+    }
+
+    controller = StreamController<List<RatingEntry>>(
+      onListen: () {
+        sub = _ratings
+            .where('uid', whereIn: chunk)
+            .orderBy('updatedAt', descending: true)
+            .limit(limit)
+            .snapshots()
+            .listen(
+              (s) => controller.add(_entries(s)),
+              onError: (Object e, StackTrace st) {
+                if (e is FirebaseException && e.code == 'failed-precondition') {
+                  debugPrint('Falta el índice uid+updatedAt de ratings; '
+                      'ordenando la actividad en el cliente.');
+                  sub?.cancel();
+                  listenUnordered();
+                } else {
+                  controller.addError(e, st);
+                }
+              },
+            );
+      },
+      onCancel: () => sub?.cancel(),
+    );
+    return controller.stream;
+  }
 
   Stream<List<AlbumStats>> recentlyRated({int limit = 12}) => _albums
       .orderBy('lastRatedAt', descending: true)
@@ -193,12 +258,40 @@ class RatingsRepo {
     });
   }
 
-  Future<void> toggleLike(RatingEntry entry, String uid) {
-    final liked = entry.likedByMe(uid);
-    return _ratings.doc(entry.id).update({
+  /// Da o quita mi "me gusta" a una nota. Dar crea la notificación "A X le
+  /// gustó tu nota de …" para su autor (nunca para uno mismo); quitar
+  /// la borra, todo en el mismo lote.
+  Future<void> toggleLike(RatingEntry entry, UserProfile me) {
+    final liked = entry.likedByMe(me.uid);
+    final batch = _db.batch();
+    batch.update(_ratings.doc(entry.id), {
       'likedBy': liked
-          ? FieldValue.arrayRemove([uid])
-          : FieldValue.arrayUnion([uid]),
+          ? FieldValue.arrayRemove([me.uid])
+          : FieldValue.arrayUnion([me.uid]),
     });
+    final id = AppNotification.idFor(
+      to: entry.uid,
+      type: NotificationType.likeRating,
+      from: me.uid,
+      target: entry.id,
+    );
+    if (liked) {
+      _notifications.removeInBatch(batch, id);
+    } else {
+      _notifications.putInBatch(
+        batch,
+        AppNotification(
+          id: id,
+          to: entry.uid,
+          from: me.person,
+          type: NotificationType.likeRating,
+          createdAt: DateTime.now(),
+          read: false,
+          album: entry.album,
+          ratingId: entry.id,
+        ),
+      );
+    }
+    return batch.commit();
   }
 }

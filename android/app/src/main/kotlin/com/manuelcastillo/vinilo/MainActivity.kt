@@ -1,4 +1,4 @@
-package com.buildday.no_retiene
+package com.manuelcastillo.vinilo
 
 import io.flutter.embedding.android.FlutterActivity
 

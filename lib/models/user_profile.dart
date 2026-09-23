@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'album.dart';
 import 'artist.dart';
+import 'follow.dart';
 import 'rating.dart';
 
 /// Preferencia de apariencia guardada en el documento del usuario.
@@ -33,6 +34,9 @@ class UserProfile {
     this.favoriteArtists = const [],
     this.recentSearches = const [],
     this.themeMode = ThemeMode.dark,
+    this.followersCount = 0,
+    this.followingCount = 0,
+    this.nameLower,
   });
 
   final String uid;
@@ -56,6 +60,12 @@ class UserProfile {
   final List<Artist> favoriteArtists;
   final List<String> recentSearches;
   final ThemeMode themeMode;
+  final int followersCount;
+  final int followingCount;
+
+  /// Nombre en minúsculas para buscar personas por prefijo. Null en los
+  /// perfiles de antes: la app lo completa al entrar.
+  final String? nameLower;
 
   Color get color => Color(colorValue);
 
@@ -70,6 +80,17 @@ class UserProfile {
         colorValue: colorValue,
         avatarUrl: avatarUrl,
       );
+
+  PersonInfo get person => PersonInfo(
+        uid: uid,
+        name: name,
+        colorValue: colorValue,
+        username: username,
+        avatarUrl: avatarUrl,
+      );
+
+  /// Con qué texto se busca a esta persona por nombre.
+  static String searchKey(String name) => name.trim().toLowerCase();
 
   factory UserProfile.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data() ?? const {};
@@ -92,6 +113,9 @@ class UserProfile {
       recentSearches:
           List<String>.from((d['recentSearches'] as List?) ?? const []),
       themeMode: themeModeFrom(d['theme'] as String?),
+      followersCount: (d['followersCount'] as num?)?.toInt() ?? 0,
+      followingCount: (d['followingCount'] as num?)?.toInt() ?? 0,
+      nameLower: d['nameLower'] as String?,
     );
   }
 }

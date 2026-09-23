@@ -4,6 +4,9 @@ import 'package:flutter/widgets.dart';
 
 import '../models/user_profile.dart';
 import 'auth_service.dart';
+import 'follow_repo.dart';
+import 'lists_repo.dart';
+import 'notifications_repo.dart';
 import 'palette.dart';
 import 'ratings_repo.dart';
 import 'spotify_api.dart';
@@ -16,19 +19,29 @@ class Services {
     required this.users,
     required this.ratings,
     required this.palette,
+    required this.follows,
+    required this.notifications,
+    required this.lists,
   });
 
   factory Services.create() {
     final auth = AuthService();
+    final db = FirebaseFirestore.instance;
+    final notifications = NotificationsRepo(db);
+    final follows = FollowRepo(db, notifications);
+    final lists = ListsRepo(db, notifications);
     return Services._(
       auth: auth,
       spotify: SpotifyApi(
         baseUrl: SpotifyApi.configuredUrl,
         idToken: auth.idToken,
       ),
-      users: UserRepo(FirebaseFirestore.instance, FirebaseStorage.instance),
-      ratings: RatingsRepo(FirebaseFirestore.instance),
+      users: UserRepo(db, FirebaseStorage.instance, follows: follows, lists: lists),
+      ratings: RatingsRepo(db, notifications),
       palette: PaletteService(),
+      follows: follows,
+      notifications: notifications,
+      lists: lists,
     );
   }
 
@@ -37,6 +50,9 @@ class Services {
   final UserRepo users;
   final RatingsRepo ratings;
   final PaletteService palette;
+  final FollowRepo follows;
+  final NotificationsRepo notifications;
+  final ListsRepo lists;
 }
 
 class ServicesScope extends InheritedWidget {

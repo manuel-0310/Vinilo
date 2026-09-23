@@ -1,0 +1,118 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'album.dart';
+import 'follow.dart';
+import 'rating.dart';
+
+/// Qué pasó: alguien empezó a seguirme, le gustó mi nota, le gustó mi lista
+/// o guardó mi lista.
+enum NotificationType {
+  follow('follow'),
+  likeRating('likeRating'),
+  likeList('likeList'),
+  saveList('saveList');
+
+  const NotificationType(this.key);
+
+  final String key;
+
+  static NotificationType? fromKey(String? key) {
+    for (final t in values) {
+      if (t.key == key) return t;
+    }
+    return null;
+  }
+}
+
+/// Una notificación dentro de la app. Vive en `notifications/{id}` con el
+/// destinatario en `to` y quien la provocó en `from`; el id es determinista
+/// (`{to}_{tipo}_{from}_{objetivo}`) para que dar y quitar un "me gusta" no
+/// acumule entradas repetidas.
+class AppNotification {
+  const AppNotification({
+    required this.id,
+    required this.to,
+    required this.from,
+    required this.type,
+    required this.createdAt,
+    required this.read,
+    this.album,
+    this.ratingId,
+    this.listId,
+    this.listName,
+  });
+
+  final String id;
+  final String to;
+  final PersonInfo from;
+  final NotificationType type;
+  final DateTime createdAt;
+  final bool read;
+
+  /// Disco de la nota (para `likeRating`).
+  final Album? album;
+  final String? ratingId;
+
+  /// Lista (para `likeList` y `saveList`).
+  final String? listId;
+  final String? listName;
+
+  static String idFor({
+    required String to,
+    required NotificationType type,
+    required String from,
+    String target = '',
+  }) =>
+      [to, type.key, from, if (target.isNotEmpty) target].join('_');
+
+  factory AppNotification.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final d = doc.data() ?? const {};
+    final from = (d['from'] ?? '') as String;
+    final albumMap = d['album'] as Map?;
+    return AppNotification(
+      id: doc.id,
+      to: (d['to'] ?? '') as String,
+      from: PersonInfo.fromMap(
+        from,
+        Map<String, dynamic>.from((d['fromInfo'] as Map?) ?? {}),
+      ),
+      type: NotificationType.fromKey(d['type'] as String?) ??
+          NotificationType.follow,
+      createdAt: dateFrom(d['createdAt']),
+      read: d['read'] == true,
+      album: albumMap == null
+          ? null
+          : Album.fromMap(Map<String, dynamic>.from(albumMap)),
+      ratingId: d['ratingId'] as String?,
+      listId: d['listId'] as String?,
+      listName: d['listName'] as String?,
+    );
+  }
+
+  /// Datos para crear (o refrescar) la notificación. `createdAt` lo pone el
+  /// servidor y `read` vuelve a false: si alguien quita y vuelve a dar su
+  /// "me gusta", la notificación sube arriba otra vez.
+  Map<String, dynamic> toMap() => {
+        'to': to,
+        'from': from.uid,
+        'fromInfo': from.toMap(),
+        'type': type.key,
+        'createdAt': FieldValue.serverTimestamp(),
+        'read': false,
+        if (album != null) 'album': album!.toMap(),
+        if (ratingId != null) 'ratingId': ratingId,
+        if (listId != null) 'listId': listId,
+        if (listName != null) 'listName': listName,
+      };
+
+  /// Frase completa, con el nombre de quien la provocó.
+  String get text => switch (type) {
+        NotificationType.follow => '${from.name} empezó a seguirte',
+        NotificationType.likeRating =>
+          'A ${from.name} le gustó tu nota de ${album?.name ?? 'un disco'}',
+        NotificationType.likeList =>
+          'A ${from.name} le gustó tu lista ${listName ?? ''}'.trimRight(),
+        NotificationType.saveList =>
+          '${from.name} guardó tu lista ${listName ?? ''}'.trimRight(),
+      };
+}

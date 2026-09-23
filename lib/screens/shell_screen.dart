@@ -30,11 +30,24 @@ class ShellScreen extends StatefulWidget {
 class _ShellScreenState extends State<ShellScreen> {
   int _index = 0;
 
+  bool _checkedSearchFields = false;
+
   @override
   void initState() {
     super.initState();
     ShellScreen.tabRequests.addListener(_onTabRequest);
     ShellScreen.actionRequests.addListener(_onActionRequest);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_checkedSearchFields) return;
+    _checkedSearchFields = true;
+    // Los perfiles de antes no tienen el nombre en minúsculas con el que se
+    // busca a la gente; se completa una vez al entrar.
+    final me = CurrentUser.maybeOf(context);
+    if (me != null) ServicesScope.of(context).users.ensureSearchFields(me);
   }
 
   @override

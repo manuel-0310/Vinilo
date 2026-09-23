@@ -5,8 +5,10 @@ import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/album_strip.dart';
+import '../widgets/bell_button.dart';
 import '../widgets/feed_card.dart';
 import '../widgets/misc.dart';
+import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.onNavigate});
@@ -18,16 +20,36 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Stream<List<RatingEntry>>? _feed;
+  Stream<List<String>>? _following;
   Stream<List<AlbumStats>>? _recent;
+
+  // La actividad depende de a quién sigo: el stream se rehace solo cuando
+  // cambia esa lista, no en cada reconstrucción.
+  String _feedKey = '';
+  Stream<List<RatingEntry>>? _feed;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_feed != null) return;
+    if (_recent != null) return;
     final services = ServicesScope.of(context);
-    _feed = services.ratings.feed();
+    final me = CurrentUser.of(context);
+    _following = services.follows.followingIds(me.uid);
     _recent = services.ratings.recentlyRated();
+  }
+
+  Stream<List<RatingEntry>> _feedFor(List<String> uids) {
+    final key = uids.join(',');
+    if (key != _feedKey || _feed == null) {
+      _feedKey = key;
+      _feed = ServicesScope.of(context).ratings.feedFor(uids);
+    }
+    return _feed!;
+  }
+
+  void _findPeople() {
+    SearchScreen.focusRequests.value = true;
+    widget.onNavigate(1);
   }
 
   @override
@@ -45,8 +67,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 VSpace.page,
                 0,
               ),
-              child: Center(
-                child: Text('Vinilo', style: VText.display(42, italic: true)),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Text('Vinilo', style: VText.display(42, italic: true)),
+                  const Positioned(right: 0, child: BellButton()),
+                ],
               ),
             ),
           ),
@@ -75,64 +101,71 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          const SliverToBoxAdapter(child: SectionHeader('Actividad')),
-          StreamBuilder<List<RatingEntry>>(
-            stream: _feed,
-            builder: (context, snap) {
-              if (snap.hasError) {
-                return SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                    child: Text(
-                      'No se pudo cargar la actividad: ${snap.error}',
-                      style: VText.ui(13, color: c.danger),
-                    ),
-                  ),
-                );
+          const SliverToBoxAdapter(
+            child: SectionHeader(
+              'Actividad',
+              subtitle: 'Lo que califican las personas que sigues',
+            ),
+          ),
+          StreamBuilder<List<String>>(
+            stream: _following,
+            builder: (context, followSnap) {
+              if (followSnap.hasError) {
+                return _feedError(c, followSnap.error);
               }
-              if (!snap.hasData) {
-                return SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                  sliver: SliverList.separated(
-                    itemCount: 3,
-                    separatorBuilder: (_, _) => const SizedBox(height: 14),
-                    itemBuilder: (_, _) =>
-                        const Skeleton(height: 170, radius: 24),
-                  ),
-                );
-              }
-              final entries = snap.data!;
-              if (entries.isEmpty) {
+              if (!followSnap.hasData) return const _FeedSkeleton();
+              final uids = followSnap.data!;
+              if (uids.isEmpty) {
                 return SliverToBoxAdapter(
                   child: EmptyState(
-                    title: 'Nadie ha puesto la primera nota',
+                    key: const ValueKey('feed-empty-follow'),
+                    title: 'Sigue a tus amigos',
                     message:
-                        'Busca un disco que te haya marcado y estrena el diario de la comunidad.',
+                        'Aquí verás lo que califican las personas que sigues. Búscalas por su nombre o su @usuario.',
                     action: FilledButton.icon(
-                      onPressed: () => widget.onNavigate(1),
-                      icon: const Icon(Icons.search_rounded),
-                      label: const Text('Buscar un disco'),
+                      key: const ValueKey('find-people'),
+                      onPressed: _findPeople,
+                      icon: const Icon(Icons.person_search_rounded),
+                      label: const Text('Buscar personas'),
                     ),
                   ),
                 );
               }
-              return SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                sliver: SliverList.separated(
-                  itemCount: entries.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 14),
-                  itemBuilder: (context, i) {
-                    final entry = entries[i];
-                    return FeedCard(
-                      entry: entry,
-                      heroTag: 'feed-${entry.id}',
-                      index: i,
-                    )
-                        .animate()
-                        .fadeIn(delay: (40 * (i % 8)).ms, duration: 380.ms)
-                        .slideY(begin: 0.05, curve: Curves.easeOutCubic);
-                  },
-                ),
+              return StreamBuilder<List<RatingEntry>>(
+                stream: _feedFor(uids),
+                builder: (context, snap) {
+                  if (snap.hasError) return _feedError(c, snap.error);
+                  if (!snap.hasData) return const _FeedSkeleton();
+                  final entries = snap.data!;
+                  if (entries.isEmpty) {
+                    return const SliverToBoxAdapter(
+                      child: EmptyState(
+                        key: ValueKey('feed-empty-quiet'),
+                        title: 'Todo tranquilo por aquí',
+                        message:
+                            'Las personas que sigues todavía no han calificado nada. Cuando lo hagan, aparecerá aquí.',
+                      ),
+                    );
+                  }
+                  return SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+                    sliver: SliverList.separated(
+                      itemCount: entries.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 14),
+                      itemBuilder: (context, i) {
+                        final entry = entries[i];
+                        return FeedCard(
+                          entry: entry,
+                          heroTag: 'feed-${entry.id}',
+                          index: i,
+                        )
+                            .animate()
+                            .fadeIn(delay: (40 * (i % 8)).ms, duration: 380.ms)
+                            .slideY(begin: 0.05, curve: Curves.easeOutCubic);
+                      },
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -140,6 +173,34 @@ class _HomeScreenState extends State<HomeScreen> {
             child: SizedBox(height: VSpace.tabBarClearance),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _feedError(ViniloPalette c, Object? error) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+        child: Text(
+          'No se pudo cargar la actividad: $error',
+          style: VText.ui(13, color: c.danger),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeedSkeleton extends StatelessWidget {
+  const _FeedSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+      sliver: SliverList.separated(
+        itemCount: 3,
+        separatorBuilder: (_, _) => const SizedBox(height: 14),
+        itemBuilder: (_, _) => const Skeleton(height: 170, radius: 24),
       ),
     );
   }

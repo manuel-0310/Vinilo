@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../models/album.dart';
 import '../models/artist.dart';
+import '../models/music_list.dart';
 import '../models/rating.dart';
 import '../models/user_profile.dart';
 import '../services/services.dart';
@@ -16,9 +17,12 @@ import '../util/format.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/artist_avatar.dart';
 import '../widgets/diary_row.dart';
+import '../widgets/follow_button.dart';
 import '../widgets/histogram.dart';
+import '../widgets/list_strip.dart';
 import '../widgets/misc.dart';
 import '../widgets/user_avatar.dart';
+import 'list_form_sheet.dart';
 import 'profile_form.dart';
 import 'routes.dart';
 
@@ -43,6 +47,8 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Stream<UserProfile?>? _profile;
   Stream<List<RatingEntry>>? _ratings;
+  Stream<List<MusicList>>? _lists;
+  Stream<List<MusicList>>? _saved;
   Future<List<RatingEntry>>? _mineForAffinity;
 
   @override
@@ -51,6 +57,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_ratings != null) return;
     final services = ServicesScope.of(context);
     _ratings = services.ratings.userRatings(widget.uid);
+    _lists = services.lists.ownedBy(widget.uid);
+    if (widget.isMe) _saved = services.lists.savedBy(widget.uid);
     if (!widget.isMe) {
       _profile = services.users.watch(widget.uid);
       final me = CurrentUser.maybeOf(context);
@@ -106,6 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               bannerUrl: bannerUrl,
               updateBanner: edit.banner != null || edit.removeBanner,
+              username: edit.username ?? profile.username,
             );
             if (ctx.mounted) Navigator.of(ctx).pop();
           },
@@ -131,6 +140,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (picked == null) return;
     await services.users.setFavorites(profile.uid, picked);
+  }
+
+  Future<void> _newList(UserProfile profile) async {
+    final draft = await showListForm(context);
+    if (draft == null || !mounted) return;
+    try {
+      final list = await ServicesScope.of(context).lists.create(
+            owner: profile,
+            name: draft.name,
+            description: draft.description,
+            kind: draft.kind,
+            itemType: draft.itemType,
+          );
+      if (mounted) openList(context, listId: list.id, initial: list);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo crear la lista: $e')),
+      );
+    }
   }
 
   Future<void> _pickArtists(UserProfile profile) async {
@@ -167,10 +196,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return _ProfileBody(
             profile: profile,
             ratings: ratings,
+            lists: _lists,
+            saved: _saved,
             isMe: widget.isMe,
             standalone: widget.standalone,
             mineForAffinity: _mineForAffinity,
             onEdit: () => _edit(profile),
+            onNewList: () => _newList(profile),
             onPickFavorites: ratings == null
                 ? null
                 : () => _pickFavorites(profile, ratings),
@@ -223,20 +255,28 @@ class _ProfileBody extends StatelessWidget {
   const _ProfileBody({
     required this.profile,
     required this.ratings,
+    required this.lists,
+    required this.saved,
     required this.isMe,
     required this.standalone,
     required this.mineForAffinity,
     required this.onEdit,
+    required this.onNewList,
     required this.onPickFavorites,
     required this.onPickArtists,
   });
 
   final UserProfile profile;
   final List<RatingEntry>? ratings;
+  final Stream<List<MusicList>>? lists;
+
+  /// Listas guardadas (solo en el perfil propio).
+  final Stream<List<MusicList>>? saved;
   final bool isMe;
   final bool standalone;
   final Future<List<RatingEntry>>? mineForAffinity;
   final VoidCallback onEdit;
+  final VoidCallback onNewList;
   final VoidCallback? onPickFavorites;
   final VoidCallback onPickArtists;
 
@@ -371,9 +411,21 @@ class _ProfileBody extends StatelessWidget {
                                     ),
                                   ],
                                 ),
+                              )
+                            else
+                              Padding(
+                                padding: EdgeInsets.only(top: banner != null ? 42 : 0),
+                                child: FollowButton(
+                                  person: profile.person,
+                                  testKey: 'follow-profile',
+                                ),
                               ),
                           ],
                         ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(VSpace.page, 14, VSpace.page, 0),
+                        child: _FollowCounts(profile: profile, isMe: isMe),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(VSpace.page, 24, VSpace.page, 0),
@@ -454,6 +506,43 @@ class _ProfileBody extends StatelessWidget {
                 ),
               ),
             ),
+            SliverToBoxAdapter(
+              child: _ListsSection(
+                title: 'Listas',
+                stream: lists,
+                keyPrefix: 'list',
+                subtitle: isMe
+                    ? 'Tus listas y rankings de canciones o discos'
+                    : 'Listas y rankings de ${profile.name}',
+                action: isMe
+                    ? GestureDetector(
+                        key: const ValueKey('new-list'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onNewList,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 4, 0, 4),
+                          child: Text(
+                            'Nueva lista',
+                            style: VText.ui(13, weight: 700, color: c.accent),
+                          ),
+                        ),
+                      )
+                    : null,
+                emptyText: isMe
+                    ? 'Todavía no tienes listas. Crea una con "Nueva lista" o desde la pantalla de un disco.'
+                    : 'Todavía no tiene listas.',
+              ),
+            ),
+            if (isMe && saved != null)
+              SliverToBoxAdapter(
+                child: _ListsSection(
+                  title: 'Guardadas',
+                  stream: saved,
+                  keyPrefix: 'saved',
+                  subtitle: 'Listas de otras personas que guardaste. Solo tú las ves aquí.',
+                  emptyText: 'Guarda listas de otras personas y aparecerán aquí.',
+                ),
+              ),
             if (list.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
@@ -614,6 +703,114 @@ class _Banner extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Encabezado + fila de listas (propias o guardadas) con sus estados de
+/// carga y vacío.
+class _ListsSection extends StatelessWidget {
+  const _ListsSection({
+    required this.title,
+    required this.stream,
+    required this.keyPrefix,
+    required this.subtitle,
+    required this.emptyText,
+    this.action,
+  });
+
+  final String title;
+  final Stream<List<MusicList>>? stream;
+  final String keyPrefix;
+  final String subtitle;
+  final String emptyText;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return StreamBuilder<List<MusicList>>(
+      stream: stream,
+      builder: (context, snap) {
+        final lists = snap.data;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SectionHeader(
+              title,
+              subtitle: lists == null
+                  ? subtitle
+                  : lists.isEmpty
+                      ? subtitle
+                      : '${lists.length} ${lists.length == 1 ? 'lista' : 'listas'}',
+              action: action,
+            ),
+            if (lists == null)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: VSpace.page),
+                child: Skeleton(height: 132, radius: 16),
+              )
+            else if (lists.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(VSpace.page, 0, VSpace.page, 4),
+                child: Text(
+                  emptyText,
+                  key: ValueKey('$keyPrefix-empty'),
+                  style: VText.ui(13, color: c.text3, height: 1.4),
+                ),
+              )
+            else
+              ListStrip(lists: lists, keyPrefix: keyPrefix),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// "N seguidores · N seguidos"; cada parte abre su lista.
+class _FollowCounts extends StatelessWidget {
+  const _FollowCounts({required this.profile, required this.isMe});
+
+  final UserProfile profile;
+  final bool isMe;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    Widget part(String key, int n, String one, String many, bool followers) {
+      return GestureDetector(
+        key: ValueKey(key),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => openFollowList(
+          context,
+          uid: profile.uid,
+          name: profile.name,
+          followers: followers,
+        ),
+        child: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: '$n ', style: VText.ui(14, weight: 800)),
+              TextSpan(
+                text: n == 1 ? one : many,
+                style: VText.ui(14, color: c.text2),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        part('followers', profile.followersCount, 'seguidor', 'seguidores', true),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text('·', style: VText.ui(14, color: c.text3)),
+        ),
+        part('following', profile.followingCount, 'seguido', 'seguidos', false),
+      ],
     );
   }
 }
