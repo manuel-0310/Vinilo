@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 
+import '../l10n/l10n.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/errors.dart';
 
 /// Abre el recortador a pantalla completa y devuelve la imagen ya recortada,
 /// redimensionada a `outputWidth` de ancho y codificada en JPEG. Null si la
@@ -17,7 +19,7 @@ Future<Uint8List?> showImageCropper(
   required double aspectRatio,
   required int outputWidth,
   bool circle = false,
-  String title = 'Ajusta tu foto',
+  String? title,
 }) {
   return Navigator.of(context).push<Uint8List>(
     PageRouteBuilder(
@@ -54,7 +56,7 @@ class ImageCropper extends StatefulWidget {
     required this.aspectRatio,
     required this.outputWidth,
     this.circle = false,
-    this.title = 'Ajusta tu foto',
+    this.title,
     this.quality = 85,
   });
 
@@ -62,7 +64,8 @@ class ImageCropper extends StatefulWidget {
   final double aspectRatio;
   final int outputWidth;
   final bool circle;
-  final String title;
+  /// Null: "Ajusta tu foto" en el idioma de la app.
+  final String? title;
   final int quality;
 
   @override
@@ -193,7 +196,7 @@ class _ImageCropperState extends State<ImageCropper> {
       if (!mounted) return;
       setState(() => _exporting = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo recortar: $e')),
+        SnackBar(content: Text(context.l10n.cropFailed(describeError(e, context.l10n)))),
       );
     }
   }
@@ -216,10 +219,10 @@ class _ImageCropperState extends State<ImageCropper> {
             padding: EdgeInsets.fromLTRB(VSpace.page, topPad + 18, VSpace.page, 0),
             child: Column(
               children: [
-                Text(widget.title, style: VText.display(30, color: ink, height: 1)),
+                Text(widget.title ?? context.l10n.cropTitle, style: VText.display(30, color: ink, height: 1)),
                 const SizedBox(height: 6),
                 Text(
-                  'Mueve y haz zoom con dos dedos. Doble toque para reiniciar.',
+                  context.l10n.cropHint,
                   textAlign: TextAlign.center,
                   style: VText.ui(13, color: ink2),
                 ),
@@ -232,7 +235,7 @@ class _ImageCropperState extends State<ImageCropper> {
               child: Center(
                 child: image == null
                     ? (_error != null
-                        ? Text('No se pudo abrir la imagen: $_error',
+                        ? Text(context.l10n.cropOpenFailed(describeError(_error, context.l10n)),
                             style: VText.ui(14, color: ink2))
                         : const CircularProgressIndicator(color: ink2))
                     : LayoutBuilder(
@@ -283,7 +286,7 @@ class _ImageCropperState extends State<ImageCropper> {
                       backgroundColor: Colors.white.withValues(alpha: 0.08),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                     ),
-                    child: Text('Cancelar', style: VText.ui(16, weight: 700)),
+                    child: Text(context.l10n.cancel, style: VText.ui(16, weight: 700)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -298,7 +301,7 @@ class _ImageCropperState extends State<ImageCropper> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2, color: c.onAccent),
                           )
-                        : const Text('Usar foto'),
+                        : Text(context.l10n.cropUse),
                   ),
                 ),
               ],

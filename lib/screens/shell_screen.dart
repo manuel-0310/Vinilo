@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/glass_bar.dart';
@@ -87,7 +88,7 @@ class _ShellScreenState extends State<ShellScreen> {
       body: IndexedStack(
         index: _index,
         children: [
-          HomeScreen(onNavigate: _select),
+          const HomeScreen(),
           const SearchScreen(),
           ProfileScreen(uid: me.uid, isMe: true),
         ],
@@ -104,11 +105,15 @@ class _ShellScreenState extends State<ShellScreen> {
   /// iOS 26+: la barra nativa con Liquid Glass.
   Widget _nativeBar(BuildContext context) {
     final c = VColors.of(context);
+    final l10n = context.l10n;
     return NativeTabBar(
-      items: const [
-        NativeTab(label: 'Inicio', icon: 'house', selectedIcon: 'house.fill'),
-        NativeTab(label: 'Buscar', icon: 'magnifyingglass'),
-        NativeTab(label: 'Perfil', icon: 'person', selectedIcon: 'person.fill'),
+      // Las etiquetas llegan a iOS al crear la barra: con otro idioma se
+      // vuelve a crear.
+      key: ValueKey('tabbar-${l10n.localeName}'),
+      items: [
+        NativeTab(label: l10n.tabHome, icon: 'house', selectedIcon: 'house.fill'),
+        NativeTab(label: l10n.tabSearch, icon: 'magnifyingglass'),
+        NativeTab(label: l10n.tabProfile, icon: 'person', selectedIcon: 'person.fill'),
       ],
       selected: _index,
       onSelected: _select,
@@ -137,21 +142,21 @@ class _ShellScreenState extends State<ShellScreen> {
                   _TabItem(
                     key: const ValueKey('tab-0'),
                     selected: _index == 0,
-                    label: 'Inicio',
+                    label: context.l10n.tabHome,
                     icon: const Icon(Icons.home_rounded, size: 22),
                     onTap: () => _select(0),
                   ),
                   _TabItem(
                     key: const ValueKey('tab-1'),
                     selected: _index == 1,
-                    label: 'Buscar',
+                    label: context.l10n.tabSearch,
                     icon: const Icon(Icons.search_rounded, size: 23),
                     onTap: () => _select(1),
                   ),
                   _TabItem(
                     key: const ValueKey('tab-2'),
                     selected: _index == 2,
-                    label: 'Perfil',
+                    label: context.l10n.tabProfile,
                     icon: const Icon(Icons.person_rounded, size: 23),
                     onTap: () => _select(2),
                   ),

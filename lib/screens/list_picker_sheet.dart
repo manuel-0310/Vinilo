@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../models/music_list.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/errors.dart';
 import '../widgets/list_row_tile.dart';
 import '../widgets/misc.dart';
 import '../widgets/sheet.dart';
@@ -62,7 +64,7 @@ class _ListPickerState extends State<_ListPicker> {
       if (!mounted) return;
       setState(() => _creating = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo crear la lista: $e')),
+        SnackBar(content: Text(context.l10n.listCreateFailed(describeError(e, context.l10n)))),
       );
     }
   }
@@ -71,8 +73,10 @@ class _ListPickerState extends State<_ListPicker> {
   Widget build(BuildContext context) {
     final c = VColors.of(context);
     return SheetScaffold(
-      title: 'Agregar a una lista',
-      subtitle: 'Tus listas de ${widget.itemType.label.toLowerCase()}',
+      title: context.l10n.pickerTitle,
+      subtitle: widget.itemType == ListItemType.tracks
+          ? context.l10n.pickerSubtitleTracks
+          : context.l10n.pickerSubtitleAlbums,
       height: 0.8,
       scrollable: false,
       child: StreamBuilder<List<MusicList>>(
@@ -115,7 +119,7 @@ class _ListPickerState extends State<_ListPicker> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Nueva lista',
+                          context.l10n.listNew,
                           style: VText.ui(15, weight: 700, color: c.accent),
                         ),
                       ],
@@ -134,7 +138,9 @@ class _ListPickerState extends State<_ListPicker> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(4, 18, 4, 0),
                   child: Text(
-                    'Todavía no tienes listas de ${widget.itemType.label.toLowerCase()}. Crea una arriba.',
+                    widget.itemType == ListItemType.tracks
+                        ? context.l10n.pickerEmptyTracks
+                        : context.l10n.pickerEmptyAlbums,
                     textAlign: TextAlign.center,
                     style: VText.ui(14, color: c.text3, height: 1.4),
                   ),

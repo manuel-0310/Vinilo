@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/album.dart';
 import '../models/artist.dart';
 import '../models/artist_stats.dart';
@@ -8,7 +9,7 @@ import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
-import '../util/format.dart';
+import '../util/errors.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/artist_avatar.dart';
 import '../widgets/histogram.dart';
@@ -162,7 +163,7 @@ class _ArtistScreenState extends State<ArtistScreen> {
                                         ] else if (_detail != null || _detailError != null) ...[
                                           const SizedBox(height: 8),
                                           Text(
-                                            'Artista',
+                                            context.l10n.artistLabel,
                                             style: VText.ui(13, color: c.text3),
                                           ),
                                         ],
@@ -185,10 +186,10 @@ class _ArtistScreenState extends State<ArtistScreen> {
                     ),
                     SliverToBoxAdapter(
                       child: SectionHeader(
-                        'Discografía',
+                        context.l10n.artistDiscography,
                         subtitle: _albums == null
                             ? null
-                            : plural(_albums!.total, 'disco', 'discos'),
+                            : context.l10n.countAlbums(_albums!.total),
                       ),
                     ),
                     if (_albums == null && _albumsError == null)
@@ -201,10 +202,10 @@ class _ArtistScreenState extends State<ArtistScreen> {
                         ),
                       )
                     else if (albums.isEmpty && _albumsError == null)
-                      const SliverToBoxAdapter(
+                      SliverToBoxAdapter(
                         child: EmptyState(
-                          title: 'Sin discos',
-                          message: 'Spotify no tiene álbumes de este artista.',
+                          title: context.l10n.artistNoAlbumsTitle,
+                          message: context.l10n.artistNoAlbumsBody,
                         ),
                       )
                     else
@@ -226,13 +227,13 @@ class _ArtistScreenState extends State<ArtistScreen> {
                               ? Column(
                                   children: [
                                     Text(
-                                      'No se pudo cargar la discografía: $_albumsError',
+                                      context.l10n.artistAlbumsError(describeError(_albumsError, context.l10n)),
                                       textAlign: TextAlign.center,
                                       style: VText.ui(13, color: c.danger),
                                     ),
                                     TextButton(
                                       onPressed: _loadAlbums,
-                                      child: const Text('Reintentar'),
+                                      child: Text(context.l10n.retry),
                                     ),
                                   ],
                                 )
@@ -244,7 +245,7 @@ class _ArtistScreenState extends State<ArtistScreen> {
                                     )
                                   : _albums != null && _albums!.nextOffset == null
                                       ? Text(
-                                          'Datos y portadas de Spotify',
+                                          context.l10n.spotifyCredit,
                                           style: VText.ui(11, color: c.text3),
                                         )
                                       : const SizedBox.shrink(),
@@ -287,7 +288,7 @@ class _ArtistScoreBlock extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Text(
-          'Nadie ha calificado un disco de este artista todavía',
+          context.l10n.artistUnrated,
           key: const ValueKey('artist-unrated'),
           textAlign: TextAlign.center,
           style: VText.ui(14, color: c.text2),
@@ -308,14 +309,14 @@ class _ArtistScoreBlock extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('CALIFICACIÓN', style: VText.label(11, color: c.text3)),
+              Text(context.l10n.ratingLabel, style: VText.label(11, color: c.text3)),
               const SizedBox(height: 4),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(
-                    Score.formatAverage(average),
+                    Score.formatAverage(average, context.l10n.localeName),
                     style: VText.display(56, color: color, height: 0.95),
                   ),
                   const SizedBox(width: 6),
@@ -324,7 +325,7 @@ class _ArtistScoreBlock extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${plural(summary.count, 'nota', 'notas')} · ${plural(summary.ratedAlbums, 'disco', 'discos')}',
+                '${context.l10n.countRatings(summary.count)} · ${context.l10n.countAlbums(summary.ratedAlbums)}',
                 style: VText.ui(13, color: c.text2),
               ),
             ],
@@ -383,8 +384,8 @@ class _AlbumRow extends StatelessWidget {
                       Text(
                         [
                           if (album.year != null) '${album.year}',
-                          album.typeLabel,
-                          if (rated) plural(s.count, 'nota', 'notas'),
+                          album.typeLabel(context.l10n),
+                          if (rated) context.l10n.countRatings(s.count),
                         ].join(' · '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -396,7 +397,7 @@ class _AlbumRow extends StatelessWidget {
                 const SizedBox(width: 12),
                 if (rated)
                   Text(
-                    Score.formatAverage(s.average),
+                    Score.formatAverage(s.average, context.l10n.localeName),
                     style: VText.display(30, color: c.score(s.average), height: 1),
                   )
                 else

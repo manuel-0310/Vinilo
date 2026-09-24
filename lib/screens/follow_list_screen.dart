@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/follow.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
-import '../util/format.dart';
 import '../widgets/misc.dart';
 import '../widgets/person_row.dart';
 
@@ -47,7 +47,8 @@ class _FollowListScreenState extends State<FollowListScreen> {
     final c = VColors.of(context);
     final topPad = MediaQuery.paddingOf(context).top;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
-    final title = widget.followers ? 'Seguidores' : 'Siguiendo';
+    final l10n = context.l10n;
+    final title = widget.followers ? l10n.followersTitle : l10n.following;
     return Scaffold(
       body: Stack(
         children: [
@@ -68,13 +69,14 @@ class _FollowListScreenState extends State<FollowListScreen> {
                           const SizedBox(height: 4),
                           Text(
                             people == null
-                                ? (widget.isMe ? 'Cargando…' : widget.name)
+                                ? (widget.isMe ? l10n.loading : widget.name)
                                 : widget.followers
-                                    ? plural(people.length, 'persona sigue', 'personas siguen') +
-                                        (widget.isMe ? ' tu diario' : ' a ${widget.name}')
+                                    ? (widget.isMe
+                                        ? l10n.followersMine(people.length)
+                                        : l10n.followersOf(people.length, widget.name))
                                     : (widget.isMe
-                                        ? plural(people.length, 'persona seguida', 'personas seguidas')
-                                        : '${widget.name} sigue a ${plural(people.length, 'persona', 'personas')}'),
+                                        ? l10n.followingMine(people.length)
+                                        : l10n.followingOf(people.length, widget.name)),
                             style: VText.ui(13, color: c.text2),
                           ),
                         ],
@@ -94,14 +96,14 @@ class _FollowListScreenState extends State<FollowListScreen> {
                   else if (people.isEmpty)
                     SliverToBoxAdapter(
                       child: EmptyState(
-                        title: widget.followers ? 'Nadie todavía' : 'A nadie todavía',
+                        title: widget.followers ? l10n.followersEmptyTitle : l10n.followingEmptyTitle,
                         message: widget.followers
                             ? (widget.isMe
-                                ? 'Cuando alguien te siga, aparecerá aquí.'
-                                : 'Nadie sigue a ${widget.name} todavía.')
+                                ? l10n.followersEmptyMine
+                                : l10n.followersEmptyOf(widget.name))
                             : (widget.isMe
-                                ? 'Busca a tus amigos en la pestaña Buscar y sigue su diario.'
-                                : '${widget.name} no sigue a nadie todavía.'),
+                                ? l10n.followingEmptyMine
+                                : l10n.followingEmptyOf(widget.name)),
                       ),
                     )
                   else

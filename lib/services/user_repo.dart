@@ -20,10 +20,9 @@ class UsernameTakenException implements Exception {
 
   final String username;
 
-  String get message => '@$username ya está en uso. Prueba con otro.';
-
+  // El texto para la persona lo arma la interfaz (`l10n.usernameTaken`).
   @override
-  String toString() => message;
+  String toString() => 'UsernameTakenException(@$username)';
 }
 
 class UserRepo {
@@ -179,6 +178,7 @@ class UserRepo {
     String? bannerUrl,
     bool updateBanner = false,
     String? username,
+    String? bio,
   }) async {
     await _users.doc(info.uid).set({
       'name': info.name.trim(),
@@ -186,6 +186,8 @@ class UserRepo {
       'color': info.colorValue,
       'avatarUrl': info.avatarUrl,
       if (updateBanner) 'bannerUrl': bannerUrl,
+      // null = no se tocó; vacía la borra.
+      if (bio != null) 'bio': bio.trim(),
     }, SetOptions(merge: true));
 
     final ratings = await _db
@@ -255,6 +257,14 @@ class UserRepo {
       'favoriteArtists':
           artists.take(maxFavorites).map((a) => a.toMap()).toList(),
     }, SetOptions(merge: true));
+  }
+
+  /// "es", "en" o null para seguir el idioma del teléfono.
+  Future<void> setLanguage(String uid, String? language) {
+    return _users.doc(uid).set(
+      {'language': language ?? 'system'},
+      SetOptions(merge: true),
+    );
   }
 
   Future<void> setThemeMode(String uid, ThemeMode mode) {

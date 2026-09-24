@@ -1,41 +1,27 @@
-const List<String> monthNames = [
-  'enero',
-  'febrero',
-  'marzo',
-  'abril',
-  'mayo',
-  'junio',
-  'julio',
-  'agosto',
-  'septiembre',
-  'octubre',
-  'noviembre',
-  'diciembre',
-];
+import 'package:intl/intl.dart';
 
-String monthShort(int month) => monthNames[month - 1].substring(0, 3);
+import '../l10n/l10n.dart';
 
 String capitalize(String s) =>
     s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
-/// "hace 5 min", "ayer", "12 sep"…
-String timeAgo(DateTime date, {DateTime? now}) {
+/// "hace 5 min", "ayer", "12 sept"… (o "5 min ago", "yesterday", "Sep 12").
+String timeAgo(DateTime date, AppLocalizations l, {DateTime? now}) {
   final n = now ?? DateTime.now();
   final diff = n.difference(date);
-  if (diff.inSeconds < 45) return 'ahora';
-  if (diff.inMinutes < 60) return 'hace ${diff.inMinutes} min';
-  if (diff.inHours < 24) return 'hace ${diff.inHours} h';
-  if (diff.inDays == 1) return 'ayer';
-  if (diff.inDays < 7) return 'hace ${diff.inDays} días';
-  if (date.year == n.year) return '${date.day} ${monthShort(date.month)}';
-  return '${date.day} ${monthShort(date.month)} ${date.year}';
+  if (diff.inSeconds < 45) return l.timeNow;
+  if (diff.inMinutes < 60) return l.timeMinutesAgo(diff.inMinutes);
+  if (diff.inHours < 24) return l.timeHoursAgo(diff.inHours);
+  if (diff.inDays == 1) return l.timeYesterday;
+  if (diff.inDays < 7) return l.timeDaysAgo(diff.inDays);
+  final pattern = date.year == n.year ? 'd MMM' : 'd MMM y';
+  return DateFormat(pattern, l.localeName).format(date);
 }
 
-String monthYear(DateTime date) =>
-    '${capitalize(monthNames[date.month - 1])} ${date.year}';
+/// "Septiembre 2026" / "September 2026" (encabezados del diario).
+String monthYear(DateTime date, AppLocalizations l) =>
+    capitalize(DateFormat('MMMM y', l.localeName).format(date));
 
-String shortDate(DateTime date) =>
-    '${date.day} ${monthShort(date.month)} ${date.year}';
-
-String plural(int n, String singular, String pluralForm) =>
-    '$n ${n == 1 ? singular : pluralForm}';
+/// "SEPT" / "SEP": el mes abreviado de una fecha.
+String monthShort(DateTime date, AppLocalizations l) =>
+    DateFormat('MMM', l.localeName).format(date).replaceAll('.', '');

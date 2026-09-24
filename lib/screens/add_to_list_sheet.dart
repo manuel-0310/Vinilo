@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../models/album.dart';
 import '../models/music_list.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/errors.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/misc.dart';
 import '../widgets/sheet.dart';
@@ -115,9 +117,9 @@ class _AddToListState extends State<_AddToList> {
       // no se marca como presente).
       _present.addAll(outcome.items.map((i) => i.id));
       _totalAdded += outcome.added;
-      _showNotice(outcome.message(widget.list.itemType));
+      _showNotice(outcome.message(widget.list.itemType, context.l10n));
     } catch (e) {
-      if (mounted) _showNotice('No se pudo agregar: $e');
+      if (mounted) _showNotice(context.l10n.addFailed(describeError(e, context.l10n)));
     } finally {
       if (mounted) setState(() => _adding = false);
     }
@@ -160,17 +162,17 @@ class _AddToListState extends State<_AddToList> {
     final c = VColors.of(context);
     final picked = _picked;
     return SheetScaffold(
-      title: picked == null ? 'Agregar a la lista' : picked.name,
+      title: picked == null ? context.l10n.addToListTitle : picked.name,
       subtitle: picked == null
           ? widget.list.name
-          : '${picked.artist} · elige las canciones',
+          : context.l10n.addPickTracksSubtitle(picked.artist),
       height: 0.9,
       scrollable: false,
       trailing: picked == null
           ? null
           : IconButton(
               key: const ValueKey('add-back'),
-              tooltip: 'Volver a los resultados',
+              tooltip: context.l10n.addBackToResults,
               onPressed: () => setState(() {
                 _picked = null;
                 _detail = null;
@@ -211,8 +213,8 @@ class _AddToListState extends State<_AddToList> {
                     onPressed: _selected.isEmpty || _adding ? null : _addSelected,
                     child: Text(
                       _selected.isEmpty
-                          ? 'Elige canciones'
-                          : 'Agregar ${ListItemType.tracks.count(_selected.length)}',
+                          ? context.l10n.addChooseTracks
+                          : context.l10n.addSelected(ListItemType.tracks.count(_selected.length, context.l10n)),
                     ),
                   ),
           ),
@@ -236,7 +238,7 @@ class _AddToListState extends State<_AddToList> {
             onSubmitted: (q) => _search(q.trim()),
             style: VText.ui(16, weight: 600),
             decoration: InputDecoration(
-              hintText: _tracks ? 'Busca el disco de la canción' : 'Busca un disco',
+              hintText: _tracks ? context.l10n.addSearchTrackAlbum : context.l10n.addSearchAlbum,
               prefixIcon: Icon(Icons.search_rounded, color: c.text3),
             ),
           ),
@@ -244,12 +246,12 @@ class _AddToListState extends State<_AddToList> {
         Expanded(
           child: _error != null
               ? EmptyState(
-                  title: 'Spotify no respondió',
-                  message: '$_error',
+                  title: context.l10n.spotifyNoResponse,
+                  message: describeError(_error, context.l10n),
                   labelColor: c.danger,
                   action: TextButton(
                     onPressed: () => _search(_controller.text.trim()),
-                    child: const Text('Reintentar'),
+                    child: Text(context.l10n.retry),
                   ),
                 )
               : _loading && page == null
@@ -264,16 +266,16 @@ class _AddToListState extends State<_AddToList> {
                           padding: const EdgeInsets.fromLTRB(22, 28, 22, 0),
                           child: Text(
                             _tracks
-                                ? 'Escribe el nombre de un disco o artista; después eliges las canciones.'
-                                : 'Escribe el nombre de un disco o artista.',
+                                ? context.l10n.addPromptTracks
+                                : context.l10n.addPromptAlbums,
                             textAlign: TextAlign.center,
                             style: VText.ui(14, color: c.text3, height: 1.4),
                           ),
                         )
                       : page.items.isEmpty
-                          ? const EmptyState(
-                              title: 'Nada por aquí',
-                              message: 'Prueba con otro nombre.',
+                          ? EmptyState(
+                              title: context.l10n.searchNothingTitle,
+                              message: context.l10n.addNothingBody,
                             )
                           : ListView.builder(
                               padding: const EdgeInsets.fromLTRB(22, 10, 22, 12),
@@ -343,12 +345,12 @@ class _AddToListState extends State<_AddToList> {
     final detail = _detail;
     if (_detailError != null) {
       return EmptyState(
-        title: 'No se pudo cargar el disco',
-        message: '$_detailError',
+        title: context.l10n.albumLoadFailed,
+        message: describeError(_detailError, context.l10n),
         labelColor: c.danger,
         action: TextButton(
           onPressed: () => _pickAlbum(album),
-          child: const Text('Reintentar'),
+          child: Text(context.l10n.retry),
         ),
       );
     }
@@ -371,7 +373,7 @@ class _AddToListState extends State<_AddToList> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  '${detail.tracks.length} canciones',
+                  context.l10n.countTracks(detail.tracks.length),
                   style: VText.ui(13, color: c.text2),
                 ),
               ),
@@ -385,7 +387,7 @@ class _AddToListState extends State<_AddToList> {
                   }
                 }),
                 child: Text(
-                  all ? 'Ninguna' : 'Todas',
+                  all ? context.l10n.selectNone : context.l10n.filterAll,
                   style: VText.ui(13, weight: 700, color: c.accent),
                 ),
               ),
@@ -434,7 +436,7 @@ class _AddToListState extends State<_AddToList> {
                       if (present)
                         Padding(
                           padding: const EdgeInsets.only(left: 8),
-                          child: Text('ya está', style: VText.label(9, color: c.text3)),
+                          child: Text(context.l10n.addAlreadyHere, style: VText.label(9, color: c.text3)),
                         ),
                       const SizedBox(width: 10),
                       Text(t.duration, style: VText.ui(13, color: c.text3)),
@@ -469,7 +471,7 @@ class SecondaryDone extends StatelessWidget {
         child: SizedBox(
           height: 52,
           child: Center(
-            child: Text('Listo', style: VText.ui(16, weight: 700, color: c.text)),
+            child: Text(context.l10n.done, style: VText.ui(16, weight: 700, color: c.text)),
           ),
         ),
       ),

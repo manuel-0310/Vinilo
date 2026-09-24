@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../services/account_service.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/errors.dart';
 import '../widgets/sheet.dart';
 
 /// "Eliminar cuenta": explica qué se borra, avisa que no se puede deshacer y
@@ -46,7 +48,7 @@ class _DeleteAccountState extends State<_DeleteAccount> {
   Future<void> _delete() async {
     final password = _password.text;
     if (password.isEmpty) {
-      setState(() => _error = 'Escribe tu contraseña para confirmar.');
+      setState(() => _error = context.l10n.deletePasswordMissing);
       return;
     }
     FocusScope.of(context).unfocus();
@@ -62,7 +64,7 @@ class _DeleteAccountState extends State<_DeleteAccount> {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _error = e is AccountDeletionException ? e.message : '$e';
+        _error = describeError(e, context.l10n);
       });
       return;
     }
@@ -76,6 +78,7 @@ class _DeleteAccountState extends State<_DeleteAccount> {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
+    final l10n = context.l10n;
     Widget item(IconData icon, String text) => Padding(
           padding: const EdgeInsets.only(bottom: 9),
           child: Row(
@@ -93,25 +96,25 @@ class _DeleteAccountState extends State<_DeleteAccount> {
     return PopScope(
       canPop: !_busy,
       child: SheetScaffold(
-        title: 'Eliminar cuenta',
-        subtitle: 'No se puede deshacer',
+        title: l10n.deleteAccount,
+        subtitle: l10n.deleteCannotUndo,
         // La hoja ya se desplaza, deja márgenes y sube con el teclado.
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Se borra para siempre todo lo tuyo:',
+              l10n.deleteIntro,
               style: VText.ui(14, weight: 700),
             ),
             const SizedBox(height: 12),
-            item(Icons.person_outline_rounded, 'Tu perfil, tu @usuario, tu foto y tu fondo.'),
-            item(Icons.album_outlined, 'Tus notas y comentarios (los promedios de los discos se recalculan) y tus "me gusta".'),
-            item(Icons.queue_music_rounded, 'Tus listas y las que guardaste.'),
-            item(Icons.group_outlined, 'A quién sigues y quién te sigue.'),
-            item(Icons.notifications_none_rounded, 'Tus notificaciones.'),
+            item(Icons.person_outline_rounded, l10n.deleteItemProfile),
+            item(Icons.album_outlined, l10n.deleteItemRatings),
+            item(Icons.queue_music_rounded, l10n.deleteItemLists),
+            item(Icons.group_outlined, l10n.deleteItemFollows),
+            item(Icons.notifications_none_rounded, l10n.deleteItemNotifications),
             const SizedBox(height: 10),
             Text(
-              'Para confirmar, escribe tu contraseña.',
+              l10n.deleteConfirmPrompt,
               style: VText.ui(13, color: c.text2),
             ),
             const SizedBox(height: 10),
@@ -125,10 +128,10 @@ class _DeleteAccountState extends State<_DeleteAccount> {
               onSubmitted: (_) => _delete(),
               style: VText.ui(16, weight: 600),
               decoration: InputDecoration(
-                hintText: 'Contraseña',
+                hintText: l10n.authPasswordHint,
                 prefixIcon: Icon(Icons.lock_outline_rounded, color: c.text3),
                 suffixIcon: IconButton(
-                  tooltip: _obscure ? 'Mostrar' : 'Ocultar',
+                  tooltip: _obscure ? l10n.authShowPassword : l10n.authHidePassword,
                   onPressed: () => setState(() => _obscure = !_obscure),
                   icon: Icon(
                     _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -168,16 +171,16 @@ class _DeleteAccountState extends State<_DeleteAccount> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Text('Borrando tu cuenta…', style: VText.ui(16, weight: 700, color: Colors.white)),
+                        Text(l10n.deleteInProgress, style: VText.ui(16, weight: 700, color: Colors.white)),
                       ],
                     )
-                  : const Text('Eliminar mi cuenta'),
+                  : Text(l10n.deleteConfirm),
             ),
             const SizedBox(height: 6),
             TextButton(
               key: const ValueKey('delete-cancel'),
               onPressed: _busy ? null : () => Navigator.of(context).maybePop(),
-              child: Text('Cancelar', style: VText.ui(15, weight: 700, color: c.text)),
+              child: Text(l10n.cancel, style: VText.ui(15, weight: 700, color: c.text)),
             ),
           ],
         ),

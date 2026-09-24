@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/notification.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/errors.dart';
 import '../util/format.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/misc.dart';
@@ -23,6 +26,52 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   Stream<List<AppNotification>>? _stream;
   Set<String>? _wasUnread;
+
+  /// Las que se deslizaron o se borraron todas: salen de la lista al
+  /// instante, sin esperar a que Firestore lo confirme (un `Dismissible`
+  /// deslizado tiene que desaparecer del árbol en ese mismo cuadro).
+  final Set<String> _removed = {};
+
+  void _delete(AppNotification n) {
+    HapticFeedback.lightImpact();
+    setState(() => _removed.add(n.id));
+    ServicesScope.of(context).notifications.delete(n.id);
+  }
+
+  Future<void> _deleteAll(List<AppNotification> items) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final c = VColors.of(ctx);
+        return AlertDialog(
+          title: Text(ctx.l10n.notificationsClearTitle, style: VText.display(28)),
+          content: Text(
+            ctx.l10n.notificationsClearBody,
+            style: VText.ui(14, color: c.text2, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(ctx.l10n.cancel),
+            ),
+            TextButton(
+              key: const ValueKey('notifications-clear-confirm'),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(
+                ctx.l10n.notificationsClear,
+                style: VText.ui(14, weight: 700, color: c.danger),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    if (ok != true || !mounted) return;
+    final me = CurrentUser.of(context);
+    final repo = ServicesScope.of(context).notifications;
+    setState(() => _removed.addAll(items.map((n) => n.id)));
+    await repo.deleteAll(me.uid);
+  }
 
   @override
   void didChangeDependencies() {
@@ -70,7 +119,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           StreamBuilder<List<AppNotification>>(
             stream: _stream,
             builder: (context, snap) {
-              final items = snap.data;
+              final items = snap.data?.where((n) => !_removed.contains(n.id)).toList();
               if (items != null) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) _markRead(items);
@@ -86,14 +135,33 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Notificaciones', style: VText.display(38, height: 1)),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  context.l10n.notificationsTitle,
+                                  style: VText.display(38, height: 1),
+                                ),
+                              ),
+                              if (items != null && items.isNotEmpty)
+                                TextButton(
+                                  key: const ValueKey('notifications-clear'),
+                                  onPressed: () => _deleteAll(items),
+                                  child: Text(
+                                    context.l10n.notificationsClear,
+                                    style: VText.ui(13, weight: 700, color: c.danger),
+                                  ),
+                                ),
+                            ],
+                          ),
                           const SizedBox(height: 4),
                           Text(
                             items == null
-                                ? 'Cargando…'
+                                ? context.l10n.loading
                                 : unread.isEmpty
-                                    ? 'Todo al día'
-                                    : plural(unread.length, 'nueva', 'nuevas'),
+                                    ? context.l10n.notificationsAllCaughtUp
+                                    : context.l10n.notificationsNew(unread.length),
                             key: const ValueKey('notifications-subtitle'),
                             style: VText.ui(13, color: c.text2),
                           ),
@@ -107,7 +175,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
                         child: Text(
-                          'No se pudieron cargar: ${snap.error}',
+                          context.l10n.notificationsError(describeError(snap.error, context.l10n)),
                           style: VText.ui(13, color: c.danger),
                         ),
                       ),
@@ -122,21 +190,31 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       ),
                     )
                   else if (items.isEmpty)
-                    const SliverToBoxAdapter(
+                    SliverToBoxAdapter(
                       child: EmptyState(
-                        title: 'Nada por ahora',
-                        message:
-                            'Aquí verás cuando alguien te siga, le guste una de tus notas o guarde una de tus listas.',
+                        title: context.l10n.notificationsEmptyTitle,
+                        message: context.l10n.notificationsEmptyBody,
                       ),
                     )
                   else
                     SliverList.builder(
                       itemCount: items.length,
-                      itemBuilder: (context, i) => _NotificationRow(
-                        key: ValueKey('notification-$i'),
-                        item: items[i],
-                        fresh: unread.contains(items[i].id),
-                        onTap: () => _open(items[i]),
+                      itemBuilder: (context, i) => Dismissible(
+                        key: ValueKey('dismiss-${items[i].id}'),
+                        direction: DismissDirection.endToStart,
+                        onDismissed: (_) => _delete(items[i]),
+                        background: Container(
+                          color: c.danger,
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+                          child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                        ),
+                        child: _NotificationRow(
+                          key: ValueKey('notification-$i'),
+                          item: items[i],
+                          fresh: unread.contains(items[i].id),
+                          onTap: () => _open(items[i]),
+                        ),
                       ).animate().fadeIn(delay: (25 * (i % 12)).ms, duration: 300.ms),
                     ),
                   SliverToBoxAdapter(child: SizedBox(height: bottomPad + 30)),
@@ -177,12 +255,13 @@ class _NotificationRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = VColors.of(context);
     final name = item.from.name;
-    final rest = item.text.startsWith(name)
-        ? item.text.substring(name.length)
-        : item.text.replaceFirst(name, '');
-    final prefix = item.text.startsWith(name)
+    final text = item.text(context.l10n);
+    final rest = text.startsWith(name)
+        ? text.substring(name.length)
+        : text.replaceFirst(name, '');
+    final prefix = text.startsWith(name)
         ? ''
-        : item.text.substring(0, item.text.indexOf(name).clamp(0, item.text.length));
+        : text.substring(0, text.indexOf(name).clamp(0, text.length));
     Widget? trailing;
     switch (item.type) {
       case NotificationType.likeRating:
@@ -242,7 +321,7 @@ class _NotificationRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 3),
-                    Text(timeAgo(item.createdAt), style: VText.ui(11, color: c.text3)),
+                    Text(timeAgo(item.createdAt, context.l10n), style: VText.ui(11, color: c.text3)),
                   ],
                 ),
               ),

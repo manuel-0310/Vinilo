@@ -31,3 +31,17 @@ class FollowingFeed {
   final bool followsAnyone;
   final List<RatingEntry> entries;
 }
+
+/// "Calificado por": las notas de mis amigos sobre un disco, de mayor a menor
+/// nota y, a igual nota, la más reciente primero. Sin repetidos.
+List<RatingEntry> friendsByScore(Iterable<List<RatingEntry>> pages) {
+  final byId = <String, RatingEntry>{
+    for (final page in pages)
+      for (final e in page) e.id: e,
+  };
+  return byId.values.toList()
+    ..sort((a, b) {
+      final byScore = b.score.compareTo(a.score);
+      return byScore != 0 ? byScore : b.updatedAt.compareTo(a.updatedAt);
+    });
+}

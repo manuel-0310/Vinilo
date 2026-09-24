@@ -1,17 +1,20 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/album.dart';
 import '../models/music_list.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
-import '../util/format.dart';
+import '../util/errors.dart';
 import '../util/ranking.dart';
+import '../util/streams.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/album_strip.dart';
 import '../widgets/comment_card.dart';
@@ -20,6 +23,7 @@ import '../widgets/misc.dart';
 import '../widgets/rating_sheet.dart';
 import '../widgets/score_widgets.dart';
 import '../widgets/sheet.dart';
+import '../widgets/user_avatar.dart';
 import 'list_form_sheet.dart';
 import 'list_picker_sheet.dart';
 import 'routes.dart';
@@ -44,6 +48,9 @@ class _AlbumScreenState extends State<AlbumScreen> {
   Stream<RatingEntry?>? _mine;
   Stream<List<RatingEntry>>? _community;
 
+  /// "Calificado por": las notas de las personas que sigo sobre este disco.
+  Stream<List<RatingEntry>>? _friends;
+
   /// Selección de canciones para agregarlas a una lista.
   bool _selecting = false;
   final Set<String> _selected = {};
@@ -67,6 +74,10 @@ class _AlbumScreenState extends State<AlbumScreen> {
     _stats = services.ratings.albumStats(widget.album.id);
     _mine = services.ratings.myRating(me.uid, widget.album.id);
     _community = services.ratings.albumRatings(widget.album.id);
+    _friends = switchLatest(
+      services.follows.followingIds(me.uid).distinct(listEquals),
+      (List<String> uids) => services.ratings.friendsRatings(widget.album.id, uids),
+    );
     _detail = services.spotify.cachedAlbum(widget.album.id);
     if (_detail == null) {
       _loadDetail();
@@ -125,9 +136,9 @@ class _AlbumScreenState extends State<AlbumScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text('Guardado en tu diario'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(context.l10n.ratingSaved),
+          duration: const Duration(seconds: 2),
         ),
       );
   }
@@ -137,6 +148,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
   /// pantalla (por eso se capturan el repositorio y los ids).
   void _deleteWithUndo(RatingEntry entry) {
     final ratings = _services!.ratings;
+    final l10n = context.l10n;
     final uid = entry.uid;
     final albumId = entry.albumId;
     final token = ++_deleteToken;
@@ -145,13 +157,13 @@ class _AlbumScreenState extends State<AlbumScreen> {
     messenger.hideCurrentSnackBar();
     final controller = messenger.showSnackBar(
       SnackBar(
-        content: const Text('Nota borrada de tu diario'),
+        content: Text(l10n.ratingDeleted),
         duration: const Duration(seconds: 4),
         // Con acción, Flutter lo dejaría fijo hasta cerrarlo a mano.
         persist: false,
         action: SnackBarAction(
           key: const ValueKey('rating-undo'),
-          label: 'Deshacer',
+          label: l10n.undo,
           onPressed: () {},
         ),
       ),
@@ -167,7 +179,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
         await ratings.remove(uid: uid, albumId: albumId);
       } catch (e) {
         messenger.showSnackBar(
-          SnackBar(content: Text('No se pudo borrar la nota: $e')),
+          SnackBar(content: Text(l10n.ratingDeleteFailed(describeError(e, l10n)))),
         );
       }
       if (mounted && token == _deleteToken) {
@@ -196,7 +208,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
           action: list == null
               ? null
               : SnackBarAction(
-                  label: 'Ver lista',
+                  label: context.l10n.viewList,
                   onPressed: () => openList(context, listId: list.id, initial: list),
                 ),
         ),
@@ -219,8 +231,8 @@ class _AlbumScreenState extends State<AlbumScreen> {
             SheetAction(
               key: const ValueKey('add-album-to-list'),
               icon: Icons.album_rounded,
-              label: 'Agregar el disco a una lista',
-              hint: 'A una de tus listas de discos, o a una nueva',
+              label: context.l10n.albumAddToList,
+              hint: context.l10n.albumAddToListHint,
               onTap: () {
                 Navigator.of(ctx).pop();
                 _addAlbumToList();
@@ -230,10 +242,10 @@ class _AlbumScreenState extends State<AlbumScreen> {
             SheetAction(
               key: const ValueKey('create-list-from-album'),
               icon: Icons.playlist_add_rounded,
-              label: 'Crear lista con este disco',
+              label: context.l10n.albumCreateList,
               hint: hasTracks
-                  ? 'Todas sus canciones, en orden, listas para ordenar'
-                  : 'Espera a que carguen las canciones',
+                  ? context.l10n.albumCreateListHint
+                  : context.l10n.albumWaitTracks,
               enabled: hasTracks,
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -251,9 +263,10 @@ class _AlbumScreenState extends State<AlbumScreen> {
     if (list == null || !mounted) return;
     try {
       final outcome = await _services!.lists.addTo(list.id, [ListItem.fromAlbum(_album)]);
-      _snack('${outcome.message(ListItemType.albums)} · ${list.name}', list: list);
+      if (!mounted) return;
+      _snack('${outcome.message(ListItemType.albums, context.l10n)} · ${list.name}', list: list);
     } catch (e) {
-      _snack('No se pudo agregar: $e');
+      if (mounted) _snack(context.l10n.addFailed(describeError(e, context.l10n)));
     }
   }
 
@@ -262,10 +275,10 @@ class _AlbumScreenState extends State<AlbumScreen> {
     if (detail == null) return;
     final draft = await showListForm(
       context,
-      title: 'Lista con este disco',
+      title: context.l10n.albumListFromAlbum,
       initialName: detail.name,
       fixedItemType: ListItemType.tracks,
-      submitLabel: 'Crear lista',
+      submitLabel: context.l10n.listCreate,
     );
     if (draft == null || !mounted) return;
     try {
@@ -280,7 +293,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
       );
       if (mounted) openList(context, listId: list.id, initial: list);
     } catch (e) {
-      _snack('No se pudo crear la lista: $e');
+      if (mounted) _snack(context.l10n.listCreateFailed(describeError(e, context.l10n)));
     }
   }
 
@@ -319,9 +332,10 @@ class _AlbumScreenState extends State<AlbumScreen> {
     try {
       final outcome = await _services!.lists.addTo(list.id, items);
       _stopSelecting();
-      _snack('${outcome.message(ListItemType.tracks)} · ${list.name}', list: list);
+      if (!mounted) return;
+      _snack('${outcome.message(ListItemType.tracks, context.l10n)} · ${list.name}', list: list);
     } catch (e) {
-      _snack('No se pudo agregar: $e');
+      if (mounted) _snack(context.l10n.addFailed(describeError(e, context.l10n)));
     }
   }
 
@@ -337,7 +351,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
     final coverSize = math.min(size.width * 0.7, 330.0);
 
     final meta = [
-      album.meta,
+      album.meta(context.l10n),
       if (detail != null && detail.tracks.isNotEmpty) detail.totalDurationLabel,
     ].join(' · ');
 
@@ -350,6 +364,9 @@ class _AlbumScreenState extends State<AlbumScreen> {
               ? null
               : mineSnap.data;
           final waitingMine = mineSnap.connectionState == ConnectionState.waiting;
+          // Sin nota: el lápiz flota abajo a la derecha (no mientras se
+          // eligen canciones, que ahí va la barra de selección).
+          final showPencil = !waitingMine && mine == null && !_selecting;
           return Stack(
             children: [
               CustomScrollView(
@@ -417,8 +434,8 @@ class _AlbumScreenState extends State<AlbumScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
                       child: Column(
                         children: [
-                          // Sin nota: la misma fila con un círculo para calificar.
-                          // Al guardar (o borrar) cambia de una a otra.
+                          // Con nota, la fila "Tu nota N ···· Editar"; sin nota no
+                          // hay fila: se califica con el lápiz flotante.
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 320),
                             switchInCurve: Curves.easeOutCubic,
@@ -441,9 +458,9 @@ class _AlbumScreenState extends State<AlbumScreen> {
                                   )
                                 : mine != null
                                     ? _MyRatingRow(entry: mine, onEdit: () => _rate(mine))
-                                    : _RateRow(onTap: () => _rate(null)),
+                                    : const SizedBox(key: ValueKey('mine-none'), width: double.infinity),
                           ),
-                          const SizedBox(height: 14),
+                          if (waitingMine || mine != null) const SizedBox(height: 14),
                           StreamBuilder<AlbumStats?>(
                             stream: _stats,
                             builder: (context, statsSnap) => _CommunityBlock(
@@ -456,7 +473,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                     ),
                   ),
                   if (detail == null && _detailError == null) ...[
-                    const SliverToBoxAdapter(child: SectionHeader('Canciones')),
+                    SliverToBoxAdapter(child: SectionHeader(context.l10n.listTypeTracks)),
                     SliverList.separated(
                       itemCount: 6,
                       separatorBuilder: (_, _) => const SizedBox(height: 14),
@@ -473,7 +490,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                'No se pudo cargar el detalle: $_detailError',
+                                context.l10n.albumDetailError(describeError(_detailError, context.l10n)),
                                 style: VText.ui(13, color: c.danger),
                               ),
                             ),
@@ -482,7 +499,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                                 setState(() => _detailError = null);
                                 _loadDetail();
                               },
-                              child: const Text('Reintentar'),
+                              child: Text(context.l10n.retry),
                             ),
                           ],
                         ),
@@ -491,10 +508,10 @@ class _AlbumScreenState extends State<AlbumScreen> {
                   else if (detail!.tracks.isNotEmpty) ...[
                     SliverToBoxAdapter(
                       child: SectionHeader(
-                        'Canciones',
+                        context.l10n.listTypeTracks,
                         subtitle: _selecting
-                            ? 'Toca las que quieras agregar'
-                            : '${plural(detail.tracks.length, 'canción', 'canciones')} · ${detail.totalDurationLabel} · Mantén pulsada una para agregarla a una lista',
+                            ? context.l10n.albumSelectHint
+                            : '${context.l10n.countTracks(detail.tracks.length)} · ${detail.totalDurationLabel} · ${context.l10n.albumLongPressHint}',
                         action: _selecting
                             ? TextButton(
                                 key: const ValueKey('select-all'),
@@ -506,7 +523,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                                   }
                                 }),
                                 child: Text(
-                                  _selected.length == detail.tracks.length ? 'Ninguna' : 'Todas',
+                                  _selected.length == detail.tracks.length ? context.l10n.selectNone : context.l10n.filterAll,
                                   style: VText.ui(13, weight: 700, color: c.accent),
                                 ),
                               )
@@ -531,6 +548,45 @@ class _AlbumScreenState extends State<AlbumScreen> {
                       ),
                     ),
                   ],
+                  // "Calificado por": mis amigos que ya le pusieron nota,
+                  // justo antes de los comentarios.
+                  StreamBuilder<List<RatingEntry>>(
+                    stream: _friends,
+                    builder: (context, snap) {
+                      final friends = snap.data ?? const <RatingEntry>[];
+                      if (friends.isEmpty) {
+                        return const SliverToBoxAdapter(child: SizedBox.shrink());
+                      }
+                      return SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SectionHeader(
+                              context.l10n.ratedBy,
+                              subtitle: context.l10n.countFriends(friends.length),
+                            ),
+                            SizedBox(
+                              height: 92,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                physics: const BouncingScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+                                itemCount: friends.length,
+                                separatorBuilder: (_, _) => const SizedBox(width: 16),
+                                itemBuilder: (context, i) => _FriendScore(
+                                  key: ValueKey('friend-rating-$i'),
+                                  entry: friends[i],
+                                )
+                                    .animate()
+                                    .fadeIn(delay: (40 * i).ms, duration: 320.ms)
+                                    .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                   StreamBuilder<List<RatingEntry>>(
                     stream: _community,
                     builder: (context, snap) {
@@ -545,8 +601,8 @@ class _AlbumScreenState extends State<AlbumScreen> {
                         slivers: [
                           SliverToBoxAdapter(
                             child: SectionHeader(
-                              'Comentarios',
-                              subtitle: plural(all.length, 'comentario', 'comentarios'),
+                              context.l10n.commentsTitle,
+                              subtitle: context.l10n.countComments(all.length),
                             ),
                           ),
                           SliverList.separated(
@@ -571,7 +627,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                                     ),
                                     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                                     child: Text(
-                                      'Ver más ($hidden)',
+                                      context.l10n.seeMore(hidden),
                                       style: VText.ui(13, weight: 700),
                                     ),
                                   ),
@@ -595,7 +651,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SectionHeader('Más de ${album.artist}'),
+                            SectionHeader(context.l10n.moreBy(album.artist)),
                             AlbumStrip(
                               albums: items,
                               heroPrefix: 'more-${album.id}',
@@ -608,22 +664,28 @@ class _AlbumScreenState extends State<AlbumScreen> {
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      // Con la barra de selección visible, la lista deja sitio
-                      // para que las últimas canciones y este pie no queden
-                      // tapados.
+                      // Con la barra de selección o el lápiz visibles, la lista
+                      // deja sitio para que las últimas canciones y este pie no
+                      // queden tapados.
                       padding: EdgeInsets.fromLTRB(
                         VSpace.page,
                         34,
                         VSpace.page,
-                        bottomPad + 30 + (_selecting ? _selectionBarClearance : 0),
+                        bottomPad +
+                            30 +
+                            (_selecting
+                                ? _selectionBarClearance
+                                : showPencil
+                                    ? _pencilClearance
+                                    : 0),
                       ),
                       child: Text(
                         [
                           if (detail?.label != null) detail!.label!,
                           if (detail?.copyright != null) detail!.copyright!,
                           if (album.releaseDate != null)
-                            'Publicado el ${album.releaseDate}',
-                          'Datos y portadas de Spotify',
+                            context.l10n.releasedOn(album.releaseDate!),
+                          context.l10n.spotifyCredit,
                         ].join('\n'),
                         style: VText.ui(11, color: c.text3, height: 1.5),
                       ),
@@ -678,6 +740,22 @@ class _AlbumScreenState extends State<AlbumScreen> {
                       : const SizedBox.shrink(key: ValueKey('no-selection-bar')),
                 ),
               ),
+              Positioned(
+                right: VSpace.page,
+                bottom: bottomPad + 16,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 280),
+                  switchInCurve: Curves.easeOutBack,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, anim) => FadeTransition(
+                    opacity: anim,
+                    child: ScaleTransition(scale: anim, child: child),
+                  ),
+                  child: showPencil
+                      ? _RatePencil(onTap: () => _rate(null))
+                      : const SizedBox.shrink(key: ValueKey('no-pencil')),
+                ),
+              ),
             ],
           );
         },
@@ -720,58 +798,115 @@ class _ArtistLink extends StatelessWidget {
 /// Alto que reserva la lista al final para que la barra de selección no
 /// tape nada.
 const double _selectionBarClearance = 76;
+
+/// Lo mismo para el lápiz flotante de calificar.
+const double _pencilClearance = 80;
 const int _maxComments = 3;
 
-/// Sin nota todavía: la misma fila que "Tu nota", con un círculo a la
-/// derecha para calificar (antes era un botón flotante abajo).
-class _RateRow extends StatelessWidget {
-  const _RateRow({required this.onTap});
+/// Sin nota: un círculo flotante del color de énfasis, abajo a la derecha,
+/// con el lápiz; abre la hoja para calificar.
+class _RatePencil extends StatelessWidget {
+  const _RatePencil({required this.onTap});
 
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 6, 6, 6),
-      decoration: BoxDecoration(
-        color: c.surface.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: c.line),
-      ),
-      child: Row(
-        children: [
-          Text('Tu nota', style: VText.ui(15, weight: 600)),
-          const SizedBox(width: 12),
-          Text(
-            'Sin calificar',
-            key: const ValueKey('album-unrated'),
-            style: VText.ui(14, color: c.text3),
-          ),
-          const SizedBox(width: 14),
-          Expanded(child: _DotLeader(color: c.text3)),
-          const SizedBox(width: 10),
-          Tooltip(
-            message: 'Calificar este disco',
-            child: Material(
-              color: c.accent,
-              shape: const CircleBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                key: const ValueKey('rate-button'),
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  onTap();
-                },
-                child: SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Icon(Icons.edit_note_rounded, size: 24, color: c.onAccent),
-                ),
-              ),
+    return Tooltip(
+      message: context.l10n.rateThisAlbum,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: c.accent.withValues(alpha: c.isDark ? 0.4 : 0.3),
+              blurRadius: 22,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: c.scrim.withValues(alpha: c.isDark ? 0.45 : 0.12),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: c.accent,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            key: const ValueKey('rate-button'),
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onTap();
+            },
+            child: SizedBox(
+              width: 58,
+              height: 58,
+              child: Icon(Icons.edit_note_rounded, size: 28, color: c.onAccent),
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Un amigo que calificó el disco: su foto con una burbuja pequeña con la
+/// nota, y su nombre debajo. Al tocarlo se abre su perfil.
+class _FriendScore extends StatelessWidget {
+  const _FriendScore({super.key, required this.entry});
+
+  final RatingEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final user = entry.user;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => openUser(context, user.uid),
+      child: SizedBox(
+        width: 62,
+        child: Column(
+          children: [
+            SizedBox(
+              width: 58,
+              height: 58,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  UserAvatar(
+                    name: user.name,
+                    color: Color(user.colorValue),
+                    url: user.avatarUrl,
+                    size: 52,
+                  ),
+                  Positioned(
+                    right: -4,
+                    bottom: -2,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: c.bg, width: 2),
+                      ),
+                      child: ScoreBadge(value: entry.score.toDouble(), fontSize: 11, whole: true),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              user.name.split(' ').first,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: VText.ui(12, weight: 600, color: c.text2),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -812,15 +947,15 @@ class _SelectionBar extends StatelessWidget {
         children: [
           IconButton(
             key: const ValueKey('cancel-select'),
-            tooltip: 'Cancelar',
+            tooltip: context.l10n.cancel,
             onPressed: onCancel,
             icon: Icon(Icons.close_rounded, color: c.text2),
           ),
           Expanded(
             child: Text(
               count == 0
-                  ? 'Elige canciones'
-                  : '$count ${count == 1 ? 'canción' : 'canciones'}',
+                  ? context.l10n.addChooseTracks
+                  : context.l10n.countTracks(count),
               key: const ValueKey('selection-count'),
               style: VText.ui(14, weight: 700),
             ),
@@ -832,7 +967,7 @@ class _SelectionBar extends StatelessWidget {
               minimumSize: const Size(0, 44),
               padding: const EdgeInsets.symmetric(horizontal: 18),
             ),
-            child: const Text('Agregar a lista'),
+            child: Text(context.l10n.addToList),
           ),
         ],
       ),
@@ -861,7 +996,7 @@ class _MyRatingRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text('Tu nota', style: VText.ui(15, weight: 600)),
+          Text(context.l10n.yourRating, style: VText.ui(15, weight: 600)),
           const SizedBox(width: 12),
           ScoreNumeral(score: entry.score, size: 30),
           const SizedBox(width: 14),
@@ -876,7 +1011,7 @@ class _MyRatingRow extends StatelessWidget {
               minimumSize: const Size(0, 36),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Text('Editar', style: VText.ui(14, weight: 700, color: c.accent)),
+            child: Text(context.l10n.edit, style: VText.ui(14, weight: 700, color: c.accent)),
           ),
         ],
       ),
@@ -936,7 +1071,7 @@ class _CommunityBlock extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Text(
-          'Nadie ha calificado este disco todavía',
+          context.l10n.albumUnratedByAnyone,
           textAlign: TextAlign.center,
           style: VText.ui(14, color: c.text2),
         ),
@@ -952,14 +1087,14 @@ class _CommunityBlock extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('CALIFICACIÓN', style: VText.label(11, color: c.text3)),
+              Text(context.l10n.ratingLabel, style: VText.label(11, color: c.text3)),
               const SizedBox(height: 4),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(
-                    Score.formatAverage(s.average),
+                    Score.formatAverage(s.average, context.l10n.localeName),
                     style: VText.display(56, color: color, height: 0.95),
                   ),
                   const SizedBox(width: 6),
@@ -968,7 +1103,7 @@ class _CommunityBlock extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                plural(s.count, 'nota', 'notas'),
+                context.l10n.countRatings(s.count),
                 style: VText.ui(13, color: c.text2),
               ),
             ],

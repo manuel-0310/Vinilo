@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/music_list.dart';
 import '../models/user_profile.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/errors.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/list_mosaic.dart';
 import '../widgets/misc.dart';
@@ -78,31 +80,31 @@ class _ListScreenState extends State<ListScreen> {
     final next = reorder(list.items, oldIndex, newIndex);
     if (_sameOrder(next, list.items)) return;
     HapticFeedback.selectionClick();
-    await _write(list, next, 'No se pudo reordenar');
+    await _write(list, next, context.l10n.listReorderFailed);
   }
 
   Future<void> _remove(MusicList list, ListItem item) async {
     HapticFeedback.lightImpact();
     final index = list.items.indexWhere((i) => i.id == item.id);
-    await _write(list, removeItem(list.items, item.id), 'No se pudo quitar');
+    await _write(list, removeItem(list.items, item.id), context.l10n.listRemoveFailed);
     if (!mounted || index < 0) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('Quitaste "${item.name}"'),
+          content: Text(context.l10n.listRemoved(item.name)),
           duration: const Duration(seconds: 4),
           // Con acción, Flutter lo dejaría fijo hasta cerrarlo a mano.
           persist: false,
           action: SnackBarAction(
             key: const ValueKey('list-undo'),
-            label: 'Deshacer',
+            label: context.l10n.undo,
             onPressed: () {
               // Vuelve a su posición sobre la lista tal como esté ahora.
               final current = _raw;
               if (current == null || !mounted) return;
               final shown = _optimistic ?? current.items;
-              _write(current, insertItemAt(shown, item, index), 'No se pudo deshacer');
+              _write(current, insertItemAt(shown, item, index), context.l10n.undoFailed);
             },
           ),
         ),
@@ -118,7 +120,7 @@ class _ListScreenState extends State<ListScreen> {
       await _services!.lists.setItems(list.id, next);
     } catch (e) {
       if (mounted) setState(() => _optimistic = null);
-      _snack('$error: $e');
+      if (mounted) _snack('$error: ${describeError(e, context.l10n)}');
     }
   }
 
@@ -132,8 +134,7 @@ class _ListScreenState extends State<ListScreen> {
 
   Future<void> _add(MusicList list) async {
     final added = await showAddToList(context, list);
-    if (added == 1) _snack('Se agregó 1 ${list.itemType.one}');
-    if (added > 1) _snack('Se agregaron ${list.itemType.count(added)}');
+    if (added > 0 && mounted) _snack(list.itemType.added(added, context.l10n));
   }
 
   Future<void> _editMeta(MusicList list) async {
@@ -146,7 +147,7 @@ class _ListScreenState extends State<ListScreen> {
         description: draft.description,
       );
     } catch (e) {
-      _snack('No se pudo guardar: $e');
+      if (mounted) _snack(context.l10n.couldNotSave(describeError(e, context.l10n)));
     }
   }
 
@@ -156,21 +157,21 @@ class _ListScreenState extends State<ListScreen> {
       builder: (ctx) {
         final c = VColors.of(ctx);
         return AlertDialog(
-          title: Text('¿Borrar "${list.name}"?', style: VText.display(28)),
+          title: Text(ctx.l10n.listDeleteTitle(list.name), style: VText.display(28)),
           content: Text(
-            'No se puede deshacer. Quien la haya guardado dejará de verla.',
+            ctx.l10n.listDeleteBody,
             style: VText.ui(14, color: c.text2, height: 1.4),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancelar'),
+              child: Text(ctx.l10n.cancel),
             ),
             TextButton(
               key: const ValueKey('list-delete-confirm'),
               onPressed: () => Navigator.of(ctx).pop(true),
               child: Text(
-                'Borrar lista',
+                ctx.l10n.listDelete,
                 style: VText.ui(14, weight: 700, color: c.danger),
               ),
             ),
@@ -183,7 +184,7 @@ class _ListScreenState extends State<ListScreen> {
       await _services!.lists.delete(list);
       if (mounted) Navigator.of(context).maybePop();
     } catch (e) {
-      _snack('No se pudo borrar: $e');
+      if (mounted) _snack(context.l10n.deleteFailed(describeError(e, context.l10n)));
     }
   }
 
@@ -192,17 +193,17 @@ class _ListScreenState extends State<ListScreen> {
       context,
       aspectRatio: 1,
       outputWidth: 1000,
-      title: 'Portada de la lista',
+      title: context.l10n.listCoverTitle,
     );
     final bytes = pick?.bytes;
     if (bytes == null || !mounted) return;
-    _snack('Subiendo portada…');
+    _snack(context.l10n.listCoverUploading);
     try {
       await _services!.lists.setCover(list, bytes);
       _glowFor = null;
       if (mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
     } catch (e) {
-      _snack('No se pudo cambiar la portada: $e');
+      if (mounted) _snack(context.l10n.listCoverFailed(describeError(e, context.l10n)));
     }
   }
 
@@ -211,7 +212,7 @@ class _ListScreenState extends State<ListScreen> {
       await _services!.lists.removeCover(list);
       _glowFor = null;
     } catch (e) {
-      _snack('No se pudo quitar la portada: $e');
+      if (mounted) _snack(context.l10n.listCoverRemoveFailed(describeError(e, context.l10n)));
     }
   }
 
@@ -220,14 +221,14 @@ class _ListScreenState extends State<ListScreen> {
       context,
       (ctx) => SheetScaffold(
         title: list.name,
-        subtitle: list.typeLabel,
+        subtitle: list.typeLabel(context.l10n),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SheetAction(
               key: const ValueKey('list-menu-edit'),
               icon: Icons.edit_rounded,
-              label: 'Editar nombre y descripción',
+              label: context.l10n.listMenuEdit,
               onTap: () {
                 Navigator.of(ctx).pop();
                 _editMeta(list);
@@ -237,8 +238,8 @@ class _ListScreenState extends State<ListScreen> {
             SheetAction(
               key: const ValueKey('list-menu-add'),
               icon: Icons.add_rounded,
-              label: 'Agregar ${list.itemType.label.toLowerCase()}',
-              hint: 'Busca un disco y elige',
+              label: list.itemType.addLabel(context.l10n),
+              hint: context.l10n.listMenuAddHint,
               onTap: () {
                 Navigator.of(ctx).pop();
                 _add(list);
@@ -248,8 +249,8 @@ class _ListScreenState extends State<ListScreen> {
             SheetAction(
               key: const ValueKey('list-menu-cover'),
               icon: Icons.image_rounded,
-              label: list.coverUrl == null ? 'Elegir portada' : 'Cambiar portada',
-              hint: 'Una foto en lugar del mosaico',
+              label: list.coverUrl == null ? context.l10n.listCoverChoose : context.l10n.listCoverChange,
+              hint: context.l10n.listCoverHint,
               onTap: () {
                 Navigator.of(ctx).pop();
                 _changeCover(list);
@@ -260,8 +261,8 @@ class _ListScreenState extends State<ListScreen> {
               SheetAction(
                 key: const ValueKey('list-menu-cover-remove'),
                 icon: Icons.grid_view_rounded,
-                label: 'Quitar portada',
-                hint: 'Vuelve el mosaico con las portadas de la lista',
+                label: context.l10n.listCoverRemove,
+                hint: context.l10n.listCoverRemoveHint,
                 onTap: () {
                   Navigator.of(ctx).pop();
                   _removeCover(list);
@@ -272,7 +273,7 @@ class _ListScreenState extends State<ListScreen> {
             SheetAction(
               key: const ValueKey('list-menu-delete'),
               icon: Icons.delete_outline_rounded,
-              label: 'Borrar lista',
+              label: context.l10n.listDelete,
               danger: true,
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -316,10 +317,10 @@ class _ListScreenState extends State<ListScreen> {
           if (list == null) {
             return Stack(
               children: [
-                const Center(
+                Center(
                   child: EmptyState(
-                    title: 'Esta lista ya no existe',
-                    message: 'Su autor la borró.',
+                    title: context.l10n.listGone,
+                    message: context.l10n.listGoneBody,
                   ),
                 ),
                 _back(topPad),
@@ -451,7 +452,7 @@ class _ListScreenState extends State<ListScreen> {
                           ],
                           const SizedBox(height: 10),
                           Text(
-                            '${list.typeLabel} · ${list.itemType.count(list.count)}',
+                            '${list.typeLabel(context.l10n)} · ${list.itemType.count(list.count, context.l10n)}',
                             key: const ValueKey('list-meta'),
                             textAlign: TextAlign.center,
                             style: VText.ui(13, color: c.text3),
@@ -472,7 +473,7 @@ class _ListScreenState extends State<ListScreen> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  mine ? 'Tu lista' : 'por ${list.owner.name}',
+                                  mine ? context.l10n.listYours : context.l10n.listBy(list.owner.name),
                                   style: VText.ui(13, weight: 700),
                                 ),
                                 if (list.owner.username != null) ...[
@@ -507,16 +508,18 @@ class _ListScreenState extends State<ListScreen> {
         if (items.isEmpty)
           SliverToBoxAdapter(
             child: EmptyState(
-              title: mine ? 'Tu lista está vacía' : 'Todavía no tiene nada',
+              title: mine ? context.l10n.listEmptyMineTitle : context.l10n.listEmptyTheirsTitle,
               message: mine
-                  ? 'Busca un disco y elige ${list.itemType == ListItemType.tracks ? 'sus canciones' : 'agregarlo'}. También puedes hacerlo desde la pantalla de cualquier disco.'
-                  : 'Cuando ${list.owner.name} agregue algo, aparecerá aquí.',
+                  ? (list.itemType == ListItemType.tracks
+                      ? context.l10n.listEmptyMineTracks
+                      : context.l10n.listEmptyMineAlbums)
+                  : context.l10n.listEmptyTheirs(list.owner.name),
               action: mine
                   ? FilledButton.icon(
                       key: const ValueKey('list-add-empty'),
                       onPressed: () => _add(list),
                       icon: const Icon(Icons.add_rounded),
-                      label: Text('Agregar ${list.itemType.label.toLowerCase()}'),
+                      label: Text(list.itemType.addLabel(context.l10n)),
                     )
                   : null,
             ),
@@ -548,8 +551,8 @@ class _ListScreenState extends State<ListScreen> {
             padding: EdgeInsets.fromLTRB(VSpace.page, 30, VSpace.page, bottomPad + 30),
             child: Text(
               mine && items.isNotEmpty
-                  ? 'Mantén pulsado un elemento para moverlo. En "Editar" puedes quitar.'
-                  : 'Datos y portadas de Spotify',
+                  ? context.l10n.listFooterOwner
+                  : context.l10n.spotifyCredit,
               style: VText.ui(11, color: c.text3, height: 1.5),
             ),
           ),
@@ -594,14 +597,14 @@ class _Actions extends StatelessWidget {
           _ActionPill(
             key: const ValueKey('list-add'),
             icon: Icons.add_rounded,
-            label: 'Agregar',
+            label: context.l10n.add,
             active: true,
             onTap: onAdd,
           ),
           _ActionPill(
             key: const ValueKey('list-edit-toggle'),
             icon: editing ? Icons.check_rounded : Icons.edit_rounded,
-            label: editing ? 'Listo' : 'Editar',
+            label: editing ? context.l10n.done : context.l10n.edit,
             active: editing,
             onTap: onToggleEdit,
           ),
@@ -617,7 +620,7 @@ class _Actions extends StatelessWidget {
           _ActionPill(
             key: const ValueKey('list-like'),
             icon: liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-            label: list.likes > 0 ? '${list.likes}' : 'Me gusta',
+            label: list.likes > 0 ? '${list.likes}' : context.l10n.like,
             active: liked,
             color: c.danger,
             onTap: () {
@@ -628,7 +631,7 @@ class _Actions extends StatelessWidget {
           _ActionPill(
             key: const ValueKey('list-save'),
             icon: saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-            label: saved ? 'Guardada' : 'Guardar',
+            label: saved ? context.l10n.saved : context.l10n.save,
             active: saved,
             onTap: () {
               HapticFeedback.lightImpact();

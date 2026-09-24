@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../models/notification.dart';
 import '../screens/routes.dart';
 import '../services/services.dart';
@@ -33,7 +34,7 @@ class _BellButtonState extends State<BellButton> {
       builder: (context, snap) {
         final unread = (snap.data ?? const <AppNotification>[]).any((n) => !n.read);
         return Tooltip(
-          message: 'Notificaciones',
+          message: context.l10n.notificationsTitle,
           child: Material(
             color: c.surface2.withValues(alpha: 0.8),
             shape: const CircleBorder(),

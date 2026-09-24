@@ -1,18 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../l10n/l10n.dart';
+import '../util/search_text.dart';
 import 'album.dart';
 import 'follow.dart';
 import 'rating.dart';
 
 /// "Lista" normal o "Ranking" numerado (el orden importa).
 enum ListKind {
-  list('list', 'Lista'),
-  ranking('ranking', 'Ranking');
+  list('list'),
+  ranking('ranking');
 
-  const ListKind(this.key, this.label);
+  const ListKind(this.key);
 
   final String key;
-  final String label;
+
+  /// "Lista" / "Ranking".
+  String label(AppLocalizations l) => switch (this) {
+        ListKind.list => l.listKindList,
+        ListKind.ranking => l.listKindRanking,
+      };
 
   static ListKind fromKey(String? key) =>
       key == ranking.key ? ranking : list;
@@ -20,20 +27,39 @@ enum ListKind {
 
 /// De canciones o de discos, sin mezclar.
 enum ListItemType {
-  tracks('tracks', 'Canciones', 'canción', 'canciones'),
-  albums('albums', 'Discos', 'disco', 'discos');
+  tracks('tracks'),
+  albums('albums');
 
-  const ListItemType(this.key, this.label, this.one, this.many);
+  const ListItemType(this.key);
 
   final String key;
-  final String label;
-  final String one;
-  final String many;
 
   static ListItemType fromKey(String? key) =>
       key == albums.key ? albums : tracks;
 
-  String count(int n) => '$n ${n == 1 ? one : many}';
+  /// "Canciones" / "Discos".
+  String label(AppLocalizations l) => switch (this) {
+        ListItemType.tracks => l.listTypeTracks,
+        ListItemType.albums => l.listTypeAlbums,
+      };
+
+  /// "3 canciones", "1 disco".
+  String count(int n, AppLocalizations l) => switch (this) {
+        ListItemType.tracks => l.countTracks(n),
+        ListItemType.albums => l.countAlbums(n),
+      };
+
+  /// "Se agregaron 3 canciones".
+  String added(int n, AppLocalizations l) => switch (this) {
+        ListItemType.tracks => l.addedTracks(n),
+        ListItemType.albums => l.addedAlbums(n),
+      };
+
+  /// "Agregar canciones" / "Agregar discos".
+  String addLabel(AppLocalizations l) => switch (this) {
+        ListItemType.tracks => l.listAddTracks,
+        ListItemType.albums => l.listAddAlbums,
+      };
 }
 
 /// Un elemento copiado dentro de la lista (id de Spotify, nombre, artista,
@@ -209,7 +235,12 @@ class MusicList {
   bool containsId(String id) => items.any((i) => i.id == id);
 
   /// "Ranking de canciones", "Lista de discos".
-  String get typeLabel => '${kind.label} de ${itemType.label.toLowerCase()}';
+  String typeLabel(AppLocalizations l) => switch ((kind, itemType)) {
+        (ListKind.list, ListItemType.tracks) => l.listFullTypeTrackList,
+        (ListKind.ranking, ListItemType.tracks) => l.listFullTypeTrackRanking,
+        (ListKind.list, ListItemType.albums) => l.listFullTypeAlbumList,
+        (ListKind.ranking, ListItemType.albums) => l.listFullTypeAlbumRanking,
+      };
 
   /// Hasta cuatro portadas distintas para el mosaico.
   List<String> get covers {
@@ -290,25 +321,15 @@ class AddOutcome {
 
   /// Mensaje corto para la persona ("Se agregaron 3 canciones", "Ya
   /// estaba en la lista"…).
-  String message(ListItemType type) {
+  String message(ListItemType type, AppLocalizations l) {
     final parts = <String>[];
-    if (added > 0) {
-      parts.add(added == 1
-          ? 'Se agregó 1 ${type.one}'
-          : 'Se agregaron ${type.count(added)}');
-    }
+    if (added > 0) parts.add(type.added(added, l));
     if (duplicates > 0) {
       parts.add(added == 0 && duplicates == 1
-          ? 'Ya estaba en la lista'
-          : duplicates == 1
-              ? '1 ya estaba'
-              : '$duplicates ya estaban');
+          ? l.addAlreadyInList
+          : l.addDuplicates(duplicates));
     }
-    if (overflow > 0) {
-      parts.add(overflow == 1
-          ? '1 no cupo (tope de ${MusicList.maxItems})'
-          : '$overflow no cupieron (tope de ${MusicList.maxItems})');
-    }
+    if (overflow > 0) parts.add(l.addOverflow(overflow, MusicList.maxItems));
     return parts.join(' · ');
   }
 }
@@ -371,5 +392,77 @@ List<ListItem> insertItemAt(List<ListItem> items, ListItem item, int index) {
   if (items.any((i) => i.id == item.id)) return [...items];
   final out = [...items];
   out.insert(index.clamp(0, out.length), item);
+  return out;
+}
+
+/// Cómo se ordenan las listas del perfil.
+enum ListSort { recent, name, size, likes }
+
+/// Búsqueda, filtros y orden de las listas del perfil. `kind` e `itemType`
+/// null = todas.
+class ListQuery {
+  const ListQuery({
+    this.text = '',
+    this.kind,
+    this.itemType,
+    this.sort = ListSort.recent,
+  });
+
+  final String text;
+  final ListKind? kind;
+  final ListItemType? itemType;
+  final ListSort sort;
+
+  /// Hay algo que reduce el resultado (el orden no cuenta).
+  bool get filtering => text.trim().isNotEmpty || kind != null || itemType != null;
+
+  ListQuery copyWith({
+    String? text,
+    ListKind? Function()? kind,
+    ListItemType? Function()? itemType,
+    ListSort? sort,
+  }) =>
+      ListQuery(
+        text: text ?? this.text,
+        kind: kind == null ? this.kind : kind(),
+        itemType: itemType == null ? this.itemType : itemType(),
+        sort: sort ?? this.sort,
+      );
+
+  /// Quita búsqueda y filtros; conserva el orden.
+  ListQuery cleared() => ListQuery(sort: sort);
+}
+
+/// Si la lista coincide con el texto: por su nombre, su descripción o el
+/// nombre y artista de lo que tiene dentro ("la lista que tiene Kid A").
+bool listMatches(MusicList list, String text) {
+  final q = foldForSearch(text);
+  if (q.isEmpty) return true;
+  bool has(String s) => foldForSearch(s).contains(q);
+  return has(list.name) ||
+      has(list.description) ||
+      list.items.any((i) => has(i.name) || has(i.artist));
+}
+
+/// Aplica búsqueda, filtros y orden. No modifica la lista original.
+List<MusicList> applyListQuery(List<MusicList> lists, ListQuery query) {
+  final out = lists.where((l) {
+    if (query.kind != null && l.kind != query.kind) return false;
+    if (query.itemType != null && l.itemType != query.itemType) return false;
+    return listMatches(l, query.text);
+  }).toList();
+  int byRecent(MusicList a, MusicList b) => b.updatedAt.compareTo(a.updatedAt);
+  out.sort(switch (query.sort) {
+    ListSort.recent => byRecent,
+    ListSort.name => (a, b) => foldForSearch(a.name).compareTo(foldForSearch(b.name)),
+    ListSort.size => (a, b) {
+        final c = b.count.compareTo(a.count);
+        return c != 0 ? c : byRecent(a, b);
+      },
+    ListSort.likes => (a, b) {
+        final c = b.likes.compareTo(a.likes);
+        return c != 0 ? c : byRecent(a, b);
+      },
+  });
   return out;
 }

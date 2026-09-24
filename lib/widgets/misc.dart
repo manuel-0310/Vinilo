@@ -307,3 +307,47 @@ class SectionSwitch extends StatelessWidget {
     );
   }
 }
+
+/// Píldora que se elige o no (filtros del diario y de las listas). `color`
+/// cambia el tono de la elegida (por defecto el énfasis).
+class ChoicePill extends StatelessWidget {
+  const ChoicePill({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.color,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final accent = color ?? c.accent;
+    return Material(
+      color: selected ? accent.withValues(alpha: 0.16) : c.surface2,
+      borderRadius: BorderRadius.circular(999),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: selected ? accent.withValues(alpha: 0.7) : Colors.transparent,
+            ),
+          ),
+          child: Text(
+            label,
+            style: VText.ui(13, weight: 700, color: selected ? accent : c.text2),
+          ),
+        ),
+      ),
+    );
+  }
+}

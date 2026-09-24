@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/auth_page.dart';
 import '../widgets/vinyl_disc.dart';
@@ -59,31 +60,31 @@ class WelcomeScreen extends StatelessWidget {
                   Text.rich(
                     TextSpan(
                       children: [
-                        const TextSpan(text: 'Tu diario de '),
+                        TextSpan(text: context.l10n.welcomeTitleStart),
                         TextSpan(
-                          text: 'discos',
+                          text: context.l10n.welcomeTitleAccent,
                           style: VText.display(50, italic: true, color: c.accent),
                         ),
-                        const TextSpan(text: ' empieza aquí.'),
+                        TextSpan(text: context.l10n.welcomeTitleEnd),
                       ],
                     ),
                     style: VText.display(50, height: 0.98),
                   ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.08),
                   const SizedBox(height: 16),
                   Text(
-                    'Busca un álbum, ponle nota del 1 al 10 y mira lo que opina la comunidad. Sin estrellas: aquí se habla en números.',
+                    context.l10n.welcomeBody,
                     style: VText.ui(15, color: c.text2, height: 1.45),
                   ).animate().fadeIn(delay: 150.ms, duration: 500.ms),
                   const Spacer(flex: 4),
                   FilledButton(
                     key: const ValueKey('welcome-signup'),
                     onPressed: () => openSignUp(context),
-                    child: const Text('Crear cuenta'),
+                    child: Text(context.l10n.welcomeSignUp),
                   ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
                   const SizedBox(height: 12),
                   SecondaryButton(
                     key: const ValueKey('welcome-signin'),
-                    label: 'Ya tengo cuenta',
+                    label: context.l10n.welcomeSignIn,
                     onPressed: () => openSignIn(context),
                   ).animate().fadeIn(delay: 380.ms, duration: 500.ms),
                 ],

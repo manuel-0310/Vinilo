@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/auth_errors.dart';
@@ -19,17 +20,12 @@ class SignInScreen extends StatelessWidget {
     );
     if (target == null || target.isEmpty || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     try {
       await services.auth.sendPasswordReset(target);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Te mandamos un correo a $target con un enlace para cambiar tu contraseña.',
-          ),
-        ),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l10n.resetSent(target))));
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(friendlyError(e))));
+      messenger.showSnackBar(SnackBar(content: Text(friendlyError(e, l10n))));
     }
   }
 
@@ -42,16 +38,16 @@ class SignInScreen extends StatelessWidget {
       title: Text.rich(
         TextSpan(
           children: [
-            const TextSpan(text: 'Hola de '),
+            TextSpan(text: context.l10n.signInTitleStart),
             TextSpan(
-              text: 'nuevo',
+              text: context.l10n.signInTitleAccent,
               style: VText.display(42, italic: true, color: c.accent),
             ),
-            const TextSpan(text: '.'),
+            TextSpan(text: context.l10n.signInTitleEnd),
           ],
         ),
       ),
-      subtitle: 'Entra con tu correo y tu contraseña.',
+      subtitle: context.l10n.signInSubtitle,
       footer: Center(
         child: TextButton(
           key: const ValueKey('signin-to-signup'),
@@ -62,9 +58,9 @@ class SignInScreen extends StatelessWidget {
           child: Text.rich(
             TextSpan(
               children: [
-                TextSpan(text: '¿Aún no tienes cuenta? ', style: VText.ui(14, color: c.text2)),
+                TextSpan(text: context.l10n.signInNoAccount, style: VText.ui(14, color: c.text2)),
                 TextSpan(
-                  text: 'Créala',
+                  text: context.l10n.signInCreateOne,
                   style: VText.ui(14, weight: 700, color: c.accent),
                 ),
               ],
@@ -73,7 +69,7 @@ class SignInScreen extends StatelessWidget {
         ),
       ),
       child: EmailPasswordForm(
-        submitLabel: 'Iniciar sesión',
+        submitLabel: context.l10n.signIn,
         onForgotPassword: (email) => _forgot(context, email),
         onSubmit: (email, password) async {
           await services.auth.signIn(email: email, password: password);
@@ -116,13 +112,13 @@ class _ResetDialogState extends State<_ResetDialog> {
   Widget build(BuildContext context) {
     final c = VColors.of(context);
     return AlertDialog(
-      title: Text('Recuperar contraseña', style: VText.display(28)),
+      title: Text(context.l10n.resetTitle, style: VText.display(28)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Te mandamos un enlace para elegir una contraseña nueva.',
+            context.l10n.resetBody,
             style: VText.ui(14, color: c.text2, height: 1.4),
           ),
           const SizedBox(height: 16),
@@ -139,20 +135,20 @@ class _ResetDialogState extends State<_ResetDialog> {
               if (_valid) Navigator.of(context).pop(_email.text.trim());
             },
             style: VText.ui(16, weight: 600),
-            decoration: const InputDecoration(hintText: 'Correo'),
+            decoration: InputDecoration(hintText: context.l10n.authEmailHint),
           ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
+          child: Text(context.l10n.cancel),
         ),
         TextButton(
           key: const ValueKey('reset-send'),
           onPressed: _valid ? () => Navigator.of(context).pop(_email.text.trim()) : null,
           child: Text(
-            'Enviar',
+            context.l10n.send,
             style: VText.ui(14, weight: 700, color: _valid ? c.accent : c.text3),
           ),
         ),

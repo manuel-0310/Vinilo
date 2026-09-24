@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/auth_page.dart';
@@ -20,17 +21,16 @@ class OnboardingScreen extends StatelessWidget {
       title: Text.rich(
         TextSpan(
           children: [
-            const TextSpan(text: 'Así te '),
+            TextSpan(text: context.l10n.onboardingTitleStart),
             TextSpan(
-              text: 'verán',
+              text: context.l10n.onboardingTitleAccent,
               style: VText.display(42, italic: true, color: c.accent),
             ),
-            const TextSpan(text: '.'),
+            TextSpan(text: context.l10n.onboardingTitleEnd),
           ],
         ),
       ),
-      subtitle:
-          'Tu nombre, tu color y un @usuario único para que te encuentren. Todo se puede cambiar después.',
+      subtitle: context.l10n.onboardingSubtitle,
       footer: email == null
           ? null
           : Center(
@@ -41,11 +41,11 @@ class OnboardingScreen extends StatelessWidget {
                   TextSpan(
                     children: [
                       TextSpan(
-                        text: 'Entraste como $email · ',
+                        text: context.l10n.onboardingSignedInAs(email),
                         style: VText.ui(13, color: c.text3),
                       ),
                       TextSpan(
-                        text: 'Salir',
+                        text: context.l10n.onboardingSignOut,
                         style: VText.ui(13, weight: 700, color: c.text2),
                       ),
                     ],
@@ -55,7 +55,7 @@ class OnboardingScreen extends StatelessWidget {
               ),
             ),
       child: ProfileForm(
-        submitLabel: 'Empezar',
+        submitLabel: context.l10n.onboardingStart,
         showColor: true,
         showUsername: true,
         forUid: uid,

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../l10n/l10n.dart';
 import 'album.dart';
 import 'follow.dart';
 import 'rating.dart';
@@ -105,14 +106,13 @@ class AppNotification {
         if (listName != null) 'listName': listName,
       };
 
-  /// Frase completa, con el nombre de quien la provocó.
-  String get text => switch (type) {
-        NotificationType.follow => '${from.name} empezó a seguirte',
+  /// Frase completa, con el nombre de quien la provocó, en el idioma de
+  /// quien la lee.
+  String text(AppLocalizations l) => switch (type) {
+        NotificationType.follow => l.notifFollow(from.name),
         NotificationType.likeRating =>
-          'A ${from.name} le gustó tu nota de ${album?.name ?? 'un disco'}',
-        NotificationType.likeList =>
-          'A ${from.name} le gustó tu lista ${listName ?? ''}'.trimRight(),
-        NotificationType.saveList =>
-          '${from.name} guardó tu lista ${listName ?? ''}'.trimRight(),
+          l.notifLikeRating(from.name, album?.name ?? l.notifSomeAlbum),
+        NotificationType.likeList => l.notifLikeList(from.name, listName ?? ''),
+        NotificationType.saveList => l.notifSaveList(from.name, listName ?? ''),
       };
 }

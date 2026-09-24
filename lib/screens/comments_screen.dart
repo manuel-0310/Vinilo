@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/album.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
-import '../util/format.dart';
 import '../util/ranking.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/comment_card.dart';
@@ -69,12 +69,12 @@ class _CommentsScreenState extends State<CommentsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Comentarios',
+                                  context.l10n.commentsTitle,
                                   style: VText.display(34, height: 1),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${widget.album.name} · ${plural(comments.length, 'comentario', 'comentarios')}',
+                                  '${widget.album.name} · ${context.l10n.countComments(comments.length)}',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: VText.ui(13, color: c.text2),
@@ -88,11 +88,10 @@ class _CommentsScreenState extends State<CommentsScreen> {
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 22)),
                   if (comments.isEmpty)
-                    const SliverToBoxAdapter(
+                    SliverToBoxAdapter(
                       child: EmptyState(
-                        title: 'Sin comentarios',
-                        message:
-                            'Nadie ha escrito nada sobre este disco todavía.',
+                        title: context.l10n.commentsEmptyTitle,
+                        message: context.l10n.commentsEmptyBody,
                       ),
                     )
                   else

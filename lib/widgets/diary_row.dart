@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/rating.dart';
 import '../screens/routes.dart';
 import '../theme/vinilo_theme.dart';
@@ -22,7 +23,7 @@ class DiaryList extends StatelessWidget {
     String? currentMonth;
     for (final e in entries) {
       if (grouped) {
-        final key = monthYear(e.createdAt);
+        final key = monthYear(e.createdAt, context.l10n);
         if (key != currentMonth) {
           currentMonth = key;
           items.add(key);
@@ -74,7 +75,7 @@ class DiaryRow extends StatelessWidget {
                     style: VText.display(24, height: 1),
                   ),
                   Text(
-                    monthShort(entry.createdAt.month).toUpperCase(),
+                    monthShort(entry.createdAt, context.l10n).toUpperCase(),
                     style: VText.label(9, color: c.text3),
                   ),
                 ],

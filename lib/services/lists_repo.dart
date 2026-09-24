@@ -9,6 +9,11 @@ import '../models/notification.dart';
 import '../models/user_profile.dart';
 import 'notifications_repo.dart';
 
+/// La lista se borró mientras se agregaba algo.
+class ListGoneException implements Exception {
+  const ListGoneException();
+}
+
 /// Listas y rankings en `lists/{id}`, con los elementos copiados dentro.
 class ListsRepo {
   ListsRepo(this._db, this._notifications, {FirebaseStorage? storage})
@@ -116,7 +121,7 @@ class ListsRepo {
     final ref = _lists.doc(listId);
     return _db.runTransaction((tx) async {
       final snap = await tx.get(ref);
-      if (!snap.exists) throw StateError('La lista ya no existe.');
+      if (!snap.exists) throw const ListGoneException();
       final current = MusicList.fromDoc(snap);
       final outcome = addItems(current.items, incoming);
       if (outcome.added > 0) {

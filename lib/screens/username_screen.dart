@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../models/user_profile.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/auth_errors.dart';
+import '../util/username.dart';
 import '../widgets/auth_page.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/username_field.dart';
@@ -39,7 +41,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
           );
       // El perfil cambia y main pasa al shell.
     } catch (e) {
-      if (mounted) setState(() => _error = friendlyError(e));
+      if (mounted) setState(() => _error = friendlyError(e, context.l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -60,17 +62,16 @@ class _UsernameScreenState extends State<UsernameScreen> {
       title: Text.rich(
         TextSpan(
           children: [
-            const TextSpan(text: 'Elige tu '),
+            TextSpan(text: context.l10n.usernameTitleStart),
             TextSpan(
-              text: '@usuario',
+              text: context.l10n.usernameTitleAccent,
               style: VText.display(42, italic: true, color: c.accent),
             ),
-            const TextSpan(text: '.'),
+            TextSpan(text: context.l10n.usernameTitleEnd),
           ],
         ),
       ),
-      subtitle:
-          'Así te encuentran tus amigos. Minúsculas, números, punto y guion bajo; de 3 a 20 caracteres. Puedes cambiarlo después desde tu perfil.',
+      subtitle: context.l10n.usernameSubtitle(usernameMin, usernameMax),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -105,7 +106,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
                       color: c.onAccent,
                     ),
                   )
-                : const Text('Continuar'),
+                : Text(context.l10n.continueLabel),
           ),
         ],
       ),

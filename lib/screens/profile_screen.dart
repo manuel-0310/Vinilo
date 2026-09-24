@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/album.dart';
 import '../models/artist.dart';
 import '../models/music_list.dart';
@@ -14,7 +15,7 @@ import '../services/services.dart';
 import '../services/user_repo.dart';
 import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
-import '../util/format.dart';
+import '../util/errors.dart';
 import '../util/search_text.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/artist_avatar.dart';
@@ -50,6 +51,17 @@ enum _ProfileSection { perfil, listas }
 
 class _ProfileScreenState extends State<ProfileScreen> {
   _ProfileSection _section = _ProfileSection.perfil;
+
+  // Pestaña "Listas": se conservan al ir y volver de "Perfil".
+  ListQuery _listQuery = const ListQuery();
+  bool _showSavedLists = false;
+  final _listSearch = TextEditingController();
+
+  @override
+  void dispose() {
+    _listSearch.dispose();
+    super.dispose();
+  }
   Stream<UserProfile?>? _profile;
   Stream<List<RatingEntry>>? _ratings;
   Stream<List<MusicList>>? _lists;
@@ -107,7 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo crear la lista: $e')),
+        SnackBar(content: Text(context.l10n.listCreateFailed(describeError(e, context.l10n)))),
       );
     }
   }
@@ -152,6 +164,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             standalone: widget.standalone,
             section: _section,
             onSection: (section) => setState(() => _section = section),
+            listSearch: _listSearch,
+            listQuery: _listQuery,
+            onListQuery: (q) => setState(() => _listQuery = q),
+            showSavedLists: _showSavedLists,
+            onShowSavedLists: (v) => setState(() => _showSavedLists = v),
             mineForAffinity: _mineForAffinity,
             onNewList: () => _newList(profile),
             onPickFavorites: ratings == null
@@ -177,10 +194,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (profile == null) {
             return Stack(
               children: [
-                const Center(
+                Center(
                   child: EmptyState(
-                    title: 'Perfil no encontrado',
-                    message: 'Esta persona ya no está en Vinilo.',
+                    title: context.l10n.profileNotFound,
+                    message: context.l10n.profileNotFoundBody,
                   ),
                 ),
                 Positioned(
@@ -212,6 +229,11 @@ class _ProfileBody extends StatelessWidget {
     required this.standalone,
     required this.section,
     required this.onSection,
+    required this.listSearch,
+    required this.listQuery,
+    required this.onListQuery,
+    required this.showSavedLists,
+    required this.onShowSavedLists,
     required this.mineForAffinity,
     required this.onNewList,
     required this.onPickFavorites,
@@ -228,6 +250,11 @@ class _ProfileBody extends StatelessWidget {
   final bool standalone;
   final _ProfileSection section;
   final ValueChanged<_ProfileSection> onSection;
+  final TextEditingController listSearch;
+  final ListQuery listQuery;
+  final ValueChanged<ListQuery> onListQuery;
+  final bool showSavedLists;
+  final ValueChanged<bool> onShowSavedLists;
   final Future<List<RatingEntry>>? mineForAffinity;
   final VoidCallback onNewList;
   final VoidCallback? onPickFavorites;
@@ -338,7 +365,7 @@ class _ProfileBody extends StatelessWidget {
                                 child: _HeaderButton(
                                   key: const ValueKey('settings'),
                                   icon: Icons.settings_rounded,
-                                  tooltip: 'Configuración',
+                                  tooltip: context.l10n.settingsTitle,
                                   onTap: () => openSettings(context),
                                 ),
                               )
@@ -353,6 +380,20 @@ class _ProfileBody extends StatelessWidget {
                           ],
                         ),
                       ),
+                      if ((profile.bio ?? '').trim().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(VSpace.page, 14, VSpace.page, 0),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              profile.bio!.trim(),
+                              key: const ValueKey('profile-bio'),
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                              style: VText.ui(14, height: 1.4),
+                            ),
+                          ),
+                        ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(VSpace.page, 14, VSpace.page, 0),
                         child: _FollowCounts(profile: profile, isMe: isMe),
@@ -370,12 +411,12 @@ class _ProfileBody extends StatelessWidget {
                             children: [
                               _Stat(
                                 value: '${list.length}',
-                                label: list.length == 1 ? 'DISCO' : 'DISCOS',
+                                label: context.l10n.statAlbums(list.length),
                               ),
                               const _StatDivider(),
                               _Stat(
-                                value: average == null ? '–' : Score.formatAverage(average),
-                                label: 'PROMEDIO',
+                                value: average == null ? '–' : Score.formatAverage(average, context.l10n.localeName),
+                                label: context.l10n.statAverage,
                                 color: average == null ? null : c.score(average),
                               ),
                             ],
@@ -400,7 +441,7 @@ class _ProfileBody extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(VSpace.page, 8, VSpace.page, 0),
                 child: SectionSwitch(
-                  labels: const ['Perfil', 'Listas'],
+                  labels: [context.l10n.tabProfile, context.l10n.profileListsTab],
                   keys: const ['profile-section-perfil', 'profile-section-listas'],
                   selected: section.index,
                   onChanged: (i) => onSection(_ProfileSection.values[i]),
@@ -410,10 +451,10 @@ class _ProfileBody extends StatelessWidget {
             if (section == _ProfileSection.perfil) ...[
                 SliverToBoxAdapter(
                   child: SectionHeader(
-                    'Favoritos',
+                    context.l10n.favorites,
                     subtitle: isMe
-                        ? 'Tres discos y tres artistas que te definen'
-                        : 'Tres discos y tres artistas que le definen',
+                        ? context.l10n.favoritesMine
+                        : context.l10n.favoritesTheirs,
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -423,7 +464,7 @@ class _ProfileBody extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _MiniHeader(
-                          label: 'DISCOS',
+                          label: context.l10n.favoritesAlbumsLabel,
                           pickKey: 'pick-favorites',
                           onPick: isMe && list.isNotEmpty ? onPickFavorites : null,
                         ),
@@ -435,7 +476,7 @@ class _ProfileBody extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         _MiniHeader(
-                          label: 'ARTISTAS',
+                          label: context.l10n.favoritesArtistsLabel,
                           pickKey: 'pick-artists',
                           onPick: isMe ? onPickArtists : null,
                         ),
@@ -464,10 +505,10 @@ class _ProfileBody extends StatelessWidget {
                   ),
                 SliverToBoxAdapter(
                   child: SectionHeader(
-                    'Diario',
+                    context.l10n.diary,
                     subtitle: ratings == null
-                        ? 'Cargando…'
-                        : plural(list.length, 'disco calificado', 'discos calificados'),
+                        ? context.l10n.loading
+                        : context.l10n.countRatedAlbums(list.length),
                   ),
                 ),
                 if (ratings == null)
@@ -482,10 +523,10 @@ class _ProfileBody extends StatelessWidget {
                 else if (list.isEmpty)
                   SliverToBoxAdapter(
                     child: EmptyState(
-                      title: isMe ? 'Tu diario está vacío' : 'Aún no hay notas',
+                      title: isMe ? context.l10n.diaryEmptyMine : context.l10n.diaryEmptyTheirs,
                       message: isMe
-                          ? 'Busca un disco y ponle nota. Aquí quedará tu historial, mes a mes.'
-                          : 'Cuando ${profile.name} califique algo, aparecerá aquí.',
+                          ? context.l10n.diaryEmptyMineBody
+                          : context.l10n.diaryEmptyTheirsBody(profile.name),
                       labelColor: profile.color,
                     ),
                   )
@@ -507,7 +548,7 @@ class _ProfileBody extends StatelessWidget {
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                           child: Text(
-                            'Ver más (${list.length - _diaryPreview})',
+                            context.l10n.seeMore(list.length - _diaryPreview),
                             style: VText.ui(13, weight: 700),
                           ),
                         ),
@@ -515,43 +556,20 @@ class _ProfileBody extends StatelessWidget {
                     ),
                   ),
             ] else ...[
-                SliverToBoxAdapter(
-                  child: _ListsSection(
-                    title: isMe ? 'Tus listas' : 'Listas de ${profile.name}',
-                    stream: lists,
-                    keyPrefix: 'list',
-                    subtitle: isMe
-                        ? 'Listas y rankings de canciones o discos'
-                        : 'Sus listas y rankings',
-                    action: isMe
-                        ? GestureDetector(
-                            key: const ValueKey('new-list'),
-                            behavior: HitTestBehavior.opaque,
-                            onTap: onNewList,
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(8, 4, 0, 4),
-                              child: Text(
-                                'Nueva lista',
-                                style: VText.ui(13, weight: 700, color: c.accent),
-                              ),
-                            ),
-                          )
-                        : null,
-                    emptyText: isMe
-                        ? 'Todavía no tienes listas. Crea una con "Nueva lista" o desde la pantalla de un disco.'
-                        : 'Todavía no tiene listas.',
-                  ),
+              SliverToBoxAdapter(
+                child: _ListsBrowser(
+                  owned: lists,
+                  saved: isMe ? saved : null,
+                  isMe: isMe,
+                  name: profile.name,
+                  search: listSearch,
+                  query: listQuery,
+                  onQuery: onListQuery,
+                  showSaved: showSavedLists,
+                  onShowSaved: onShowSavedLists,
+                  onNewList: onNewList,
                 ),
-                if (isMe && saved != null)
-                  SliverToBoxAdapter(
-                    child: _ListsSection(
-                      title: 'Guardadas',
-                      stream: saved,
-                      keyPrefix: 'saved',
-                      subtitle: 'Listas de otras personas que guardaste. Solo tú las ves aquí.',
-                      emptyText: 'Guarda listas de otras personas y aparecerán aquí.',
-                    ),
-                  ),
+              ),
             ],
             SliverToBoxAdapter(
               child: SizedBox(
@@ -651,82 +669,243 @@ class _Banner extends StatelessWidget {
   }
 }
 
-/// Encabezado + fila de listas (propias o guardadas) con sus estados de
-/// carga y vacío.
-class _ListsSection extends StatelessWidget {
-  const _ListsSection({
-    required this.title,
-    required this.stream,
-    required this.keyPrefix,
-    required this.subtitle,
-    required this.emptyText,
-    this.action,
+/// La pestaña "Listas" del perfil: en el propio, "Mías" y "Guardadas"; un
+/// buscador (por nombre, descripción o lo que tiene dentro), filtros por tipo
+/// (lista o ranking) y contenido (canciones o discos), el orden y un resumen
+/// de cuántas se ven.
+class _ListsBrowser extends StatelessWidget {
+  const _ListsBrowser({
+    required this.owned,
+    required this.saved,
+    required this.isMe,
+    required this.name,
+    required this.search,
+    required this.query,
+    required this.onQuery,
+    required this.showSaved,
+    required this.onShowSaved,
+    required this.onNewList,
   });
 
-  final String title;
-  final Stream<List<MusicList>>? stream;
-  final String keyPrefix;
-  final String subtitle;
-  final String emptyText;
-  final Widget? action;
+  final Stream<List<MusicList>>? owned;
+
+  /// Solo en el perfil propio.
+  final Stream<List<MusicList>>? saved;
+  final bool isMe;
+  final String name;
+  final TextEditingController search;
+  final ListQuery query;
+  final ValueChanged<ListQuery> onQuery;
+  final bool showSaved;
+  final ValueChanged<bool> onShowSaved;
+  final VoidCallback onNewList;
 
   @override
   Widget build(BuildContext context) {
-    final c = VColors.of(context);
     return StreamBuilder<List<MusicList>>(
-      stream: stream,
-      builder: (context, snap) {
-        final lists = snap.data;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SectionHeader(
-              title,
-              subtitle: lists == null
-                  ? subtitle
-                  : lists.isEmpty
-                      ? subtitle
-                      : '${lists.length} ${lists.length == 1 ? 'lista' : 'listas'}',
-              action: action,
+      stream: owned,
+      builder: (context, ownedSnap) => StreamBuilder<List<MusicList>>(
+        stream: saved,
+        builder: (context, savedSnap) => _content(
+          context,
+          ownedSnap.data,
+          saved == null ? const <MusicList>[] : savedSnap.data,
+        ),
+      ),
+    );
+  }
+
+  Widget _content(BuildContext context, List<MusicList>? mine, List<MusicList>? savedLists) {
+    final c = VColors.of(context);
+    final l10n = context.l10n;
+    final viewingSaved = isMe && showSaved;
+    final source = viewingSaved ? savedLists : mine;
+    final shown = source == null ? null : applyListQuery(source, query);
+    final keyPrefix = viewingSaved ? 'saved' : 'list';
+
+    Widget pill(String key, String label, bool selected, VoidCallback onTap) => Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: ChoicePill(key: ValueKey(key), label: label, selected: selected, onTap: onTap),
+        );
+
+    final sortLabels = {
+      ListSort.recent: l10n.listsSortRecent,
+      ListSort.name: l10n.listsSortName,
+      ListSort.size: l10n.listsSortSize,
+      ListSort.likes: l10n.listsSortLikes,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isMe)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(VSpace.page, 22, VSpace.page, 0),
+            child: SectionSwitch(
+              labels: [
+                l10n.listsMineTab(mine?.length ?? 0),
+                l10n.listsSavedTab(savedLists?.length ?? 0),
+              ],
+              keys: const ['lists-mine', 'lists-saved'],
+              selected: viewingSaved ? 1 : 0,
+              onChanged: (i) => onShowSaved(i == 1),
             ),
-            if (lists == null)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: VSpace.page),
-                child: Skeleton(height: 70, radius: 18),
-              )
-            else if (lists.isEmpty)
+          )
+        else
+          SectionHeader(
+            l10n.listsOf(name),
+            subtitle: mine == null ? null : l10n.countLists(mine.length),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(VSpace.page, 14, VSpace.page, 0),
+          child: TextField(
+            key: const ValueKey('lists-search'),
+            controller: search,
+            textInputAction: TextInputAction.search,
+            onChanged: (v) => onQuery(query.copyWith(text: v)),
+            style: VText.ui(15, weight: 600),
+            decoration: InputDecoration(
+              hintText: l10n.listsSearchHint,
+              prefixIcon: Icon(Icons.search_rounded, color: c.text3),
+              suffixIcon: query.text.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: l10n.clear,
+                      onPressed: () {
+                        search.clear();
+                        onQuery(query.copyWith(text: ''));
+                      },
+                      icon: Icon(Icons.close_rounded, color: c.text3),
+                    ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 36,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+            children: [
+              pill('lists-kind-all', l10n.filterAll, query.kind == null,
+                  () => onQuery(query.copyWith(kind: () => null))),
+              pill('lists-kind-list', l10n.listsFilterLists, query.kind == ListKind.list,
+                  () => onQuery(query.copyWith(kind: () => query.kind == ListKind.list ? null : ListKind.list))),
+              pill('lists-kind-ranking', l10n.listsFilterRankings, query.kind == ListKind.ranking,
+                  () => onQuery(query.copyWith(kind: () => query.kind == ListKind.ranking ? null : ListKind.ranking))),
               Padding(
-                padding: const EdgeInsets.fromLTRB(VSpace.page, 0, VSpace.page, 4),
+                padding: const EdgeInsets.only(right: 8),
+                child: Center(child: Container(width: 1, height: 18, color: c.line)),
+              ),
+              pill('lists-type-tracks', l10n.listTypeTracks, query.itemType == ListItemType.tracks,
+                  () => onQuery(query.copyWith(itemType: () => query.itemType == ListItemType.tracks ? null : ListItemType.tracks))),
+              pill('lists-type-albums', l10n.listTypeAlbums, query.itemType == ListItemType.albums,
+                  () => onQuery(query.copyWith(itemType: () => query.itemType == ListItemType.albums ? null : ListItemType.albums))),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(VSpace.page, 10, 12, 4),
+          child: Row(
+            children: [
+              Expanded(
                 child: Text(
-                  emptyText,
-                  key: ValueKey('$keyPrefix-empty'),
-                  style: VText.ui(13, color: c.text3, height: 1.4),
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                child: Column(
-                  children: [
-                    for (final (i, list) in lists.indexed)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: ListRowTile(
-                          key: ValueKey('$keyPrefix-$i'),
-                          list: list,
-                          onTap: () => openList(context, listId: list.id, initial: list),
-                          trailing: Icon(Icons.chevron_right_rounded, color: c.text3),
-                        ),
-                      )
-                          .animate()
-                          .fadeIn(delay: (40 * i).ms, duration: 320.ms)
-                          .slideY(begin: 0.08, curve: Curves.easeOutCubic),
-                  ],
+                  shown == null || source == null
+                      ? ''
+                      : query.filtering
+                          ? l10n.listsShowing(shown.length, source.length)
+                          : l10n.countLists(source.length),
+                  key: const ValueKey('lists-summary'),
+                  style: VText.ui(12, color: c.text3),
                 ),
               ),
-          ],
-        );
-      },
+              if (query.filtering)
+                TextButton(
+                  key: const ValueKey('lists-clear'),
+                  onPressed: () {
+                    search.clear();
+                    onQuery(query.cleared());
+                  },
+                  child: Text(l10n.listsClearFilters, style: VText.ui(13, weight: 700, color: c.accent)),
+                ),
+              PopupMenuButton<ListSort>(
+                key: const ValueKey('lists-sort'),
+                tooltip: l10n.sortBy,
+                initialValue: query.sort,
+                onSelected: (s) => onQuery(query.copyWith(sort: s)),
+                itemBuilder: (_) => [
+                  for (final s in ListSort.values)
+                    PopupMenuItem(
+                      key: ValueKey('lists-sort-${s.name}'),
+                      value: s,
+                      child: Text(sortLabels[s]!),
+                    ),
+                ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.swap_vert_rounded, size: 18, color: c.text2),
+                      const SizedBox(width: 4),
+                      Text(sortLabels[query.sort]!, style: VText.ui(13, weight: 700, color: c.text2)),
+                    ],
+                  ),
+                ),
+              ),
+              if (isMe && !viewingSaved)
+                TextButton(
+                  key: const ValueKey('new-list'),
+                  onPressed: onNewList,
+                  child: Text(l10n.listNew, style: VText.ui(13, weight: 700, color: c.accent)),
+                ),
+            ],
+          ),
+        ),
+        if (shown == null)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: VSpace.page),
+            child: Skeleton(height: 70, radius: 18),
+          )
+        else if (source!.isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(VSpace.page, 6, VSpace.page, 4),
+            child: Text(
+              viewingSaved
+                  ? l10n.listsSavedEmpty
+                  : isMe
+                      ? l10n.listsEmptyMine
+                      : l10n.listsEmptyTheirs,
+              key: ValueKey('$keyPrefix-empty'),
+              style: VText.ui(13, color: c.text3, height: 1.4),
+            ),
+          )
+        else if (shown.isEmpty)
+          EmptyState(
+            key: const ValueKey('lists-no-match'),
+            title: l10n.listsNoMatchTitle,
+            message: l10n.listsNoMatchBody,
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.fromLTRB(VSpace.page, 6, VSpace.page, 0),
+            child: Column(
+              children: [
+                for (final (i, list) in shown.indexed)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: ListRowTile(
+                      key: ValueKey('$keyPrefix-$i'),
+                      list: list,
+                      onTap: () => openList(context, listId: list.id, initial: list),
+                      trailing: Icon(Icons.chevron_right_rounded, color: c.text3),
+                    ),
+                  ).animate().fadeIn(delay: (30 * (i % 10)).ms, duration: 280.ms),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
@@ -741,7 +920,7 @@ class _FollowCounts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    Widget part(String key, int n, String one, String many, bool followers) {
+    Widget part(String key, int n, String word, bool followers) {
       return GestureDetector(
         key: ValueKey(key),
         behavior: HitTestBehavior.opaque,
@@ -756,7 +935,7 @@ class _FollowCounts extends StatelessWidget {
             children: [
               TextSpan(text: '$n ', style: VText.ui(14, weight: 800)),
               TextSpan(
-                text: n == 1 ? one : many,
+                text: word,
                 style: VText.ui(14, color: c.text2),
               ),
             ],
@@ -767,12 +946,12 @@ class _FollowCounts extends StatelessWidget {
 
     return Row(
       children: [
-        part('followers', profile.followersCount, 'seguidor', 'seguidores', true),
+        part('followers', profile.followersCount, context.l10n.followersWord(profile.followersCount), true),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Text('·', style: VText.ui(14, color: c.text3)),
         ),
-        part('following', profile.followingCount, 'seguido', 'seguidos', false),
+        part('following', profile.followingCount, context.l10n.followingWord(profile.followingCount), false),
       ],
     );
   }
@@ -839,7 +1018,7 @@ class _MiniHeader extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               child: Text(
-                'Elegir',
+                context.l10n.pick,
                 style: VText.ui(13, weight: 700, color: c.accent),
               ),
             ),
@@ -932,7 +1111,7 @@ class _AffinityCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('AFINIDAD MUSICAL', style: VText.label(11, color: c.text3)),
+                      Text(context.l10n.affinity, style: VText.label(11, color: c.text3)),
                       const SizedBox(height: 4),
                       Text(
                         affinity == null ? '–' : '$affinity%',
@@ -941,8 +1120,8 @@ class _AffinityCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         common.isEmpty
-                            ? 'Todavía no tienen discos en común'
-                            : 'Según ${plural(common.length, 'disco en común', 'discos en común')}',
+                            ? context.l10n.affinityNone
+                            : context.l10n.affinityBasis(common.length),
                         style: VText.ui(13, color: c.text2),
                       ),
                     ],
@@ -1094,7 +1273,7 @@ class _ArtistsRow extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          onEmptyTap == null ? '' : 'Artista',
+                          onEmptyTap == null ? '' : context.l10n.artistLabel,
                           style: VText.ui(13, color: c.text3),
                         ),
                       ],
@@ -1202,10 +1381,10 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Tus discos', style: VText.display(30, height: 1)),
+                        Text(context.l10n.favoritesPickerTitle, style: VText.display(30, height: 1)),
                         const SizedBox(height: 4),
                         Text(
-                          'Elige hasta tres, en el orden que quieras.',
+                          context.l10n.favoritesPickerHint,
                           style: VText.ui(13, color: c.text2),
                         ),
                       ],
@@ -1227,12 +1406,12 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
                 textInputAction: TextInputAction.search,
                 style: VText.ui(16, weight: 600),
                 decoration: InputDecoration(
-                  hintText: 'Buscar en tus discos',
+                  hintText: context.l10n.favoritesSearchHint,
                   prefixIcon: Icon(Icons.search_rounded, color: c.text3),
                   suffixIcon: _query.isEmpty
                       ? null
                       : IconButton(
-                          tooltip: 'Borrar',
+                          tooltip: context.l10n.clear,
                           onPressed: () {
                             _search.clear();
                             setState(() => _query = '');
@@ -1247,7 +1426,7 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(22, 28, 22, 0),
                   child: Text(
-                    'Ningún disco de tu diario coincide con "${_query.trim()}".',
+                    context.l10n.favoritesNoMatch(_query.trim()),
                     key: const ValueKey('favorites-no-match'),
                     textAlign: TextAlign.center,
                     style: VText.ui(14, color: c.text3, height: 1.4),
@@ -1308,7 +1487,7 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
               child: FilledButton(
                 key: const ValueKey('favorites-save'),
                 onPressed: () => Navigator.of(context).pop(_selected),
-                child: const Text('Guardar discos'),
+                child: Text(context.l10n.favoritesSave),
               ),
             ),
           ],
@@ -1449,10 +1628,10 @@ class _ArtistPickerState extends State<_ArtistPicker> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Tus artistas', style: VText.display(30, height: 1)),
+                        Text(context.l10n.artistsPickerTitle, style: VText.display(30, height: 1)),
                         const SizedBox(height: 4),
                         Text(
-                          'Busca en Spotify y elige hasta tres.',
+                          context.l10n.artistsPickerHint,
                           style: VText.ui(13, color: c.text2),
                         ),
                       ],
@@ -1475,7 +1654,7 @@ class _ArtistPickerState extends State<_ArtistPicker> {
                 onChanged: _onChanged,
                 style: VText.ui(16, weight: 600),
                 decoration: InputDecoration(
-                  hintText: 'Nombre del artista',
+                  hintText: context.l10n.artistsSearchHint,
                   prefixIcon: Icon(Icons.search_rounded, color: c.text3),
                 ),
               ),
@@ -1512,12 +1691,12 @@ class _ArtistPickerState extends State<_ArtistPicker> {
             Expanded(
               child: _error != null
                   ? EmptyState(
-                      title: 'Spotify no respondió',
-                      message: '$_error',
+                      title: context.l10n.spotifyNoResponse,
+                      message: describeError(_error, context.l10n),
                       labelColor: c.danger,
                       action: TextButton(
                         onPressed: () => _search(_controller.text.trim()),
-                        child: const Text('Reintentar'),
+                        child: Text(context.l10n.retry),
                       ),
                     )
                   : _loading && results == null
@@ -1531,15 +1710,15 @@ class _ArtistPickerState extends State<_ArtistPicker> {
                           ? Padding(
                               padding: const EdgeInsets.fromLTRB(22, 28, 22, 0),
                               child: Text(
-                                'Escribe el nombre de un artista para buscarlo.',
+                                context.l10n.artistsPrompt,
                                 textAlign: TextAlign.center,
                                 style: VText.ui(14, color: c.text3),
                               ),
                             )
                           : results.isEmpty
-                              ? const EmptyState(
-                                  title: 'Nada por aquí',
-                                  message: 'Prueba con otro nombre.',
+                              ? EmptyState(
+                                  title: context.l10n.searchNothingTitle,
+                                  message: context.l10n.addNothingBody,
                                 )
                               : ListView.builder(
                                   padding: const EdgeInsets.fromLTRB(22, 10, 22, 12),
@@ -1565,7 +1744,7 @@ class _ArtistPickerState extends State<_ArtistPicker> {
               child: FilledButton(
                 key: const ValueKey('artists-save'),
                 onPressed: () => Navigator.of(context).pop(_selected),
-                child: const Text('Guardar artistas'),
+                child: Text(context.l10n.artistsSave),
               ),
             ),
           ],

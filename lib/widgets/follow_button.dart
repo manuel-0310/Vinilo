@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../models/follow.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/errors.dart';
 
 /// "Seguir" / "Siguiendo" para otra persona. Escucha el seguimiento en vivo
 /// y no se muestra para uno mismo. `compact` es la versión de las filas.
@@ -53,7 +55,7 @@ class _FollowButtonState extends State<FollowButton> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo guardar: $e')),
+        SnackBar(content: Text(context.l10n.couldNotSave(describeError(e, context.l10n)))),
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -70,7 +72,7 @@ class _FollowButtonState extends State<FollowButton> {
       builder: (context, snap) {
         final known = snap.hasData;
         final following = snap.data ?? false;
-        final label = following ? 'Siguiendo' : 'Seguir';
+        final label = following ? context.l10n.following : context.l10n.follow;
         final bg = following ? c.surface2 : c.accent;
         final fg = following ? c.text : c.onAccent;
         return AnimatedOpacity(

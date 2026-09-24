@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'image_cropper.dart';
 import 'sheet.dart';
 
+import '../l10n/l10n.dart';
+
 /// Lo que eligió la persona: una foto ya recortada o quitar la que había.
 class PhotoPick {
   const PhotoPick.bytes(Uint8List this.bytes) : remove = false;
@@ -27,7 +29,7 @@ Future<PhotoPick?> pickPhoto(
   required String title,
   bool circle = false,
   bool canRemove = false,
-  String removeLabel = 'Quitar foto',
+  String? removeLabel,
 }) async {
   final source = await showVSheet<_Source>(
     context,
@@ -39,14 +41,14 @@ Future<PhotoPick?> pickPhoto(
           SheetAction(
             key: const ValueKey('photo-camera'),
             icon: Icons.photo_camera_rounded,
-            label: 'Tomar foto',
+            label: context.l10n.photoCamera,
             onTap: () => Navigator.of(ctx).pop(_Source.camera),
           ),
           const SizedBox(height: 10),
           SheetAction(
             key: const ValueKey('photo-gallery'),
             icon: Icons.photo_library_rounded,
-            label: 'Elegir de la galería',
+            label: context.l10n.photoGallery,
             onTap: () => Navigator.of(ctx).pop(_Source.gallery),
           ),
           if (canRemove) ...[
@@ -54,7 +56,7 @@ Future<PhotoPick?> pickPhoto(
             SheetAction(
               key: const ValueKey('photo-remove'),
               icon: Icons.delete_outline_rounded,
-              label: removeLabel,
+              label: removeLabel ?? context.l10n.photoRemove,
               danger: true,
               onTap: () => Navigator.of(ctx).pop(_Source.remove),
             ),
@@ -85,8 +87,8 @@ Future<PhotoPick?> pickPhoto(
       SnackBar(
         content: Text(
           camera
-              ? 'No hay cámara disponible (${e.message ?? e.code}).'
-              : 'No se pudo abrir la galería: ${e.message ?? e.code}',
+              ? context.l10n.photoNoCamera
+              : context.l10n.photoGalleryFailed(e.message ?? e.code),
         ),
       ),
     );

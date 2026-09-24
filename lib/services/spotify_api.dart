@@ -6,14 +6,21 @@ import 'package:http/http.dart' as http;
 import '../models/album.dart';
 import '../models/artist.dart';
 
-class SpotifyApiException implements Exception {
-  SpotifyApiException(this.message, {this.status});
+/// Qué falló al hablar con la función de Spotify. El texto para la persona
+/// lo pone `describeError` (util/errors.dart) en su idioma.
+enum SpotifyError { notConfigured, timeout, offline, server, unexpected }
 
-  final String message;
+class SpotifyApiException implements Exception {
+  SpotifyApiException(this.kind, {this.status, this.detail});
+
+  final SpotifyError kind;
   final int? status;
 
+  /// Mensaje técnico (del servidor o del cliente HTTP), para depurar.
+  final String? detail;
+
   @override
-  String toString() => message;
+  String toString() => 'SpotifyApiException($kind, $status, $detail)';
 }
 
 /// Cliente de la Cloud Function que hace de proxy de Spotify.
@@ -85,10 +92,7 @@ class SpotifyApi {
     Map<String, String> query = const {},
   ]) async {
     if (!isConfigured) {
-      throw SpotifyApiException(
-        'Falta la URL de la función de Spotify. Corre la app con '
-        '--dart-define=SPOTIFY_FN_URL=…',
-      );
+      throw SpotifyApiException(SpotifyError.notConfigured);
     }
     final token = await idToken();
     final uri = Uri.parse('$baseUrl$path')
@@ -100,9 +104,9 @@ class SpotifyApi {
         'Accept': 'application/json',
       }).timeout(const Duration(seconds: 20));
     } on TimeoutException {
-      throw SpotifyApiException('Spotify tardó demasiado en responder.');
+      throw SpotifyApiException(SpotifyError.timeout);
     } on http.ClientException catch (e) {
-      throw SpotifyApiException('Sin conexión: ${e.message}');
+      throw SpotifyApiException(SpotifyError.offline, detail: e.message);
     }
     dynamic body;
     try {
@@ -111,13 +115,11 @@ class SpotifyApi {
       body = null;
     }
     if (res.statusCode != 200) {
-      final message = body is Map && body['error'] is String
-          ? body['error'] as String
-          : 'Error ${res.statusCode}';
-      throw SpotifyApiException(message, status: res.statusCode);
+      final detail = body is Map && body['error'] is String ? body['error'] as String : null;
+      throw SpotifyApiException(SpotifyError.server, status: res.statusCode, detail: detail);
     }
     if (body is! Map<String, dynamic>) {
-      throw SpotifyApiException('Respuesta inesperada de Spotify.');
+      throw SpotifyApiException(SpotifyError.unexpected);
     }
     return body;
   }

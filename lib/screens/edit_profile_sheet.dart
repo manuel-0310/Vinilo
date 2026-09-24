@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../models/rating.dart';
 import '../models/user_profile.dart';
 import '../services/services.dart';
@@ -15,9 +16,9 @@ Future<void> showEditProfile(BuildContext context, UserProfile profile) {
   return showVSheet<void>(
     context,
     (ctx) => SheetScaffold(
-      title: 'Tu perfil',
+      title: context.l10n.editProfileTitle,
       child: ProfileForm(
-        submitLabel: 'Guardar',
+        submitLabel: context.l10n.save,
         showBanner: true,
         showUsername: true,
         initialName: profile.name,
@@ -26,6 +27,8 @@ Future<void> showEditProfile(BuildContext context, UserProfile profile) {
         forUid: profile.uid,
         initialAvatarUrl: profile.avatarUrl,
         initialBannerUrl: profile.bannerUrl,
+        showBio: true,
+        initialBio: profile.bio,
         onSubmit: (edit) async {
           if (edit.username != null && edit.username != profile.username) {
             await services.users.setUsername(
@@ -52,6 +55,7 @@ Future<void> showEditProfile(BuildContext context, UserProfile profile) {
             bannerUrl: bannerUrl,
             updateBanner: edit.banner != null || edit.removeBanner,
             username: edit.username ?? profile.username,
+            bio: edit.bio,
           );
           if (ctx.mounted) Navigator.of(ctx).pop();
         },

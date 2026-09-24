@@ -4,17 +4,43 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
+import '../l10n/l10n.dart';
 import 'auth_service.dart';
 
-/// El borrado no se pudo completar; `message` ya viene en español para
-/// mostrarlo tal cual.
-class AccountDeletionException implements Exception {
-  const AccountDeletionException(this.message);
+/// Por qué no se pudo borrar la cuenta. La pantalla lo traduce con
+/// [message]; `detail` lleva el código o el estado HTTP para depurar.
+enum AccountDeletionError {
+  noEndpoint,
+  wrongPassword,
+  tooManyRequests,
+  offline,
+  reauthFailed,
+  noSession,
+  timeout,
+  requiresRecentLogin,
+  server,
+}
 
-  final String message;
+class AccountDeletionException implements Exception {
+  const AccountDeletionException(this.error, [this.detail]);
+
+  final AccountDeletionError error;
+  final String? detail;
+
+  String message(AppLocalizations l) => switch (error) {
+        AccountDeletionError.noEndpoint => l.deleteErrorNoEndpoint,
+        AccountDeletionError.wrongPassword => l.deleteErrorWrongPassword,
+        AccountDeletionError.tooManyRequests => l.authTooManyRequests,
+        AccountDeletionError.offline => l.errorOffline,
+        AccountDeletionError.reauthFailed => l.deleteErrorReauth(detail ?? ''),
+        AccountDeletionError.noSession => l.deleteErrorNoSession,
+        AccountDeletionError.timeout => l.deleteErrorTimeout,
+        AccountDeletionError.requiresRecentLogin => l.deleteErrorRecentLogin,
+        AccountDeletionError.server => l.deleteErrorServer(detail ?? ''),
+      };
 
   @override
-  String toString() => message;
+  String toString() => 'AccountDeletionException($error, $detail)';
 }
 
 /// Borrar la cuenta. Lo hace la Cloud Function `account` con el Admin SDK
@@ -54,28 +80,27 @@ class AccountService {
   Future<void> deleteAccount(String password) async {
     final endpoint = _endpoint;
     if (endpoint == null) {
-      throw const AccountDeletionException(
-        'Falta la URL de la función (--dart-define=SPOTIFY_FN_URL=…).',
-      );
+      throw const AccountDeletionException(AccountDeletionError.noEndpoint);
     }
     try {
       await _auth.reauthenticate(password);
     } on FirebaseAuthException catch (e) {
-      throw AccountDeletionException(switch (e.code) {
-        'wrong-password' ||
-        'invalid-credential' ||
-        'INVALID_LOGIN_CREDENTIALS' =>
-          'La contraseña no es correcta.',
-        'too-many-requests' =>
-          'Demasiados intentos. Espera un momento y vuelve a probar.',
-        'network-request-failed' =>
-          'Sin conexión. Revisa tu internet y vuelve a intentar.',
-        _ => 'No se pudo comprobar tu contraseña (${e.code}).',
-      });
+      throw AccountDeletionException(
+        switch (e.code) {
+          'wrong-password' ||
+          'invalid-credential' ||
+          'INVALID_LOGIN_CREDENTIALS' =>
+            AccountDeletionError.wrongPassword,
+          'too-many-requests' => AccountDeletionError.tooManyRequests,
+          'network-request-failed' => AccountDeletionError.offline,
+          _ => AccountDeletionError.reauthFailed,
+        },
+        e.code,
+      );
     }
     final token = await _auth.current?.getIdToken(true);
     if (token == null) {
-      throw const AccountDeletionException('No hay sesión.');
+      throw const AccountDeletionException(AccountDeletionError.noSession);
     }
 
     deleting = true;
@@ -88,23 +113,21 @@ class AccountService {
           )
           .timeout(const Duration(minutes: 3));
     } on TimeoutException {
-      throw const AccountDeletionException(
-        'El borrado está tardando más de la cuenta. Vuelve a intentarlo: retoma donde quedó.',
-      );
+      throw const AccountDeletionException(AccountDeletionError.timeout);
     } catch (_) {
-      throw const AccountDeletionException(
-        'Sin conexión. Revisa tu internet y vuelve a intentar.',
-      );
+      throw const AccountDeletionException(AccountDeletionError.offline);
     }
     if (res.statusCode == 200) return;
-    String? message;
+    // La función devuelve un `code` estable; el texto lo pone la app.
+    String? code;
     try {
-      message = (jsonDecode(res.body) as Map<String, dynamic>)['error'] as String?;
+      code = (jsonDecode(res.body) as Map<String, dynamic>)['code'] as String?;
     } catch (_) {}
     throw AccountDeletionException(
-      message == null || message.isEmpty
-          ? 'No se pudo borrar la cuenta (${res.statusCode}). Vuelve a intentarlo.'
-          : message,
+      code == 'requires-recent-login'
+          ? AccountDeletionError.requiresRecentLogin
+          : AccountDeletionError.server,
+      '${res.statusCode}',
     );
   }
 

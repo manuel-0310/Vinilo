@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/user_profile.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
@@ -25,6 +25,7 @@ class SettingsScreen extends StatelessWidget {
     final me = CurrentUser.maybeOf(context);
     if (me == null) return const Scaffold();
     final services = ServicesScope.of(context);
+    final l10n = context.l10n;
     final topPad = MediaQuery.paddingOf(context).top;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
 
@@ -46,24 +47,24 @@ class SettingsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Configuración',
+                        l10n.settingsTitle,
                         style: VText.display(38, height: 1),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Se guarda en tu perfil y te sigue en cualquier dispositivo.',
+                        l10n.settingsSubtitle,
                         style: VText.ui(13, color: c.text2),
                       ),
                       const SizedBox(height: 30),
                       Text(
-                        'PERFIL',
+                        l10n.settingsProfile,
                         style: VText.label(11, color: c.text3),
                       ),
                       const SizedBox(height: 10),
                       _ProfileRow(profile: me),
                       const SizedBox(height: 34),
                       Text(
-                        'APARIENCIA',
+                        l10n.settingsAppearance,
                         style: VText.label(11, color: c.text3),
                       ),
                       const SizedBox(height: 10),
@@ -76,12 +77,25 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 34),
                       Text(
-                        'COLOR DE ÉNFASIS',
+                        l10n.settingsLanguage,
+                        style: VText.label(11, color: c.text3),
+                      ),
+                      const SizedBox(height: 10),
+                      _LanguageRow(
+                        language: me.language,
+                        onChanged: (language) {
+                          HapticFeedback.selectionClick();
+                          services.users.setLanguage(me.uid, language);
+                        },
+                      ),
+                      const SizedBox(height: 34),
+                      Text(
+                        l10n.settingsAccent,
                         style: VText.label(11, color: c.text3),
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Tiñe botones, enlaces, la pestaña activa y la escala de las notas. También es el color de tu avatar.',
+                        l10n.settingsAccentBody,
                         style: VText.ui(13, color: c.text2, height: 1.4),
                       ),
                       const SizedBox(height: 14),
@@ -93,11 +107,9 @@ class SettingsScreen extends StatelessWidget {
                           services.users.setColor(me, v);
                         },
                       ),
-                      const SizedBox(height: 22),
-                      _AccentPreview(profile: me),
                       const SizedBox(height: 34),
                       Text(
-                        'CUENTA',
+                        l10n.settingsAccount,
                         style: VText.label(11, color: c.text3),
                       ),
                       const SizedBox(height: 10),
@@ -106,8 +118,8 @@ class SettingsScreen extends StatelessWidget {
                       SheetAction(
                         key: const ValueKey('delete-account'),
                         icon: Icons.delete_forever_rounded,
-                        label: 'Eliminar cuenta',
-                        hint: 'Borra tu perfil y todo lo tuyo. No se puede deshacer.',
+                        label: l10n.deleteAccount,
+                        hint: l10n.deleteAccountHint,
                         danger: true,
                         onTap: () => showDeleteAccount(context),
                       ),
@@ -142,10 +154,11 @@ class _AppearanceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const options = [
-      (ThemeMode.system, 'Sistema', Icons.brightness_auto_rounded, 'system'),
-      (ThemeMode.light, 'Claro', Icons.light_mode_rounded, 'light'),
-      (ThemeMode.dark, 'Oscuro', Icons.dark_mode_rounded, 'dark'),
+    final l10n = context.l10n;
+    final options = [
+      (ThemeMode.system, l10n.themeSystem, Icons.brightness_auto_rounded, 'system'),
+      (ThemeMode.light, l10n.themeLight, Icons.light_mode_rounded, 'light'),
+      (ThemeMode.dark, l10n.themeDark, Icons.dark_mode_rounded, 'dark'),
     ];
     return Row(
       children: [
@@ -157,6 +170,41 @@ class _AppearanceRow extends StatelessWidget {
               label: o.$2,
               icon: o.$3,
               selected: mode == o.$1,
+              onTap: () => onChanged(o.$1),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Sistema (el idioma del teléfono), español o inglés.
+class _LanguageRow extends StatelessWidget {
+  const _LanguageRow({required this.language, required this.onChanged});
+
+  /// "es", "en" o null (sistema).
+  final String? language;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final options = <(String?, String, IconData, String)>[
+      (null, l10n.languageSystem, Icons.phone_iphone_rounded, 'system'),
+      ('es', 'Español', Icons.translate_rounded, 'es'),
+      ('en', 'English', Icons.translate_rounded, 'en'),
+    ];
+    return Row(
+      children: [
+        for (final (i, o) in options.indexed) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: _ThemeChoice(
+              key: ValueKey('language-${o.$4}'),
+              label: o.$2,
+              icon: o.$3,
+              selected: language == o.$1,
               onTap: () => onChanged(o.$1),
             ),
           ),
@@ -213,75 +261,6 @@ class _ThemeChoice extends StatelessWidget {
   }
 }
 
-/// Muestra el efecto del color elegido: un botón con su texto de contraste,
-/// un enlace y la escala de notas del 1 al 10 tal como se verá en la app.
-class _AccentPreview extends StatelessWidget {
-  const _AccentPreview({required this.profile});
-
-  final UserProfile profile;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    return Container(
-      key: ValueKey('accent-preview-${profile.colorValue}'),
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-      decoration: BoxDecoration(
-        color: c.surface.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: c.line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton(
-                  onPressed: () {},
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(44),
-                  ),
-                  child: const Text('Así se ve un botón'),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Text('Editar', style: VText.ui(14, weight: 700, color: c.accent)),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Text('ESCALA DE NOTAS', style: VText.label(10, color: c.text3)),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              for (var n = 1; n <= 10; n++)
-                Expanded(
-                  child: Column(
-                    children: [
-                      Container(
-                        height: 26,
-                        margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                        decoration: BoxDecoration(
-                          color: c.score(n),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '$n',
-                        style: VText.display(16, color: c.score(n), height: 1),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    ).animate(key: ValueKey(profile.colorValue)).fadeIn(duration: 350.ms);
-  }
-}
-
 /// Tu foto, tu nombre y tu @usuario; al tocarla se edita el perfil (antes
 /// era un botón aparte en el encabezado del perfil).
 class _ProfileRow extends StatelessWidget {
@@ -335,7 +314,7 @@ class _ProfileRow extends StatelessWidget {
                 ),
               ),
               Text(
-                'Editar perfil',
+                context.l10n.editProfile,
                 style: VText.ui(14, weight: 700, color: c.accent),
               ),
               Icon(Icons.chevron_right_rounded, color: c.accent),
@@ -361,21 +340,21 @@ class _AccountCard extends StatelessWidget {
       builder: (ctx) {
         final c = VColors.of(ctx);
         return AlertDialog(
-          title: Text('¿Cerrar sesión?', style: VText.display(28)),
+          title: Text(ctx.l10n.signOutTitle, style: VText.display(28)),
           content: Text(
-            'Tu perfil y tus notas se quedan en tu cuenta. Para volver, entra con tu correo y tu contraseña.',
+            ctx.l10n.signOutBody,
             style: VText.ui(14, color: c.text2, height: 1.4),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancelar'),
+              child: Text(ctx.l10n.cancel),
             ),
             TextButton(
               key: const ValueKey('sign-out-confirm'),
               onPressed: () => Navigator.of(ctx).pop(true),
               child: Text(
-                'Cerrar sesión',
+                ctx.l10n.signOut,
                 style: VText.ui(14, weight: 700, color: c.danger),
               ),
             ),
@@ -426,7 +405,7 @@ class _AccountCard extends StatelessWidget {
               onPressed: () => _signOut(context),
               icon: Icon(Icons.logout_rounded, size: 18, color: c.text),
               label: Text(
-                'Cerrar sesión',
+                context.l10n.signOut,
                 style: VText.ui(14, weight: 700, color: c.text),
               ),
             ),

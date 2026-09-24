@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/vinyl_disc.dart';
 
@@ -28,13 +29,13 @@ class SplashScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
                 child: Text(
-                  'No se pudo iniciar sesión.\n$error',
+                  context.l10n.splashError('$error'),
                   textAlign: TextAlign.center,
                   style: VText.ui(13, color: c.text2),
                 ),
               ),
               const SizedBox(height: 12),
-              TextButton(onPressed: onRetry, child: const Text('Reintentar')),
+              TextButton(onPressed: onRetry, child: Text(context.l10n.retry)),
             ],
           ],
         ),

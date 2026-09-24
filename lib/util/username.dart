@@ -1,3 +1,5 @@
+import '../l10n/l10n.dart';
+
 /// Reglas del @usuario: en minúsculas, de 3 a 20 caracteres, solo letras,
 /// números, punto y guion bajo. Es único en toda la app (colección
 /// `usernames/{usuario}` → uid) y se puede cambiar desde el perfil.
@@ -38,10 +40,10 @@ UsernameProblem? usernameProblem(String username) {
 
 bool isValidUsername(String username) => usernameProblem(username) == null;
 
-String usernameProblemMessage(UsernameProblem problem) => switch (problem) {
-      UsernameProblem.empty => 'Elige tu @usuario.',
-      UsernameProblem.tooShort => 'Mínimo $usernameMin caracteres.',
-      UsernameProblem.tooLong => 'Máximo $usernameMax caracteres.',
-      UsernameProblem.badChars =>
-        'Solo letras minúsculas, números, punto y guion bajo.',
+String usernameProblemMessage(UsernameProblem problem, AppLocalizations l) =>
+    switch (problem) {
+      UsernameProblem.empty => l.usernameEmpty,
+      UsernameProblem.tooShort => l.usernameTooShort(usernameMin),
+      UsernameProblem.tooLong => l.usernameTooLong(usernameMax),
+      UsernameProblem.badChars => l.usernameBadChars,
     };

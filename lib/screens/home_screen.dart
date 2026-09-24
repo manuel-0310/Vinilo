@@ -2,21 +2,21 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/feed.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/errors.dart';
 import '../util/streams.dart';
 import '../widgets/album_strip.dart';
 import '../widgets/bell_button.dart';
 import '../widgets/feed_card.dart';
 import '../widgets/misc.dart';
-import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.onNavigate});
+  const HomeScreen({super.key});
 
-  final ValueChanged<int> onNavigate;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -47,11 +47,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _findPeople() {
-    SearchScreen.focusRequests.value = true;
-    widget.onNavigate(1);
-  }
-
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
@@ -70,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Text('Vinilo', style: VText.display(42, italic: true)),
+                  Text(context.l10n.appName, style: VText.display(42, italic: true)),
                   const Positioned(right: 0, child: BellButton()),
                 ],
               ),
@@ -87,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionHeader('Popular'),
+                    SectionHeader(context.l10n.homePopular),
                     AlbumStrip(
                       albums: albums.map((a) => a.album).toList(),
                       averages: {for (final a in albums) a.album.id: a.average},
@@ -98,10 +93,10 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: SectionHeader(
-              'Actividad',
-              subtitle: 'De tus amigos',
+              context.l10n.homeActivity,
+              subtitle: context.l10n.homeActivitySubtitle,
             ),
           ),
           StreamBuilder<FollowingFeed>(
@@ -114,26 +109,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 return SliverToBoxAdapter(
                   child: EmptyState(
                     key: const ValueKey('feed-empty-follow'),
-                    title: 'Sigue a tus amigos',
-                    message:
-                        'Aquí verás lo que califican las personas que sigues. Búscalas por su nombre o su @usuario.',
-                    action: FilledButton.icon(
-                      key: const ValueKey('find-people'),
-                      onPressed: _findPeople,
-                      icon: const Icon(Icons.person_search_rounded),
-                      label: const Text('Buscar personas'),
-                    ),
+                    title: context.l10n.homeFollowTitle,
+                    message: context.l10n.homeFollowBody,
                   ),
                 );
               }
               final entries = feed.entries;
               if (entries.isEmpty) {
-                return const SliverToBoxAdapter(
+                return SliverToBoxAdapter(
                   child: EmptyState(
-                    key: ValueKey('feed-empty-quiet'),
-                    title: 'Todo tranquilo por aquí',
-                    message:
-                        'Las personas que sigues todavía no han calificado nada. Cuando lo hagan, aparecerá aquí.',
+                    key: const ValueKey('feed-empty-quiet'),
+                    title: context.l10n.homeQuietTitle,
+                    message: context.l10n.homeQuietBody,
                   ),
                 );
               }
@@ -170,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
         child: Text(
-          'No se pudo cargar la actividad: $error',
+          context.l10n.homeActivityError(describeError(error, context.l10n)),
           style: VText.ui(13, color: c.danger),
         ),
       ),

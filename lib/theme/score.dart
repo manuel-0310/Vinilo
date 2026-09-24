@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
+
 /// Todo lo relacionado con la nota del 1 al 10: etiquetas, color y formato.
 class Score {
   Score._();
@@ -9,20 +11,20 @@ class Score {
   static const int min = 1;
   static const int max = 10;
 
-  static const Map<int, String> labels = {
-    1: 'Insufrible',
-    2: 'Malo',
-    3: 'Flojo',
-    4: 'Meh',
-    5: 'Regular',
-    6: 'Está bien',
-    7: 'Bueno',
-    8: 'Muy bueno',
-    9: 'Excelente',
-    10: 'Obra maestra',
-  };
-
-  static String label(int score) => labels[score] ?? '';
+  /// "Obra maestra" / "Masterpiece"… en el idioma de la app.
+  static String label(int score, AppLocalizations l) => switch (score) {
+        1 => l.score1,
+        2 => l.score2,
+        3 => l.score3,
+        4 => l.score4,
+        5 => l.score5,
+        6 => l.score6,
+        7 => l.score7,
+        8 => l.score8,
+        9 => l.score9,
+        10 => l.score10,
+        _ => '',
+      };
 
   /// Color de una nota (acepta promedios con decimales) como variación del
   /// color de énfasis: una nota baja sale apagada y desaturada, una alta
@@ -46,8 +48,11 @@ class Score {
   static double _lerp(double a, double b, double t) => a + (b - a) * t;
 
   /// "8,4" con coma, como se escribe en español.
-  static String formatAverage(double value) =>
-      value.toStringAsFixed(1).replaceAll('.', ',');
+  /// "8,4" en español, "8.4" en inglés.
+  static String formatAverage(double value, [String localeName = 'es']) {
+    final s = value.toStringAsFixed(1);
+    return localeName.startsWith('en') ? s : s.replaceAll('.', ',');
+  }
 }
 
 /// Ajusta el color elegido por la persona para que funcione como énfasis en

@@ -60,4 +60,33 @@ void main() {
       expect(mergeNewestFirst(const []), isEmpty);
     });
   });
+
+  group('friendsByScore', () {
+    RatingEntry rated(String id, int score, int minutesAgo) {
+      final e = entry(id, minutesAgo);
+      return RatingEntry(
+        id: e.id,
+        uid: e.uid,
+        albumId: e.albumId,
+        score: score,
+        note: e.note,
+        createdAt: e.createdAt,
+        updatedAt: e.updatedAt,
+        album: e.album,
+        user: e.user,
+      );
+    }
+
+    test('de mayor a menor nota y, empatadas, la más reciente primero', () {
+      final sorted = friendsByScore([
+        [rated('a', 7, 10), rated('b', 9, 30)],
+        [rated('c', 7, 5), rated('b', 9, 30)],
+      ]);
+      expect(sorted.map((e) => e.id), ['b', 'c', 'a']);
+    });
+
+    test('sin páginas no hay nadie', () {
+      expect(friendsByScore(const []), isEmpty);
+    });
+  });
 }

@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/album.dart';
 import '../models/artist.dart';
 import '../models/follow.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/errors.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/artist_avatar.dart';
 import '../widgets/misc.dart';
@@ -28,10 +30,6 @@ const _suggestions = [
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
-  /// Pide al buscador que tome el foco y sugiera buscar personas (lo usa el
-  /// inicio cuando todavía no sigues a nadie).
-  static final ValueNotifier<bool> focusRequests = ValueNotifier(false);
-
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
@@ -51,27 +49,11 @@ class _SearchScreenState extends State<SearchScreen> {
   Object? _error;
 
   @override
-  void initState() {
-    super.initState();
-    SearchScreen.focusRequests.addListener(_onFocusRequest);
-  }
-
-  @override
   void dispose() {
-    SearchScreen.focusRequests.removeListener(_onFocusRequest);
     _debounce?.cancel();
     _controller.dispose();
     _focus.dispose();
     super.dispose();
-  }
-
-  void _onFocusRequest() {
-    if (!SearchScreen.focusRequests.value || !mounted) return;
-    SearchScreen.focusRequests.value = false;
-    // La pestaña acaba de cambiar; el campo necesita un cuadro para existir.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _focus.requestFocus();
-    });
   }
 
   void _onChanged(String text) {
@@ -155,7 +137,7 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo cargar más: $e')),
+        SnackBar(content: Text(context.l10n.loadMoreFailed(describeError(e, context.l10n)))),
       );
     } finally {
       if (mounted) setState(() => _loadingMore = false);
@@ -202,7 +184,7 @@ class _SearchScreenState extends State<SearchScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Buscar', style: VText.display(42)),
+                  Text(context.l10n.searchTitle, style: VText.display(42)),
                   const SizedBox(height: 14),
                   TextField(
                     key: const ValueKey('search-field'),
@@ -213,7 +195,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     onSubmitted: _submit,
                     style: VText.ui(16, weight: 600),
                     decoration: InputDecoration(
-                      hintText: 'Álbum, artista o @persona',
+                      hintText: context.l10n.searchHint,
                       prefixIcon: Icon(
                         Icons.search_rounded,
                         color: c.text3,
@@ -243,12 +225,12 @@ class _SearchScreenState extends State<SearchScreen> {
           else if (_error != null)
             SliverToBoxAdapter(
               child: EmptyState(
-                title: 'Spotify no respondió',
-                message: '$_error',
+                title: context.l10n.spotifyNoResponse,
+                message: describeError(_error, context.l10n),
                 labelColor: c.danger,
                 action: TextButton(
                   onPressed: () => _search(_query),
-                  child: const Text('Reintentar'),
+                  child: Text(context.l10n.retry),
                 ),
               ),
             )
@@ -260,10 +242,10 @@ class _SearchScreenState extends State<SearchScreen> {
               (_people?.isEmpty ?? true))
             SliverToBoxAdapter(
               child: EmptyState(
-                title: 'Nada por aquí',
+                title: context.l10n.searchNothingTitle,
                 message: _query.startsWith('@')
-                    ? 'Nadie tiene un @usuario que empiece así.'
-                    : 'Prueba con otro nombre, o busca por el artista.',
+                    ? context.l10n.searchNoUsername
+                    : context.l10n.searchNothingBody,
               ),
             )
           else if (_page != null) ...[
@@ -272,7 +254,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionHeader('Personas', top: 22),
+                    SectionHeader(context.l10n.searchPeople, top: 22),
                     for (final (i, p) in _people!.indexed)
                       PersonRow(key: ValueKey('person-hit-$i'), person: p)
                           .animate()
@@ -287,7 +269,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SectionHeader(
-                      'Artistas',
+                      context.l10n.searchArtists,
                       top: _people != null && _people!.isNotEmpty ? 26 : 22,
                     ),
                     _ArtistStrip(artists: _artists!),
@@ -297,7 +279,7 @@ class _SearchScreenState extends State<SearchScreen> {
             if (_page!.items.isNotEmpty)
               SliverToBoxAdapter(
                 child: SectionHeader(
-                  'Álbumes',
+                  context.l10n.searchAlbums,
                   top: (_artists != null && _artists!.isNotEmpty) ||
                           (_people != null && _people!.isNotEmpty)
                       ? 26
@@ -343,13 +325,13 @@ class _SearchScreenState extends State<SearchScreen> {
                         )
                       : _page!.nextOffset == null
                           ? Text(
-                              _loading ? '' : 'Eso es todo lo que encontró Spotify',
+                              _loading ? '' : context.l10n.searchEnd,
                               style: VText.ui(12, color: c.text3),
                             )
                           : Pill(
                               onTap: _loadMore,
                               child: Text(
-                                'Cargar más',
+                                context.l10n.loadMore,
                                 style: VText.ui(13, weight: 700),
                               ),
                             ),
@@ -512,7 +494,7 @@ class _Suggestions extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (recent.isNotEmpty) ...[
-            Text('RECIENTES', style: VText.label(11, color: c.text3)),
+            Text(context.l10n.searchRecent, style: VText.label(11, color: c.text3)),
             const SizedBox(height: 10),
             for (final q in recent)
               InkWell(
@@ -542,7 +524,7 @@ class _Suggestions extends StatelessWidget {
               ),
             const SizedBox(height: 26),
           ],
-          Text('PARA EMPEZAR', style: VText.label(11, color: c.text3)),
+          Text(context.l10n.searchSuggestions, style: VText.label(11, color: c.text3)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,

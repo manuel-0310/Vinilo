@@ -1,4 +1,6 @@
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:no_retiene/l10n/app_localizations.dart';
 import 'package:no_retiene/models/album.dart';
 import 'package:no_retiene/models/follow.dart';
 import 'package:no_retiene/models/music_list.dart';
@@ -11,6 +13,9 @@ ListItem track(String id, {String album = 'alb'}) => ListItem(
       albumName: 'Disco',
       durationMs: 200000,
     );
+
+final es = lookupAppLocalizations(const Locale('es'));
+final en = lookupAppLocalizations(const Locale('en'));
 
 ListItem disc(String id) => ListItem(id: id, name: 'Disco $id', artist: 'Alguien', year: 2020);
 
@@ -36,7 +41,8 @@ void main() {
       final r = addItems([disc('x')], [disc('x')]);
       expect(r.nothingAdded, isTrue);
       expect(r.items.length, 1);
-      expect(r.message(ListItemType.albums), 'Ya estaba en la lista');
+      expect(r.message(ListItemType.albums, es), 'Ya estaba en la lista');
+      expect(r.message(ListItemType.albums, en), 'Already in the list');
     });
 
     test('respeta el tope y cuenta lo que no cupo', () {
@@ -44,14 +50,15 @@ void main() {
       expect(r.items.map((i) => i.id), ['a', 'b', 'c']);
       expect(r.added, 1);
       expect(r.overflow, 1);
-      expect(r.message(ListItemType.tracks), contains('no cupo'));
+      expect(r.message(ListItemType.tracks, es), contains('no cupo'));
     });
 
     test('el mensaje resume agregados y repetidos', () {
       final r = addItems([track('a')], [track('a'), track('b'), track('c')]);
-      expect(r.message(ListItemType.tracks), 'Se agregaron 2 canciones · 1 ya estaba');
+      expect(r.message(ListItemType.tracks, es), 'Se agregaron 2 canciones · 1 ya estaba');
+      expect(r.message(ListItemType.tracks, en), 'Added 2 songs · 1 was already there');
       final one = addItems([], [disc('z')]);
-      expect(one.message(ListItemType.albums), 'Se agregó 1 disco');
+      expect(one.message(ListItemType.albums, es), 'Se agregó 1 disco');
     });
   });
 
@@ -151,7 +158,8 @@ void main() {
       updatedAt: DateTime(2026),
     );
     expect(list.covers, ['c0', 'c1', 'c2']);
-    expect(list.typeLabel, 'Ranking de canciones');
+    expect(list.typeLabel(es), 'Ranking de canciones');
+    expect(list.typeLabel(en), 'Song ranking');
     expect(list.count, 6);
   });
 
@@ -198,6 +206,78 @@ void main() {
     final edited = list.copyWith(name: 'Otro', items: [ListItem(id: 'a', name: 'a', artist: 'b')]);
     expect(edited.coverUrl, 'https://x/portada.jpg');
     expect(edited.coverPath, 'lists/l/1.jpg');
+  });
+
+  group('applyListQuery', () {
+    MusicList mk(
+      String id,
+      String name, {
+      ListKind kind = ListKind.list,
+      ListItemType type = ListItemType.albums,
+      List<ListItem> items = const [],
+      int likes = 0,
+      int day = 1,
+      String description = '',
+    }) =>
+        MusicList(
+          id: id,
+          ownerUid: 'u',
+          owner: const PersonInfoStub().info,
+          name: name,
+          description: description,
+          kind: kind,
+          itemType: type,
+          items: items,
+          createdAt: DateTime(2026, 9, day),
+          updatedAt: DateTime(2026, 9, day),
+          likedBy: [for (var i = 0; i < likes; i++) 'x$i'],
+        );
+
+    final lists = [
+      mk('a', 'Pop perfecto', day: 3, likes: 1, items: [disc('1'), disc('2')]),
+      mk('b', 'Kid A, de mejor a peor',
+          kind: ListKind.ranking, type: ListItemType.tracks, day: 5, likes: 4,
+          items: [track('t1'), track('t2'), track('t3')]),
+      mk('c', 'Ánimo', day: 1, description: 'Para días grises',
+          items: [ListItem(id: 'k', name: 'Kid A', artist: 'Radiohead')]),
+    ];
+    List<String> ids(List<MusicList> l) => l.map((x) => x.id).toList();
+
+    test('sin filtros, las más recientes primero', () {
+      expect(ids(applyListQuery(lists, const ListQuery())), ['b', 'a', 'c']);
+    });
+
+    test('busca en el nombre, la descripción y lo que tiene dentro, sin tildes', () {
+      expect(ids(applyListQuery(lists, const ListQuery(text: 'kid a'))), ['b', 'c']);
+      expect(ids(applyListQuery(lists, const ListQuery(text: 'radiohead'))), ['c']);
+      expect(ids(applyListQuery(lists, const ListQuery(text: 'GRISES'))), ['c']);
+      expect(ids(applyListQuery(lists, const ListQuery(text: 'animo'))), ['c']);
+    });
+
+    test('filtra por tipo y por contenido', () {
+      expect(ids(applyListQuery(lists, const ListQuery(kind: ListKind.ranking))), ['b']);
+      expect(ids(applyListQuery(lists, const ListQuery(itemType: ListItemType.albums))), ['a', 'c']);
+      expect(
+        ids(applyListQuery(lists, const ListQuery(kind: ListKind.list, itemType: ListItemType.tracks))),
+        isEmpty,
+      );
+    });
+
+    test('ordena por nombre, por elementos y por me gusta', () {
+      expect(ids(applyListQuery(lists, const ListQuery(sort: ListSort.name))), ['c', 'b', 'a']);
+      expect(ids(applyListQuery(lists, const ListQuery(sort: ListSort.size))), ['b', 'a', 'c']);
+      expect(ids(applyListQuery(lists, const ListQuery(sort: ListSort.likes))), ['b', 'a', 'c']);
+    });
+
+    test('filtrar no cambia la lista original y "cleared" conserva el orden', () {
+      final q = const ListQuery(text: 'x', kind: ListKind.ranking, sort: ListSort.name);
+      applyListQuery(lists, q);
+      expect(ids(lists), ['a', 'b', 'c']);
+      expect(q.filtering, isTrue);
+      expect(q.cleared().filtering, isFalse);
+      expect(q.cleared().sort, ListSort.name);
+      expect(q.copyWith(kind: () => null).kind, isNull);
+    });
   });
 }
 

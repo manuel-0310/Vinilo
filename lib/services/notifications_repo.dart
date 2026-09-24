@@ -36,6 +36,22 @@ class NotificationsRepo {
     await batch.commit();
   }
 
+  /// Borra una notificación (deslizar para borrar).
+  Future<void> delete(String id) => _col.doc(id).delete();
+
+  /// Borra todas las notificaciones de una persona, en lotes de 400.
+  Future<int> deleteAll(String uid) async {
+    final snap = await _col.where('to', isEqualTo: uid).get();
+    for (var i = 0; i < snap.docs.length; i += 400) {
+      final batch = _db.batch();
+      for (final doc in snap.docs.skip(i).take(400)) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    }
+    return snap.docs.length;
+  }
+
   /// Escribe la notificación dentro de una transacción. Nunca para uno mismo.
   void putIn(Transaction tx, AppNotification n) {
     if (n.to == n.from.uid) return;

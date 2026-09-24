@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/username.dart';
@@ -41,7 +42,8 @@ class _UsernameFieldState extends State<UsernameField> {
       TextEditingController(text: widget.initial);
   Timer? _debounce;
   _Status _status = _Status.idle;
-  String _message = '';
+  /// El texto se arma en `build` (en `initState` todavía no hay idioma).
+  String Function(AppLocalizations l)? _message;
   int _request = 0;
 
   @override
@@ -49,7 +51,7 @@ class _UsernameFieldState extends State<UsernameField> {
     super.initState();
     if (widget.initial.isNotEmpty) {
       _status = _Status.available;
-      _message = 'Ese es tu @usuario actual.';
+      _message = (l) => l.usernameCurrent;
     }
   }
 
@@ -60,7 +62,7 @@ class _UsernameFieldState extends State<UsernameField> {
     super.dispose();
   }
 
-  void _set(_Status status, String message, {String? valid}) {
+  void _set(_Status status, String Function(AppLocalizations l)? message, {String? valid}) {
     if (!mounted) return;
     setState(() {
       _status = status;
@@ -74,18 +76,18 @@ class _UsernameFieldState extends State<UsernameField> {
     final username = normalizeUsername(raw);
     final problem = usernameProblem(username);
     if (problem == UsernameProblem.empty) {
-      _set(_Status.idle, '');
+      _set(_Status.idle, null);
       return;
     }
     if (problem != null) {
-      _set(_Status.invalid, usernameProblemMessage(problem));
+      _set(_Status.invalid, (l) => usernameProblemMessage(problem, l));
       return;
     }
     if (username == widget.initial) {
-      _set(_Status.available, 'Ese es tu @usuario actual.', valid: username);
+      _set(_Status.available, (l) => l.usernameCurrent, valid: username);
       return;
     }
-    _set(_Status.checking, 'Comprobando…');
+    _set(_Status.checking, (l) => l.usernameChecking);
     final id = ++_request;
     _debounce = Timer(const Duration(milliseconds: 450), () => _check(username, id));
   }
@@ -97,18 +99,19 @@ class _UsernameFieldState extends State<UsernameField> {
           .isUsernameAvailable(username, forUid: widget.forUid);
       if (id != _request) return; // Ya se escribió otra cosa.
       if (free) {
-        _set(_Status.available, '@$username está libre.', valid: username);
+        _set(_Status.available, (l) => l.usernameAvailable(username), valid: username);
       } else {
-        _set(_Status.taken, '@$username ya está en uso. Prueba con otro.');
+        _set(_Status.taken, (l) => l.usernameTaken(username));
       }
     } catch (_) {
       if (id != _request) return;
-      _set(_Status.offline, 'No se pudo comprobar. Revisa tu conexión.');
+      _set(_Status.offline, (l) => l.usernameOffline);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final message = _message?.call(context.l10n) ?? '';
     final c = VColors.of(context);
     final statusColor = switch (_status) {
       _Status.available => c.success,
@@ -135,7 +138,7 @@ class _UsernameFieldState extends State<UsernameField> {
           onSubmitted: (_) => widget.onSubmitted?.call(),
           style: VText.ui(17, weight: 600),
           decoration: InputDecoration(
-            hintText: 'tu_usuario',
+            hintText: context.l10n.usernameHint,
             prefixText: '@',
             prefixStyle: VText.ui(17, weight: 600, color: c.text2),
             suffixIcon: _SuffixFor(status: _status),
@@ -145,12 +148,12 @@ class _UsernameFieldState extends State<UsernameField> {
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
           alignment: Alignment.topLeft,
-          child: _message.isEmpty
+          child: message.isEmpty
               ? const SizedBox(width: double.infinity)
               : Padding(
                   padding: const EdgeInsets.fromLTRB(6, 8, 6, 0),
                   child: Text(
-                    _message,
+                    message,
                     key: const ValueKey('username-status'),
                     style: VText.ui(12, weight: 600, color: statusColor),
                   ),

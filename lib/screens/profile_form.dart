@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../services/user_repo.dart';
+import '../l10n/l10n.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/auth_errors.dart';
 import '../widgets/photo_picker.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/username_field.dart';
@@ -17,6 +18,7 @@ class ProfileEdit {
     this.removeAvatar = false,
     this.banner,
     this.removeBanner = false,
+    this.bio,
   });
 
   final String name;
@@ -29,6 +31,9 @@ class ProfileEdit {
   final bool removeAvatar;
   final Uint8List? banner;
   final bool removeBanner;
+
+  /// Biografía (hasta [bioMaxLength]); null si el formulario no la pedía.
+  final String? bio;
 }
 
 typedef ProfileSubmit = Future<void> Function(ProfileEdit edit);
@@ -40,6 +45,9 @@ const int bannerWidth = 1600;
 /// Proporción del banner: la del encabezado del perfil (ancho completo por
 /// ~210 pt de alto en un iPhone), redondeada a 2:1.
 const double bannerAspect = 2;
+
+/// Largo máximo de la biografía del perfil.
+const int bioMaxLength = 160;
 
 /// Formulario compartido por el onboarding y la edición de perfil.
 class ProfileForm extends StatefulWidget {
@@ -57,6 +65,8 @@ class ProfileForm extends StatefulWidget {
     this.initialUsername,
     this.forUid,
     this.autofocus = false,
+    this.showBio = false,
+    this.initialBio,
   });
 
   final String submitLabel;
@@ -81,6 +91,10 @@ class ProfileForm extends StatefulWidget {
   final String? forUid;
   final bool autofocus;
 
+  /// Muestra el campo de biografía (solo al editar el perfil).
+  final bool showBio;
+  final String? initialBio;
+
   @override
   State<ProfileForm> createState() => _ProfileFormState();
 }
@@ -90,6 +104,8 @@ class _ProfileFormState extends State<ProfileForm> {
       TextEditingController(text: widget.initialName);
   late int _color = widget.initialColor ?? VColors.accentPalette.first.toARGB32();
   late String? _username = widget.initialUsername;
+  late final TextEditingController _bio =
+      TextEditingController(text: widget.initialBio ?? '');
   Uint8List? _picked;
   bool _removed = false;
   Uint8List? _pickedBanner;
@@ -105,6 +121,7 @@ class _ProfileFormState extends State<ProfileForm> {
   @override
   void dispose() {
     _name.dispose();
+    _bio.dispose();
     super.dispose();
   }
 
@@ -116,7 +133,7 @@ class _ProfileFormState extends State<ProfileForm> {
       aspectRatio: 1,
       outputWidth: avatarSize,
       circle: true,
-      title: 'Tu foto de perfil',
+      title: context.l10n.profilePhotoTitle,
       canRemove: _hasAvatar,
     );
     if (pick == null || !mounted) return;
@@ -131,9 +148,9 @@ class _ProfileFormState extends State<ProfileForm> {
       context,
       aspectRatio: bannerAspect,
       outputWidth: bannerWidth,
-      title: 'Tu foto de fondo',
+      title: context.l10n.bannerPhotoTitle,
       canRemove: _hasBanner,
-      removeLabel: 'Quitar fondo',
+      removeLabel: context.l10n.bannerRemove,
     );
     if (pick == null || !mounted) return;
     setState(() {
@@ -158,6 +175,7 @@ class _ProfileFormState extends State<ProfileForm> {
           removeAvatar: _removed,
           banner: _pickedBanner,
           removeBanner: _removedBanner,
+          bio: widget.showBio ? _bio.text.trim() : null,
         ),
       );
     } catch (e) {
@@ -165,7 +183,7 @@ class _ProfileFormState extends State<ProfileForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e is UsernameTakenException ? e.message : 'Algo falló: $e',
+            friendlyError(e, context.l10n),
           ),
         ),
       );
@@ -195,7 +213,7 @@ class _ProfileFormState extends State<ProfileForm> {
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: _pickBanner,
-              child: Text(_hasBanner ? 'Cambiar fondo' : 'Elegir foto de fondo'),
+              child: Text(_hasBanner ? context.l10n.bannerChange : context.l10n.bannerChoose),
             ),
           ),
           const SizedBox(height: 6),
@@ -240,7 +258,7 @@ class _ProfileFormState extends State<ProfileForm> {
         Center(
           child: TextButton(
             onPressed: _pick,
-            child: Text(_hasAvatar ? 'Cambiar foto' : 'Elegir una foto'),
+            child: Text(_hasAvatar ? context.l10n.photoChange : context.l10n.photoChoose),
           ),
         ),
         const SizedBox(height: 18),
@@ -255,13 +273,31 @@ class _ProfileFormState extends State<ProfileForm> {
           onSubmitted: (_) => _submit(),
           style: VText.ui(17, weight: 600),
           decoration: InputDecoration(
-            hintText: '¿Cómo te llamamos?',
+            hintText: context.l10n.nameHint,
             counterStyle: VText.label(10, color: c.text3),
           ),
         ),
+        if (widget.showBio) ...[
+          const SizedBox(height: 14),
+          Text(context.l10n.bioLabel, style: VText.label(11, color: c.text3)),
+          const SizedBox(height: 10),
+          TextField(
+            key: const ValueKey('bio-field'),
+            controller: _bio,
+            maxLength: bioMaxLength,
+            minLines: 2,
+            maxLines: 4,
+            textCapitalization: TextCapitalization.sentences,
+            style: VText.ui(15, height: 1.4),
+            decoration: InputDecoration(
+              hintText: context.l10n.bioHint,
+              counterStyle: VText.label(10, color: c.text3),
+            ),
+          ),
+        ],
         if (widget.showUsername) ...[
           const SizedBox(height: 14),
-          Text('TU @USUARIO', style: VText.label(11, color: c.text3)),
+          Text(context.l10n.yourUsernameLabel, style: VText.label(11, color: c.text3)),
           const SizedBox(height: 10),
           UsernameField(
             initial: widget.initialUsername ?? '',
@@ -271,7 +307,7 @@ class _ProfileFormState extends State<ProfileForm> {
         ],
         if (widget.showColor) ...[
           const SizedBox(height: 14),
-          Text('TU COLOR', style: VText.label(11, color: c.text3)),
+          Text(context.l10n.yourColorLabel, style: VText.label(11, color: c.text3)),
           const SizedBox(height: 12),
           ColorSwatches(
             selected: _color,
@@ -407,7 +443,7 @@ class _BannerField extends StatelessWidget {
                     children: [
                       const Icon(Icons.add_photo_alternate_outlined, size: 20),
                       const SizedBox(width: 8),
-                      Text('Foto de fondo', style: VText.ui(14, weight: 700)),
+                      Text(context.l10n.bannerPlaceholder, style: VText.ui(14, weight: 700)),
                     ],
                   ),
                 ),

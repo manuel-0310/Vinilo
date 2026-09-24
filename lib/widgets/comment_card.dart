@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../models/rating.dart';
 import '../screens/routes.dart';
 import '../theme/vinilo_theme.dart';
@@ -52,7 +53,7 @@ class CommentCard extends StatelessWidget {
                             style: VText.ui(14, weight: 700),
                           ),
                           Text(
-                            timeAgo(entry.updatedAt),
+                            timeAgo(entry.updatedAt, context.l10n),
                             style: VText.ui(11, color: c.text3),
                           ),
                         ],

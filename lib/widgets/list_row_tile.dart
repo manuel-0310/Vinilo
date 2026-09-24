@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../models/music_list.dart';
 import '../theme/vinilo_theme.dart';
 import 'list_mosaic.dart';
@@ -50,7 +51,7 @@ class ListRowTile extends StatelessWidget {
                       style: VText.ui(15, weight: 700),
                     ),
                     Text(
-                      '${list.kind.label} · ${list.itemType.count(list.count)}',
+                      '${list.kind.label(context.l10n)} · ${list.itemType.count(list.count, context.l10n)}',
                       style: VText.ui(12, color: c.text2),
                     ),
                   ],

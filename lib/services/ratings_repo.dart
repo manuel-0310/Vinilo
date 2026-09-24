@@ -106,6 +106,21 @@ class RatingsRepo {
     return controller.stream;
   }
 
+  /// Las notas de estas personas (mis amigos) sobre un disco: una consulta
+  /// por cada 30 uids, juntas y de mayor a menor nota.
+  Stream<List<RatingEntry>> friendsRatings(String albumId, List<String> uids) {
+    if (uids.isEmpty) return Stream.value(const []);
+    final pages = [
+      for (final chunk in chunked(uids, firestoreInLimit))
+        _ratings
+            .where('albumId', isEqualTo: albumId)
+            .where('uid', whereIn: chunk)
+            .snapshots()
+            .map(_entries),
+    ];
+    return combineLatestAll(pages).map(friendsByScore);
+  }
+
   Stream<List<AlbumStats>> recentlyRated({int limit = 12}) => _albums
       .orderBy('lastRatedAt', descending: true)
       .limit(limit)

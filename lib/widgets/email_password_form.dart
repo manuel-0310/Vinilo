@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/auth_errors.dart';
 
@@ -78,7 +79,7 @@ class _EmailPasswordFormState extends State<EmailPasswordForm> {
       await widget.onSubmit(_emailText, _password.text);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = friendlyError(e));
+      setState(() => _error = friendlyError(e, context.l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -87,9 +88,10 @@ class _EmailPasswordFormState extends State<EmailPasswordForm> {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
+    final l10n = context.l10n;
     final passwordHint = widget.newPassword
-        ? 'Contraseña (mínimo $minPassword caracteres)'
-        : 'Contraseña';
+        ? l10n.authPasswordNewHint(minPassword)
+        : l10n.authPasswordHint;
     return AutofillGroup(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -107,7 +109,7 @@ class _EmailPasswordFormState extends State<EmailPasswordForm> {
             onChanged: (_) => setState(() => _error = null),
             onSubmitted: (_) => _passwordFocus.requestFocus(),
             style: VText.ui(17, weight: 600),
-            decoration: const InputDecoration(hintText: 'Correo'),
+            decoration: InputDecoration(hintText: l10n.authEmailHint),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -130,7 +132,7 @@ class _EmailPasswordFormState extends State<EmailPasswordForm> {
               hintText: passwordHint,
               suffixIcon: IconButton(
                 key: const ValueKey('password-toggle'),
-                tooltip: _obscure ? 'Mostrar contraseña' : 'Ocultar contraseña',
+                tooltip: _obscure ? l10n.authShowPassword : l10n.authHidePassword,
                 icon: Icon(
                   _obscure
                       ? Icons.visibility_outlined
@@ -149,7 +151,7 @@ class _EmailPasswordFormState extends State<EmailPasswordForm> {
                 key: const ValueKey('forgot-password'),
                 onPressed: () => widget.onForgotPassword!(_emailText),
                 child: Text(
-                  '¿Olvidaste tu contraseña?',
+                  l10n.authForgotPassword,
                   style: VText.ui(13, weight: 700, color: c.accent),
                 ),
               ),

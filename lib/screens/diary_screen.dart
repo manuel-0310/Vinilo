@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
-import '../util/format.dart';
 import '../util/search_text.dart';
 import '../widgets/diary_row.dart';
 import '../widgets/misc.dart';
@@ -90,14 +90,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.isMe ? 'Tu diario' : 'Diario de ${widget.name}',
+                            widget.isMe ? context.l10n.diaryMine : context.l10n.diaryOf(widget.name),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: VText.display(38, height: 1),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            plural(all.length, 'disco calificado', 'discos calificados'),
+                            context.l10n.countRatedAlbums(all.length),
                             style: VText.ui(13, color: c.text2),
                           ),
                           const SizedBox(height: 16),
@@ -108,7 +108,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
                             onChanged: (v) => setState(() => _query = v),
                             style: VText.ui(16, weight: 600),
                             decoration: InputDecoration(
-                              hintText: 'Disco o artista',
+                              hintText: context.l10n.diarySearchHint,
                               prefixIcon: Icon(
                                 Icons.search_rounded,
                                 color: c.text3,
@@ -143,10 +143,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
                     ),
                   ),
                   if (shown.isEmpty)
-                    const SliverToBoxAdapter(
+                    SliverToBoxAdapter(
                       child: EmptyState(
-                        title: 'Nada por aquí',
-                        message: 'Ningún disco del diario coincide con esa búsqueda o ese filtro.',
+                        title: context.l10n.searchNothingTitle,
+                        message: context.l10n.diaryNoMatch,
                       ),
                     )
                   else
@@ -197,15 +197,15 @@ class _Filters extends StatelessWidget {
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
             children: [
-              _Chip(
+              ChoicePill(
                 key: const ValueKey('diary-filter-all'),
-                label: 'Todas',
+                label: context.l10n.filterAll,
                 selected: score == null,
                 onTap: () => onScore(null),
               ),
               for (var n = 10; n >= 1; n--) ...[
                 const SizedBox(width: 8),
-                _Chip(
+                ChoicePill(
                   key: ValueKey('diary-filter-$n'),
                   label: '$n',
                   selected: score == n,
@@ -221,18 +221,18 @@ class _Filters extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
           child: Row(
             children: [
-              Text('ORDENAR POR', style: VText.label(11, color: c.text3)),
+              Text(context.l10n.sortBy, style: VText.label(11, color: c.text3)),
               const SizedBox(width: 12),
-              _Chip(
+              ChoicePill(
                 key: const ValueKey('diary-sort-date'),
-                label: 'Fecha',
+                label: context.l10n.sortDate,
                 selected: sort == DiarySort.date,
                 onTap: () => onSort(DiarySort.date),
               ),
               const SizedBox(width: 8),
-              _Chip(
+              ChoicePill(
                 key: const ValueKey('diary-sort-score'),
-                label: 'Nota',
+                label: context.l10n.sortScore,
                 selected: sort == DiarySort.score,
                 onTap: () => onSort(DiarySort.score),
               ),
@@ -240,48 +240,6 @@ class _Filters extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.color,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    final accent = color ?? c.accent;
-    return Material(
-      color: selected ? accent.withValues(alpha: 0.16) : c.surface2,
-      borderRadius: BorderRadius.circular(999),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: selected ? accent.withValues(alpha: 0.7) : Colors.transparent,
-            ),
-          ),
-          child: Text(
-            label,
-            style: VText.ui(13, weight: 700, color: selected ? accent : c.text2),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import '../l10n/l10n.dart';
 import 'artist.dart';
 
 /// Álbum tal como lo devuelve la Cloud Function (normalizado) o como se
@@ -103,19 +104,18 @@ class Album {
   String? get bestCover => cover ?? coverSmall ?? coverThumb;
   String? get smallCover => coverSmall ?? cover ?? coverThumb;
 
-  String get typeLabel => switch (type) {
-        'single' => 'Sencillo',
-        'compilation' => 'Recopilatorio',
-        _ => 'Álbum',
+  String typeLabel(AppLocalizations l) => switch (type) {
+        'single' => l.albumTypeSingle,
+        'compilation' => l.albumTypeCompilation,
+        _ => l.albumTypeAlbum,
       };
 
   String get subtitle => [artist, if (year != null) '$year'].join(' · ');
 
-  String get meta => [
+  String meta(AppLocalizations l) => [
         if (year != null) '$year',
-        typeLabel,
-        if (totalTracks != null)
-          '$totalTracks ${totalTracks == 1 ? 'canción' : 'canciones'}',
+        typeLabel(l),
+        if (totalTracks != null) l.countTracks(totalTracks!),
       ].join(' · ');
 }
 

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../models/album.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
+import '../util/errors.dart';
 import 'album_cover.dart';
 import 'rating_dial.dart';
 
@@ -90,7 +92,7 @@ class _RatingSheetState extends State<RatingSheet> {
       if (!mounted) return;
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo guardar: $e')),
+        SnackBar(content: Text(context.l10n.couldNotSave(describeError(e, context.l10n)))),
       );
     }
   }
@@ -199,7 +201,7 @@ class _RatingSheetState extends State<RatingSheet> {
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   child: Text(
-                    score == null ? 'Toca o desliza para elegir tu nota' : Score.label(score),
+                    score == null ? context.l10n.rateSheetPrompt : Score.label(score, context.l10n),
                     key: ValueKey(score),
                     textAlign: TextAlign.center,
                     style: VText.display(
@@ -225,7 +227,7 @@ class _RatingSheetState extends State<RatingSheet> {
                 textCapitalization: TextCapitalization.sentences,
                 style: VText.ui(15),
                 decoration: InputDecoration(
-                  hintText: 'Una línea sobre este disco (opcional)',
+                  hintText: context.l10n.rateSheetCommentHint,
                   counterStyle: VText.label(10, color: c.text3),
                 ),
               ),
@@ -244,8 +246,8 @@ class _RatingSheetState extends State<RatingSheet> {
                       )
                     : Text(
                         widget.existing == null
-                            ? 'Guardar en mi diario'
-                            : 'Actualizar mi nota',
+                            ? context.l10n.rateSheetSave
+                            : context.l10n.rateSheetUpdate,
                       ),
               ),
               if (widget.existing != null)
@@ -255,7 +257,7 @@ class _RatingSheetState extends State<RatingSheet> {
                     key: const ValueKey('rating-delete'),
                     onPressed: _busy ? null : _delete,
                     child: Text(
-                      'Borrar nota',
+                      context.l10n.rateSheetDelete,
                       style: VText.ui(14, weight: 600, color: c.danger),
                     ),
                   ),

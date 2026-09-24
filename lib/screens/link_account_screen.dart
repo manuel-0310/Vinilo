@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../models/user_profile.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
@@ -23,21 +24,21 @@ class LinkAccountScreen extends StatelessWidget {
       builder: (ctx) {
         final c = VColors.of(ctx);
         return AlertDialog(
-          title: Text('¿Entrar con otra cuenta?', style: VText.display(28)),
+          title: Text(ctx.l10n.linkOtherTitle, style: VText.display(28)),
           content: Text(
-            'Esta sesión tiene ${_count(profile.ratingsCount)} y tu perfil. Si entras con otra cuenta, todo eso queda fuera de tu alcance. Para conservarlo, guarda esta sesión con un correo y una contraseña.',
+            ctx.l10n.linkOtherBody(profile.ratingsCount),
             style: VText.ui(14, color: c.text2, height: 1.4),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Volver'),
+              child: Text(ctx.l10n.back),
             ),
             TextButton(
               key: const ValueKey('link-signin-confirm'),
               onPressed: () => Navigator.of(ctx).pop(true),
               child: Text(
-                'Entrar de todos modos',
+                ctx.l10n.linkOtherConfirm,
                 style: VText.ui(14, weight: 700, color: c.danger),
               ),
             ),
@@ -47,8 +48,6 @@ class LinkAccountScreen extends StatelessWidget {
     );
     if (ok == true && context.mounted) WelcomeScreen.openSignIn(context);
   }
-
-  static String _count(int n) => n == 1 ? '1 nota' : '$n notas';
 
   @override
   Widget build(BuildContext context) {
@@ -65,29 +64,28 @@ class LinkAccountScreen extends StatelessWidget {
       title: Text.rich(
         TextSpan(
           children: [
-            const TextSpan(text: 'Guarda tu '),
+            TextSpan(text: context.l10n.linkTitleStart),
             TextSpan(
-              text: 'cuenta',
+              text: context.l10n.linkTitleAccent,
               style: VText.display(42, italic: true, color: c.accent),
             ),
-            TextSpan(text: ', ${profile.name}.'),
+            TextSpan(text: context.l10n.linkTitleEnd(profile.name)),
           ],
         ),
       ),
-      subtitle:
-          'Vinilo ahora entra con correo y contraseña. Vincúlalos a esta sesión y conservas ${_count(profile.ratingsCount)}, tus favoritos y tu perfil en cualquier dispositivo.',
+      subtitle: context.l10n.linkSubtitle(profile.ratingsCount),
       footer: Center(
         child: TextButton(
           key: const ValueKey('link-signin'),
           onPressed: () => _signInInstead(context),
           child: Text(
-            'Ya tengo una cuenta',
+            context.l10n.linkHaveAccount,
             style: VText.ui(14, weight: 700, color: c.text2),
           ),
         ),
       ),
       child: EmailPasswordForm(
-        submitLabel: 'Guardar mi cuenta',
+        submitLabel: context.l10n.linkSubmit,
         newPassword: true,
         autofocus: false,
         onSubmit: (email, password) async {

@@ -19,6 +19,11 @@ String themeModeKey(ThemeMode mode) => switch (mode) {
       ThemeMode.dark => 'dark',
     };
 
+/// Idiomas de la app. `null` (o "system" en Firestore) sigue al teléfono.
+const List<String> appLanguages = ['es', 'en'];
+
+String? languageFrom(String? raw) => appLanguages.contains(raw) ? raw : null;
+
 class UserProfile {
   const UserProfile({
     required this.uid,
@@ -34,9 +39,11 @@ class UserProfile {
     this.favoriteArtists = const [],
     this.recentSearches = const [],
     this.themeMode = ThemeMode.dark,
+    this.language,
     this.followersCount = 0,
     this.followingCount = 0,
     this.nameLower,
+    this.bio,
   });
 
   final String uid;
@@ -60,6 +67,14 @@ class UserProfile {
   final List<Artist> favoriteArtists;
   final List<String> recentSearches;
   final ThemeMode themeMode;
+
+  /// "es" o "en"; null sigue el idioma del teléfono.
+  final String? language;
+
+  Locale? get locale => language == null ? null : Locale(language!);
+
+  /// Biografía corta (hasta 160 caracteres); null o vacía si no tiene.
+  final String? bio;
   final int followersCount;
   final int followingCount;
 
@@ -113,6 +128,8 @@ class UserProfile {
       recentSearches:
           List<String>.from((d['recentSearches'] as List?) ?? const []),
       themeMode: themeModeFrom(d['theme'] as String?),
+      language: languageFrom(d['language'] as String?),
+      bio: d['bio'] as String?,
       followersCount: (d['followersCount'] as num?)?.toInt() ?? 0,
       followingCount: (d['followingCount'] as num?)?.toInt() ?? 0,
       nameLower: d['nameLower'] as String?,

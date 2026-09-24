@@ -27,7 +27,9 @@ service cloud.firestore {
     function validName(data) {
       return data.name is string
         && data.name.size() >= 2
-        && data.name.size() <= 24;
+        && data.name.size() <= 24
+        // Biografía opcional, hasta 160 caracteres.
+        && (!('bio' in data) || (data.bio is string && data.bio.size() <= 160));
     }
 
     // Minúsculas, de 3 a 20, solo letras, números, punto y guion bajo.

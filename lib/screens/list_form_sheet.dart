@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../models/music_list.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/sheet.dart';
@@ -104,11 +105,12 @@ class _ListFormState extends State<_ListForm> {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
+    final l10n = context.l10n;
     return SheetScaffold(
-      title: widget.title ?? (_editing ? 'Editar lista' : 'Nueva lista'),
+      title: widget.title ?? (_editing ? l10n.listEdit : l10n.listNew),
       subtitle: _editing
-          ? widget.initial!.typeLabel
-          : 'Un ranking va numerado y se ordena arrastrando.',
+          ? widget.initial!.typeLabel(l10n)
+          : l10n.listFormSubtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -122,7 +124,7 @@ class _ListFormState extends State<_ListForm> {
             onChanged: (_) => setState(() {}),
             style: VText.ui(17, weight: 600),
             decoration: InputDecoration(
-              hintText: 'Nombre de la lista',
+              hintText: l10n.listNameHint,
               counterStyle: VText.label(10, color: c.text3),
             ),
           ),
@@ -136,21 +138,21 @@ class _ListFormState extends State<_ListForm> {
             textCapitalization: TextCapitalization.sentences,
             style: VText.ui(15),
             decoration: InputDecoration(
-              hintText: 'Descripción (opcional)',
+              hintText: l10n.listDescriptionHint,
               counterStyle: VText.label(10, color: c.text3),
             ),
           ),
           if (!_editing) ...[
             const SizedBox(height: 14),
-            Text('TIPO', style: VText.label(11, color: c.text3)),
+            Text(l10n.listFormKind, style: VText.label(11, color: c.text3)),
             const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
                   child: _Choice(
                     key: const ValueKey('kind-list'),
-                    label: 'Lista',
-                    hint: 'Sin orden fijo',
+                    label: l10n.listKindList,
+                    hint: l10n.listKindListHint,
                     icon: Icons.format_list_bulleted_rounded,
                     selected: _kind == ListKind.list,
                     onTap: () => setState(() => _kind = ListKind.list),
@@ -160,8 +162,8 @@ class _ListFormState extends State<_ListForm> {
                 Expanded(
                   child: _Choice(
                     key: const ValueKey('kind-ranking'),
-                    label: 'Ranking',
-                    hint: 'Numerado, del 1 en adelante',
+                    label: l10n.listKindRanking,
+                    hint: l10n.listKindRankingHint,
                     icon: Icons.format_list_numbered_rounded,
                     selected: _kind == ListKind.ranking,
                     onTap: () => setState(() => _kind = ListKind.ranking),
@@ -171,15 +173,15 @@ class _ListFormState extends State<_ListForm> {
             ),
             if (widget.fixedItemType == null) ...[
               const SizedBox(height: 16),
-              Text('¿DE QUÉ?', style: VText.label(11, color: c.text3)),
+              Text(l10n.listFormContent, style: VText.label(11, color: c.text3)),
               const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
                     child: _Choice(
                       key: const ValueKey('type-tracks'),
-                      label: 'Canciones',
-                      hint: 'De cualquier disco',
+                      label: l10n.listTypeTracks,
+                      hint: l10n.listTypeTracksHint,
                       icon: Icons.music_note_rounded,
                       selected: _itemType == ListItemType.tracks,
                       onTap: () => setState(() => _itemType = ListItemType.tracks),
@@ -189,8 +191,8 @@ class _ListFormState extends State<_ListForm> {
                   Expanded(
                     child: _Choice(
                       key: const ValueKey('type-albums'),
-                      label: 'Discos',
-                      hint: 'Álbumes completos',
+                      label: l10n.listTypeAlbums,
+                      hint: l10n.listTypeAlbumsHint,
                       icon: Icons.album_rounded,
                       selected: _itemType == ListItemType.albums,
                       onTap: () => setState(() => _itemType = ListItemType.albums),
@@ -204,7 +206,7 @@ class _ListFormState extends State<_ListForm> {
           FilledButton(
             key: const ValueKey('list-submit'),
             onPressed: _canSubmit ? _submit : null,
-            child: Text(widget.submitLabel ?? (_editing ? 'Guardar' : 'Crear lista')),
+            child: Text(widget.submitLabel ?? (_editing ? l10n.save : l10n.listCreate)),
           ),
         ],
       ),

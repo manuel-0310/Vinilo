@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'firebase_options.dart';
+import 'l10n/l10n.dart';
 import 'models/user_profile.dart';
 import 'screens/link_account_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -67,6 +68,15 @@ class _ViniloAppState extends State<ViniloApp> {
         // Sin perfil (splash, bienvenida, onboarding) la app arranca oscura,
         // que es su carácter; la preferencia vive en el documento del usuario.
         themeMode: profile?.themeMode ?? ThemeMode.dark,
+        // Español o inglés: el que eligió en Configuración o, si no eligió,
+        // el del teléfono (con español de respaldo).
+        locale: profile?.locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localeResolutionCallback: (locale, supported) => supported.firstWhere(
+          (s) => s.languageCode == locale?.languageCode,
+          orElse: () => const Locale('es'),
+        ),
         // La barra de estado sigue al tema; las pantallas con foto de fondo
         // la sobrescriben con su propia AnnotatedRegion.
         builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(

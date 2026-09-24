@@ -1,0 +1,965 @@
+{
+  "@@locale": "es",
+  "appName": "Vinilo",
+  "@appName": {
+    "description": "Nombre de la app"
+  },
+  "timeNow": "ahora",
+  "timeMinutesAgo": "hace {n} min",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "hace {n} h",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYesterday": "ayer",
+  "timeDaysAgo": "{n, plural, =1{hace 1 día} other{hace {n} días}}",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "errorGeneric": "Algo falló. Vuelve a intentarlo.",
+  "errorOffline": "Sin conexión. Revisa tu internet y vuelve a intentar.",
+  "errorPermissionDenied": "No tienes permiso para hacer eso.",
+  "authEmailInUse": "Ese correo ya tiene una cuenta. Inicia sesión o usa otro.",
+  "authInvalidEmail": "Ese correo no parece válido.",
+  "authWeakPassword": "La contraseña es muy débil: usa al menos 6 caracteres.",
+  "authMissingPassword": "Escribe tu contraseña.",
+  "authWrongCredentials": "Correo o contraseña incorrectos.",
+  "authUserDisabled": "Esta cuenta está deshabilitada.",
+  "authTooManyRequests": "Demasiados intentos. Espera un momento y vuelve a probar.",
+  "authOperationNotAllowed": "El acceso con correo y contraseña no está habilitado todavía.",
+  "authCredentialInUse": "Ese correo ya pertenece a otra cuenta. Inicia sesión con ella o usa otro correo.",
+  "authProviderLinked": "Esta sesión ya tiene un correo vinculado.",
+  "authRequiresRecentLogin": "Por seguridad, vuelve a iniciar sesión antes de hacer esto.",
+  "authSessionExpired": "Tu sesión venció. Vuelve a iniciar sesión.",
+  "usernameTaken": "@{username} ya está en uso. Prueba con otro.",
+  "@usernameTaken": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "usernameEmpty": "Elige tu @usuario.",
+  "usernameTooShort": "Mínimo {n} caracteres.",
+  "@usernameTooShort": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "usernameTooLong": "Máximo {n} caracteres.",
+  "@usernameTooLong": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "usernameBadChars": "Solo letras minúsculas, números, punto y guion bajo.",
+  "listKindList": "Lista",
+  "listKindRanking": "Ranking",
+  "listTypeTracks": "Canciones",
+  "listTypeAlbums": "Discos",
+  "countTracks": "{n, plural, =1{1 canción} other{{n} canciones}}",
+  "@countTracks": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "countAlbums": "{n, plural, =1{1 disco} other{{n} discos}}",
+  "@countAlbums": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "addedTracks": "{n, plural, =1{Se agregó 1 canción} other{Se agregaron {n} canciones}}",
+  "@addedTracks": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "addedAlbums": "{n, plural, =1{Se agregó 1 disco} other{Se agregaron {n} discos}}",
+  "@addedAlbums": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "listAddTracks": "Agregar canciones",
+  "listAddAlbums": "Agregar discos",
+  "listFullTypeTrackList": "Lista de canciones",
+  "listFullTypeTrackRanking": "Ranking de canciones",
+  "listFullTypeAlbumList": "Lista de discos",
+  "listFullTypeAlbumRanking": "Ranking de discos",
+  "addAlreadyInList": "Ya estaba en la lista",
+  "addDuplicates": "{n, plural, =1{1 ya estaba} other{{n} ya estaban}}",
+  "@addDuplicates": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "addOverflow": "{n, plural, =1{1 no cupo (tope de {max})} other{{n} no cupieron (tope de {max})}}",
+  "@addOverflow": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "score1": "Insufrible",
+  "score2": "Malo",
+  "score3": "Flojo",
+  "score4": "Meh",
+  "score5": "Regular",
+  "score6": "Está bien",
+  "score7": "Bueno",
+  "score8": "Muy bueno",
+  "score9": "Excelente",
+  "score10": "Obra maestra",
+  "albumTypeSingle": "Sencillo",
+  "albumTypeCompilation": "Recopilatorio",
+  "albumTypeAlbum": "Álbum",
+  "notifFollow": "{name} empezó a seguirte",
+  "@notifFollow": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifLikeRating": "A {name} le gustó tu nota de {album}",
+  "@notifLikeRating": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSomeAlbum": "un disco",
+  "notifLikeList": "A {name} le gustó tu lista {list}",
+  "@notifLikeList": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSaveList": "{name} guardó tu lista {list}",
+  "@notifSaveList": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteErrorNoEndpoint": "Falta la URL de la función (--dart-define=SPOTIFY_FN_URL=…).",
+  "deleteErrorWrongPassword": "La contraseña no es correcta.",
+  "deleteErrorReauth": "No se pudo comprobar tu contraseña ({code}).",
+  "@deleteErrorReauth": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteErrorNoSession": "No hay sesión.",
+  "deleteErrorTimeout": "El borrado está tardando más de la cuenta. Vuelve a intentarlo: retoma donde quedó.",
+  "deleteErrorRecentLogin": "Vuelve a escribir tu contraseña para borrar la cuenta.",
+  "deleteErrorServer": "No se pudo borrar la cuenta ({status}). Vuelve a intentarlo.",
+  "@deleteErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "spotifyNotConfigured": "Falta la URL de la función de Spotify. Corre la app con --dart-define=SPOTIFY_FN_URL=…",
+  "spotifyTimeout": "Spotify tardó demasiado en responder.",
+  "spotifyServerError": "Spotify no respondió bien (error {status}).",
+  "@spotifyServerError": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "spotifyUnexpected": "Respuesta inesperada de Spotify.",
+  "listGone": "La lista ya no existe.",
+  "notificationsTitle": "Notificaciones",
+  "authPasswordNewHint": "Contraseña (mínimo {n} caracteres)",
+  "@authPasswordNewHint": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "authPasswordHint": "Contraseña",
+  "authEmailHint": "Correo",
+  "authShowPassword": "Mostrar contraseña",
+  "authHidePassword": "Ocultar contraseña",
+  "authForgotPassword": "¿Olvidaste tu contraseña?",
+  "feedRatedSuffix": " calificó",
+  "@feedRatedSuffix": {
+    "description": "Va justo después del nombre, en la tarjeta de la actividad"
+  },
+  "couldNotSave": "No se pudo guardar: {error}",
+  "@couldNotSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "follow": "Seguir",
+  "following": "Siguiendo",
+  "cropTitle": "Ajusta tu foto",
+  "cropFailed": "No se pudo recortar: {error}",
+  "@cropFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cropHint": "Mueve y haz zoom con dos dedos. Doble toque para reiniciar.",
+  "cropOpenFailed": "No se pudo abrir la imagen: {error}",
+  "@cropOpenFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cropUse": "Usar foto",
+  "cancel": "Cancelar",
+  "photoCamera": "Tomar foto",
+  "photoGallery": "Elegir de la galería",
+  "photoRemove": "Quitar foto",
+  "photoNoCamera": "No hay cámara disponible.",
+  "photoGalleryFailed": "No se pudo abrir la galería: {error}",
+  "@photoGalleryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "rateSheetPrompt": "Toca o desliza para elegir tu nota",
+  "rateSheetCommentHint": "Agregar un comentario (opcional)",
+  "rateSheetSave": "Guardar en mi diario",
+  "rateSheetUpdate": "Actualizar mi nota",
+  "rateSheetDelete": "Borrar nota",
+  "usernameCurrent": "Ese es tu @usuario actual.",
+  "usernameChecking": "Comprobando…",
+  "usernameAvailable": "@{username} está libre.",
+  "@usernameAvailable": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "usernameOffline": "No se pudo comprobar. Revisa tu conexión.",
+  "usernameHint": "tu_usuario",
+  "welcomeTitleStart": "Tu diario de ",
+  "welcomeTitleAccent": "discos",
+  "welcomeTitleEnd": " empieza aquí.",
+  "welcomeBody": "Busca un álbum, ponle nota del 1 al 10 y mira lo que opina la comunidad. Sin estrellas: aquí se habla en números.",
+  "welcomeSignUp": "Crear cuenta",
+  "welcomeSignIn": "Ya tengo cuenta",
+  "resetSent": "Te mandamos un correo a {email} con un enlace para cambiar tu contraseña.",
+  "@resetSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "signInTitleStart": "Hola de ",
+  "signInTitleAccent": "nuevo",
+  "signInTitleEnd": ".",
+  "signInSubtitle": "Entra con tu correo y tu contraseña.",
+  "signInNoAccount": "¿Aún no tienes cuenta? ",
+  "signInCreateOne": "Créala",
+  "signIn": "Iniciar sesión",
+  "resetTitle": "Recuperar contraseña",
+  "resetBody": "Te mandamos un enlace para elegir una contraseña nueva.",
+  "send": "Enviar",
+  "signUpTitleStart": "Crea tu ",
+  "signUpTitleAccent": "cuenta",
+  "signUpTitleEnd": ".",
+  "signUpSubtitle": "Con tu correo y una contraseña. Después eliges tu nombre, tu color y tu @usuario.",
+  "signUpHaveAccount": "¿Ya tienes cuenta? ",
+  "signUpSignIn": "Inicia sesión",
+  "continueLabel": "Continuar",
+  "usernameTitleStart": "Elige tu ",
+  "usernameTitleAccent": "@usuario",
+  "usernameTitleEnd": ".",
+  "usernameSubtitle": "Así te encuentran tus amigos. Minúsculas, números, punto y guion bajo; de {min} a {max} caracteres. Puedes cambiarlo después desde tu perfil.",
+  "@usernameSubtitle": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "linkOtherTitle": "¿Entrar con otra cuenta?",
+  "linkOtherBody": "Esta sesión tiene {n, plural, =1{1 nota} other{{n} notas}} y tu perfil. Si entras con otra cuenta, todo eso queda fuera de tu alcance. Para conservarlo, guarda esta sesión con un correo y una contraseña.",
+  "@linkOtherBody": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "back": "Volver",
+  "linkOtherConfirm": "Entrar de todos modos",
+  "linkTitleStart": "Guarda tu ",
+  "linkTitleAccent": "cuenta",
+  "linkTitleEnd": ", {name}.",
+  "@linkTitleEnd": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linkSubtitle": "Vinilo ahora entra con correo y contraseña. Vincúlalos a esta sesión y conservas {n, plural, =1{1 nota} other{{n} notas}}, tus favoritos y tu perfil en cualquier dispositivo.",
+  "@linkSubtitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "linkHaveAccount": "Ya tengo una cuenta",
+  "linkSubmit": "Guardar mi cuenta",
+  "onboardingTitleStart": "Así te ",
+  "onboardingTitleAccent": "verán",
+  "onboardingTitleEnd": ".",
+  "onboardingSubtitle": "Tu nombre, tu color y un @usuario único para que te encuentren. Todo se puede cambiar después.",
+  "onboardingSignedInAs": "Entraste como {email} · ",
+  "@onboardingSignedInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingSignOut": "Salir",
+  "onboardingStart": "Empezar",
+  "splashError": "No se pudo iniciar sesión.\n{error}",
+  "@splashError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "retry": "Reintentar",
+  "settingsTitle": "Configuración",
+  "settingsSubtitle": "Se guarda en tu perfil y te sigue en cualquier dispositivo.",
+  "settingsProfile": "PERFIL",
+  "settingsAppearance": "APARIENCIA",
+  "settingsLanguage": "IDIOMA",
+  "settingsAccent": "COLOR DE ÉNFASIS",
+  "settingsAccentBody": "Tiñe botones, enlaces, la pestaña activa y la escala de las notas. También es el color de tu avatar.",
+  "settingsAccount": "CUENTA",
+  "deleteAccount": "Eliminar cuenta",
+  "deleteAccountHint": "Borra tu perfil y todo lo tuyo. No se puede deshacer.",
+  "themeSystem": "Sistema",
+  "themeLight": "Claro",
+  "themeDark": "Oscuro",
+  "languageSystem": "Sistema",
+  "editProfile": "Editar perfil",
+  "signOutTitle": "¿Cerrar sesión?",
+  "signOutBody": "Tu perfil y tus notas se quedan en tu cuenta. Para volver, entra con tu correo y tu contraseña.",
+  "signOut": "Cerrar sesión",
+  "deletePasswordMissing": "Escribe tu contraseña para confirmar.",
+  "deleteCannotUndo": "No se puede deshacer",
+  "deleteIntro": "Se borra para siempre todo lo tuyo:",
+  "deleteItemProfile": "Tu perfil, tu @usuario, tu foto y tu fondo.",
+  "deleteItemRatings": "Tus notas y comentarios (los promedios de los discos se recalculan) y tus \"me gusta\".",
+  "deleteItemLists": "Tus listas y las que guardaste.",
+  "deleteItemFollows": "A quién sigues y quién te sigue.",
+  "deleteItemNotifications": "Tus notificaciones.",
+  "deleteConfirmPrompt": "Para confirmar, escribe tu contraseña.",
+  "deleteInProgress": "Borrando tu cuenta…",
+  "deleteConfirm": "Eliminar mi cuenta",
+  "editProfileTitle": "Tu perfil",
+  "save": "Guardar",
+  "profilePhotoTitle": "Tu foto de perfil",
+  "bannerPhotoTitle": "Tu foto de fondo",
+  "bannerRemove": "Quitar fondo",
+  "bannerChange": "Cambiar fondo",
+  "bannerChoose": "Elegir foto de fondo",
+  "photoChange": "Cambiar foto",
+  "photoChoose": "Elegir una foto",
+  "nameHint": "¿Cómo te llamamos?",
+  "yourUsernameLabel": "TU @USUARIO",
+  "yourColorLabel": "TU COLOR",
+  "bannerPlaceholder": "Foto de fondo",
+  "homePopular": "Popular",
+  "homeActivity": "Actividad",
+  "homeActivitySubtitle": "De tus amigos",
+  "homeFollowTitle": "Sigue a tus amigos",
+  "homeFollowBody": "Aquí verás lo que califican las personas que sigues. Búscalas en la pestaña Buscar por su nombre o su @usuario.",
+  "homeQuietTitle": "Todo tranquilo por aquí",
+  "homeQuietBody": "Las personas que sigues todavía no han calificado nada. Cuando lo hagan, aparecerá aquí.",
+  "homeActivityError": "No se pudo cargar la actividad: {error}",
+  "@homeActivityError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loadMoreFailed": "No se pudo cargar más: {error}",
+  "@loadMoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "searchTitle": "Buscar",
+  "searchHint": "Álbum, artista o @persona",
+  "spotifyNoResponse": "Spotify no respondió",
+  "searchNothingTitle": "Nada por aquí",
+  "searchNoUsername": "Nadie tiene un @usuario que empiece así.",
+  "searchNothingBody": "Prueba con otro nombre, o busca por el artista.",
+  "searchPeople": "Personas",
+  "searchArtists": "Artistas",
+  "searchAlbums": "Álbumes",
+  "searchEnd": "Eso es todo lo que encontró Spotify",
+  "loadMore": "Cargar más",
+  "searchRecent": "RECIENTES",
+  "searchSuggestions": "PARA EMPEZAR",
+  "tabHome": "Inicio",
+  "tabSearch": "Buscar",
+  "tabProfile": "Perfil",
+  "loading": "Cargando…",
+  "notificationsAllCaughtUp": "Todo al día",
+  "notificationsNew": "{n, plural, =1{1 nueva} other{{n} nuevas}}",
+  "@notificationsNew": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsError": "No se pudieron cargar: {error}",
+  "@notificationsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsEmptyTitle": "Nada por ahora",
+  "notificationsEmptyBody": "Aquí verás cuando alguien te siga, le guste una de tus notas o guarde una de tus listas.",
+  "commentsTitle": "Comentarios",
+  "countComments": "{n, plural, =1{1 comentario} other{{n} comentarios}}",
+  "@countComments": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "commentsEmptyTitle": "Sin comentarios",
+  "commentsEmptyBody": "Nadie ha escrito nada sobre este disco todavía.",
+  "diaryMine": "Tu diario",
+  "diaryOf": "Diario de {name}",
+  "@diaryOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "countRatedAlbums": "{n, plural, =1{1 disco calificado} other{{n} discos calificados}}",
+  "@countRatedAlbums": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "diarySearchHint": "Disco o artista",
+  "diaryNoMatch": "Ningún disco del diario coincide con esa búsqueda o ese filtro.",
+  "filterAll": "Todas",
+  "sortBy": "ORDENAR POR",
+  "sortDate": "Fecha",
+  "sortScore": "Nota",
+  "followersTitle": "Seguidores",
+  "followersMine": "{n, plural, =1{1 persona sigue tu diario} other{{n} personas siguen tu diario}}",
+  "@followersMine": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "followersOf": "{n, plural, =1{1 persona sigue a {name}} other{{n} personas siguen a {name}}}",
+  "@followersOf": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "followingMine": "{n, plural, =1{1 persona seguida} other{{n} personas seguidas}}",
+  "@followingMine": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "followingOf": "{n, plural, =1{{name} sigue a 1 persona} other{{name} sigue a {n} personas}}",
+  "@followingOf": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "followersEmptyTitle": "Nadie todavía",
+  "followingEmptyTitle": "A nadie todavía",
+  "followersEmptyMine": "Cuando alguien te siga, aparecerá aquí.",
+  "followersEmptyOf": "Nadie sigue a {name} todavía.",
+  "@followersEmptyOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "followingEmptyMine": "Busca a tus amigos en la pestaña Buscar y sigue su diario.",
+  "followingEmptyOf": "{name} no sigue a nadie todavía.",
+  "@followingEmptyOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listEdit": "Editar lista",
+  "listNew": "Nueva lista",
+  "listFormSubtitle": "Un ranking va numerado y se ordena arrastrando.",
+  "listNameHint": "Nombre de la lista",
+  "listDescriptionHint": "Descripción (opcional)",
+  "listFormKind": "TIPO",
+  "listKindListHint": "Sin orden fijo",
+  "listKindRankingHint": "Numerado, del 1 en adelante",
+  "listFormContent": "¿DE QUÉ?",
+  "listTypeTracksHint": "De cualquier disco",
+  "listTypeAlbumsHint": "Álbumes completos",
+  "listCreate": "Crear lista",
+  "listCreateFailed": "No se pudo crear la lista: {error}",
+  "@listCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerTitle": "Agregar a una lista",
+  "pickerSubtitleTracks": "Tus listas de canciones",
+  "pickerSubtitleAlbums": "Tus listas de discos",
+  "pickerEmptyTracks": "Todavía no tienes listas de canciones. Crea una arriba.",
+  "pickerEmptyAlbums": "Todavía no tienes listas de discos. Crea una arriba.",
+  "addFailed": "No se pudo agregar: {error}",
+  "@addFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "addToListTitle": "Agregar a la lista",
+  "addPickTracksSubtitle": "{artist} · elige las canciones",
+  "@addPickTracksSubtitle": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "addBackToResults": "Volver a los resultados",
+  "addChooseTracks": "Elige canciones",
+  "addSelected": "Agregar {count}",
+  "@addSelected": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "addSearchTrackAlbum": "Busca el disco de la canción",
+  "addSearchAlbum": "Busca un disco",
+  "addPromptTracks": "Escribe el nombre de un disco o artista; después eliges las canciones.",
+  "addPromptAlbums": "Escribe el nombre de un disco o artista.",
+  "addNothingBody": "Prueba con otro nombre.",
+  "albumLoadFailed": "No se pudo cargar el disco",
+  "selectNone": "Ninguna",
+  "addAlreadyHere": "ya está",
+  "done": "Listo",
+  "artistLabel": "Artista",
+  "artistDiscography": "Discografía",
+  "artistNoAlbumsTitle": "Sin discos",
+  "artistNoAlbumsBody": "Spotify no tiene álbumes de este artista.",
+  "artistAlbumsError": "No se pudo cargar la discografía: {error}",
+  "@artistAlbumsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "spotifyCredit": "Datos y portadas de Spotify",
+  "artistUnrated": "Nadie ha calificado un disco de este artista todavía",
+  "ratingLabel": "CALIFICACIÓN",
+  "countRatings": "{n, plural, =1{1 nota} other{{n} notas}}",
+  "@countRatings": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "listReorderFailed": "No se pudo reordenar",
+  "listRemoveFailed": "No se pudo quitar",
+  "listRemoved": "Quitaste \"{name}\"",
+  "@listRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "undo": "Deshacer",
+  "undoFailed": "No se pudo deshacer",
+  "listDeleteTitle": "¿Borrar \"{name}\"?",
+  "@listDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listDeleteBody": "No se puede deshacer. Quien la haya guardado dejará de verla.",
+  "listDelete": "Borrar lista",
+  "deleteFailed": "No se pudo borrar: {error}",
+  "@deleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "listCoverTitle": "Portada de la lista",
+  "listCoverUploading": "Subiendo portada…",
+  "listCoverFailed": "No se pudo cambiar la portada: {error}",
+  "@listCoverFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "listCoverRemoveFailed": "No se pudo quitar la portada: {error}",
+  "@listCoverRemoveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "listMenuEdit": "Editar nombre y descripción",
+  "listMenuAddHint": "Busca un disco y elige",
+  "listCoverChoose": "Elegir portada",
+  "listCoverChange": "Cambiar portada",
+  "listCoverHint": "Una foto en lugar del mosaico",
+  "listCoverRemove": "Quitar portada",
+  "listCoverRemoveHint": "Vuelve el mosaico con las portadas de la lista",
+  "listGoneBody": "Su autor la borró.",
+  "listYours": "Tu lista",
+  "listBy": "por {name}",
+  "@listBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listEmptyMineTitle": "Tu lista está vacía",
+  "listEmptyTheirsTitle": "Todavía no tiene nada",
+  "listEmptyMineTracks": "Busca un disco y elige sus canciones. También puedes hacerlo desde la pantalla de cualquier disco.",
+  "listEmptyMineAlbums": "Busca un disco y agrégalo. También puedes hacerlo desde la pantalla de cualquier disco.",
+  "listEmptyTheirs": "Cuando {name} agregue algo, aparecerá aquí.",
+  "@listEmptyTheirs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listFooterOwner": "Mantén pulsado un elemento para moverlo. En \"Editar\" puedes quitar.",
+  "add": "Agregar",
+  "edit": "Editar",
+  "like": "Me gusta",
+  "saved": "Guardada",
+  "ratingSaved": "Guardado en tu diario",
+  "ratingDeleted": "Nota borrada de tu diario",
+  "ratingDeleteFailed": "No se pudo borrar la nota: {error}",
+  "@ratingDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "viewList": "Ver lista",
+  "albumAddToList": "Agregar el disco a una lista",
+  "albumAddToListHint": "A una de tus listas de discos, o a una nueva",
+  "albumCreateList": "Crear lista con este disco",
+  "albumCreateListHint": "Todas sus canciones, en orden, listas para ordenar",
+  "albumWaitTracks": "Espera a que carguen las canciones",
+  "albumListFromAlbum": "Lista con este disco",
+  "albumDetailError": "No se pudo cargar el detalle: {error}",
+  "@albumDetailError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "albumSelectHint": "Toca las que quieras agregar",
+  "albumLongPressHint": "Mantén pulsada una para agregarla a una lista",
+  "seeMore": "Ver más ({n})",
+  "@seeMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "moreBy": "Más de {artist}",
+  "@moreBy": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "releasedOn": "Publicado el {date}",
+  "@releasedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "yourRating": "Tu nota",
+  "unrated": "Sin calificar",
+  "rateThisAlbum": "Calificar este disco",
+  "addToList": "Agregar a lista",
+  "albumUnratedByAnyone": "Nadie ha calificado este disco todavía",
+  "profileNotFound": "Perfil no encontrado",
+  "profileNotFoundBody": "Esta persona ya no está en Vinilo.",
+  "statAlbums": "{n, plural, =1{DISCO} other{DISCOS}}",
+  "@statAlbums": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "statAverage": "PROMEDIO",
+  "profileListsTab": "Listas",
+  "favorites": "Favoritos",
+  "favoritesMine": "Tres discos y tres artistas que te definen",
+  "favoritesTheirs": "Tres discos y tres artistas que le definen",
+  "favoritesAlbumsLabel": "DISCOS",
+  "favoritesArtistsLabel": "ARTISTAS",
+  "diary": "Diario",
+  "diaryEmptyMine": "Tu diario está vacío",
+  "diaryEmptyTheirs": "Aún no hay notas",
+  "diaryEmptyMineBody": "Busca un disco y ponle nota. Aquí quedará tu historial, mes a mes.",
+  "diaryEmptyTheirsBody": "Cuando {name} califique algo, aparecerá aquí.",
+  "@diaryEmptyTheirsBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listsMine": "Tus listas",
+  "listsOf": "Listas de {name}",
+  "@listsOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listsMineSubtitle": "Listas y rankings de canciones o discos",
+  "listsTheirsSubtitle": "Sus listas y rankings",
+  "listsEmptyMine": "Todavía no tienes listas. Crea una con \"Nueva lista\" o desde la pantalla de un disco.",
+  "listsEmptyTheirs": "Todavía no tiene listas.",
+  "listsSaved": "Guardadas",
+  "listsSavedSubtitle": "Listas de otras personas que guardaste. Solo tú las ves aquí.",
+  "listsSavedEmpty": "Guarda listas de otras personas y aparecerán aquí.",
+  "countLists": "{n, plural, =1{1 lista} other{{n} listas}}",
+  "@countLists": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "pick": "Elegir",
+  "affinity": "AFINIDAD MUSICAL",
+  "affinityNone": "Todavía no tienen discos en común",
+  "affinityBasis": "{n, plural, =1{Según 1 disco en común} other{Según {n} discos en común}}",
+  "@affinityBasis": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "favoritesPickerTitle": "Tus discos",
+  "favoritesPickerHint": "Elige hasta tres, en el orden que quieras.",
+  "favoritesSearchHint": "Buscar en tus discos",
+  "clear": "Borrar",
+  "favoritesNoMatch": "Ningún disco de tu diario coincide con \"{query}\".",
+  "@favoritesNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritesSave": "Guardar discos",
+  "artistsPickerTitle": "Tus artistas",
+  "artistsPickerHint": "Busca en Spotify y elige hasta tres.",
+  "artistsSearchHint": "Nombre del artista",
+  "artistsPrompt": "Escribe el nombre de un artista para buscarlo.",
+  "artistsSave": "Guardar artistas",
+  "bioLabel": "BIOGRAFÍA",
+  "bioHint": "Cuéntale a la gente qué escuchas (opcional)",
+  "ratedBy": "Calificado por",
+  "countFriends": "{n, plural, =1{1 amigo} other{{n} amigos}}",
+  "@countFriends": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "listsMineTab": "Mías ({n})",
+  "@listsMineTab": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "listsSavedTab": "Guardadas ({n})",
+  "@listsSavedTab": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "listsSearchHint": "Buscar por nombre o por lo que tiene",
+  "listsFilterLists": "Listas",
+  "listsFilterRankings": "Rankings",
+  "listsSortRecent": "Recientes",
+  "listsSortName": "A–Z",
+  "listsSortSize": "Más elementos",
+  "listsSortLikes": "Más me gusta",
+  "listsShowing": "Mostrando {shown} de {total}",
+  "@listsShowing": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "listsClearFilters": "Quitar filtros",
+  "listsNoMatchTitle": "Ninguna lista coincide",
+  "listsNoMatchBody": "Prueba con otra búsqueda o quita los filtros.",
+  "notificationsClear": "Borrar todas",
+  "notificationsClearTitle": "¿Borrar todas las notificaciones?",
+  "notificationsClearBody": "Se borran de tu lista. No afecta a quien las provocó.",
+  "followersWord": "{n, plural, =1{seguidor} other{seguidores}}",
+  "@followersWord": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "followingWord": "{n, plural, =1{seguido} other{seguidos}}",
+  "@followingWord": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
+}

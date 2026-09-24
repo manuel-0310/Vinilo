@@ -1,6 +1,11 @@
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:no_retiene/l10n/app_localizations.dart';
 import 'package:no_retiene/util/auth_errors.dart';
 import 'package:no_retiene/util/username.dart';
+
+final es = lookupAppLocalizations(const Locale('es'));
+final en = lookupAppLocalizations(const Locale('en'));
 
 void main() {
   group('normalizeUsername', () {
@@ -44,7 +49,8 @@ void main() {
 
     test('cada problema tiene un mensaje', () {
       for (final p in UsernameProblem.values) {
-        expect(usernameProblemMessage(p), isNotEmpty);
+        expect(usernameProblemMessage(p, es), isNotEmpty);
+        expect(usernameProblemMessage(p, en), isNotEmpty);
       }
     });
   });
@@ -66,20 +72,22 @@ void main() {
 
   group('authMessageForCode', () {
     test('traduce los errores comunes', () {
-      expect(authMessageForCode('email-already-in-use'), contains('ya tiene una cuenta'));
-      expect(authMessageForCode('weak-password'), contains('6 caracteres'));
-      expect(authMessageForCode('network-request-failed'), contains('conexión'));
-      expect(authMessageForCode('invalid-email'), contains('correo'));
+      expect(authMessageForCode('email-already-in-use', es), contains('ya tiene una cuenta'));
+      expect(authMessageForCode('weak-password', es), contains('6 caracteres'));
+      expect(authMessageForCode('network-request-failed', es), contains('conexión'));
+      expect(authMessageForCode('invalid-email', es), contains('correo'));
+      expect(authMessageForCode('invalid-email', en), contains('email'));
     });
 
     test('correo inexistente y contraseña mal dan el mismo mensaje', () {
-      final wrong = authMessageForCode('wrong-password');
-      expect(authMessageForCode('user-not-found'), wrong);
-      expect(authMessageForCode('invalid-credential'), wrong);
+      final wrong = authMessageForCode('wrong-password', es);
+      expect(authMessageForCode('user-not-found', es), wrong);
+      expect(authMessageForCode('invalid-credential', es), wrong);
     });
 
     test('un código desconocido cae al mensaje genérico', () {
-      expect(authMessageForCode('lo-que-sea'), genericAuthMessage);
+      expect(authMessageForCode('lo-que-sea', es), es.errorGeneric);
+      expect(authMessageForCode('lo-que-sea', en), en.errorGeneric);
     });
   });
 }

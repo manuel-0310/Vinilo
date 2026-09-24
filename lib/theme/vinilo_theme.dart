@@ -173,6 +173,13 @@ class VColors {
     Color(0xFFE07BB0),
     Color(0xFF4FC3B0),
     Color(0xFFF2D06B),
+    // Ronda 6: cobalto, cereza, esmeralda, mandarina, lima y magenta.
+    Color(0xFF5B7FE8),
+    Color(0xFFE0546E),
+    Color(0xFF3FAE7A),
+    Color(0xFFF08A3C),
+    Color(0xFFB5CF5A),
+    Color(0xFFC45BD6),
   ];
 }
 

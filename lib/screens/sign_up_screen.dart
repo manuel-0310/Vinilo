@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../widgets/auth_page.dart';
@@ -20,17 +21,16 @@ class SignUpScreen extends StatelessWidget {
       title: Text.rich(
         TextSpan(
           children: [
-            const TextSpan(text: 'Crea tu '),
+            TextSpan(text: context.l10n.signUpTitleStart),
             TextSpan(
-              text: 'cuenta',
+              text: context.l10n.signUpTitleAccent,
               style: VText.display(42, italic: true, color: c.accent),
             ),
-            const TextSpan(text: '.'),
+            TextSpan(text: context.l10n.signUpTitleEnd),
           ],
         ),
       ),
-      subtitle:
-          'Con tu correo y una contraseña. Después eliges tu nombre, tu color y tu @usuario.',
+      subtitle: context.l10n.signUpSubtitle,
       footer: Center(
         child: TextButton(
           key: const ValueKey('signup-to-signin'),
@@ -41,9 +41,9 @@ class SignUpScreen extends StatelessWidget {
           child: Text.rich(
             TextSpan(
               children: [
-                TextSpan(text: '¿Ya tienes cuenta? ', style: VText.ui(14, color: c.text2)),
+                TextSpan(text: context.l10n.signUpHaveAccount, style: VText.ui(14, color: c.text2)),
                 TextSpan(
-                  text: 'Inicia sesión',
+                  text: context.l10n.signUpSignIn,
                   style: VText.ui(14, weight: 700, color: c.accent),
                 ),
               ],
@@ -52,7 +52,7 @@ class SignUpScreen extends StatelessWidget {
         ),
       ),
       child: EmailPasswordForm(
-        submitLabel: 'Continuar',
+        submitLabel: context.l10n.continueLabel,
         newPassword: true,
         onSubmit: (email, password) async {
           await services.auth.signUp(email: email, password: password);

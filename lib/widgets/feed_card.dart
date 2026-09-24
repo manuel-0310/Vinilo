@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../models/rating.dart';
 import '../screens/routes.dart';
 import '../services/services.dart';
@@ -66,7 +67,7 @@ class FeedCard extends StatelessWidget {
                               style: VText.ui(14, weight: 700),
                             ),
                             TextSpan(
-                              text: ' calificó',
+                              text: context.l10n.feedRatedSuffix,
                               style: VText.ui(14, color: c.text2),
                             ),
                           ],
@@ -77,7 +78,7 @@ class FeedCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    timeAgo(entry.updatedAt),
+                    timeAgo(entry.updatedAt, context.l10n),
                     style: VText.ui(12, color: c.text3),
                   ),
                 ],
@@ -129,7 +130,7 @@ class FeedCard extends StatelessWidget {
                   LikeButton(key: ValueKey('feed-like-$index'), entry: entry),
                   const Spacer(),
                   Text(
-                    Score.label(entry.score).toUpperCase(),
+                    Score.label(entry.score, context.l10n).toUpperCase(),
                     style: VText.label(10, color: color),
                   ),
                 ],
