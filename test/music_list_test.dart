@@ -279,6 +279,36 @@ void main() {
       expect(q.copyWith(kind: () => null).kind, isNull);
     });
   });
+
+  group('filtro único de listas', () {
+    test('cada filtro fija solo una cosa y conserva búsqueda y orden', () {
+      const base = ListQuery(text: 'lluvia', sort: ListSort.likes);
+      final lists = base.withFilter(ListFilter.lists);
+      expect(lists.kind, ListKind.list);
+      expect(lists.itemType, isNull);
+      expect(lists.text, 'lluvia');
+      expect(lists.sort, ListSort.likes);
+      final albums = lists.withFilter(ListFilter.albums);
+      expect(albums.kind, isNull);
+      expect(albums.itemType, ListItemType.albums);
+      final all = albums.withFilter(ListFilter.all);
+      expect(all.kind, isNull);
+      expect(all.itemType, isNull);
+    });
+
+    test('el filtro se lee de vuelta de la consulta', () {
+      for (final f in ListFilter.values) {
+        expect(const ListQuery().withFilter(f).filter, f);
+      }
+      // Con tipo y contenido a la vez (consultas de antes), manda el tipo.
+      expect(const ListQuery(kind: ListKind.ranking, itemType: ListItemType.tracks).filter, ListFilter.rankings);
+    });
+
+    test('el orden rota y vuelve al principio', () {
+      expect(nextListSort(ListSort.recent), ListSort.name);
+      expect(nextListSort(ListSort.likes), ListSort.recent);
+    });
+  });
 }
 
 class PersonInfoStub {

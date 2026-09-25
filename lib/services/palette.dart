@@ -13,6 +13,10 @@ import 'package:flutter/material.dart';
 class PaletteService {
   final Map<String, Color> _cache = {};
 
+  /// El color ya calculado de esa portada, sin esperar (null si todavía no
+  /// se sacó): así la nota no pasa un cuadro por el énfasis antes del tono.
+  Color? cached(String? url) => url == null ? null : _cache[url];
+
   Future<Color?> dominant(String? url) async {
     if (url == null || url.isEmpty) return null;
     final cached = _cache[url];

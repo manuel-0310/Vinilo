@@ -398,6 +398,15 @@ List<ListItem> insertItemAt(List<ListItem> items, ListItem item, int index) {
 /// Cómo se ordenan las listas del perfil.
 enum ListSort { recent, name, size, likes }
 
+/// El orden siguiente al tocar "recientes ↓" (vuelve al primero al final).
+ListSort nextListSort(ListSort sort) =>
+    ListSort.values[(sort.index + 1) % ListSort.values.length];
+
+/// Los filtros de la pestaña Listas del perfil, en una sola fila y con una
+/// opción a la vez: "Listas" y "Rankings" fijan el tipo, "Canciones" y
+/// "Discos" el contenido, y "Todas" quita los dos.
+enum ListFilter { all, lists, rankings, tracks, albums }
+
 /// Búsqueda, filtros y orden de las listas del perfil. `kind` e `itemType`
 /// null = todas.
 class ListQuery {
@@ -431,6 +440,34 @@ class ListQuery {
 
   /// Quita búsqueda y filtros; conserva el orden.
   ListQuery cleared() => ListQuery(sort: sort);
+
+  /// El filtro único que corresponde a esta consulta (si vienen tipo y
+  /// contenido a la vez, manda el tipo).
+  ListFilter get filter => switch (kind) {
+        ListKind.list => ListFilter.lists,
+        ListKind.ranking => ListFilter.rankings,
+        null => switch (itemType) {
+            ListItemType.tracks => ListFilter.tracks,
+            ListItemType.albums => ListFilter.albums,
+            null => ListFilter.all,
+          },
+      };
+
+  /// La misma búsqueda y el mismo orden con otro filtro (solo uno a la vez).
+  ListQuery withFilter(ListFilter filter) => ListQuery(
+        text: text,
+        sort: sort,
+        kind: switch (filter) {
+          ListFilter.lists => ListKind.list,
+          ListFilter.rankings => ListKind.ranking,
+          _ => null,
+        },
+        itemType: switch (filter) {
+          ListFilter.tracks => ListItemType.tracks,
+          ListFilter.albums => ListItemType.albums,
+          _ => null,
+        },
+      );
 }
 
 /// Si la lista coincide con el texto: por su nombre, su descripción o el

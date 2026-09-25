@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
@@ -50,6 +52,10 @@ class SheetScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = VColors.of(context);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    // El botón fijo va a 38 del borde de abajo, como en el prototipo ("Crear
+    // lista →"); con el teclado abierto, a 20 de él.
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final footerBottom = keyboard ? 20.0 : math.max(38.0, bottomInset + 4);
     final header = Padding(
       padding: const EdgeInsets.fromLTRB(VSpace.page, 22, VSpace.page, 0),
       child: Row(
@@ -112,7 +118,7 @@ class SheetScaffold extends StatelessWidget {
           body,
         if (footer != null)
           Padding(
-            padding: EdgeInsets.fromLTRB(VSpace.page, 0, VSpace.page, 20 + bottomInset),
+            padding: EdgeInsets.fromLTRB(VSpace.page, 0, VSpace.page, footerBottom),
             child: footer,
           ),
       ],
@@ -123,7 +129,13 @@ class SheetScaffold extends StatelessWidget {
       curve: Curves.easeOut,
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Container(
-        height: height == null ? null : MediaQuery.sizeOf(context).height * height!,
+        // Con el teclado abierto se encoge para que el botón siga a la vista.
+        height: height == null
+            ? null
+            : math.min(
+                MediaQuery.sizeOf(context).height * height!,
+                MediaQuery.sizeOf(context).height - MediaQuery.viewInsetsOf(context).bottom - 60,
+              ),
         decoration: BoxDecoration(
           color: c.sheet,
           border: Border(top: BorderSide(color: c.line)),

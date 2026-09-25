@@ -380,16 +380,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get rateSheetPrompt => 'Tap or slide to choose your score';
-
-  @override
   String get rateSheetCommentHint => 'Add a comment (optional)';
-
-  @override
-  String get rateSheetSave => 'Save to my diary';
-
-  @override
-  String get rateSheetUpdate => 'Update my rating';
 
   @override
   String get rateSheetDelete => 'Delete rating';
@@ -627,9 +618,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nameHint => 'What should we call you?';
 
   @override
-  String get yourUsernameLabel => 'YOUR @USERNAME';
-
-  @override
   String get yourColorLabel => 'YOUR COLOR';
 
   @override
@@ -774,9 +762,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterAll => 'All';
 
   @override
-  String get sortBy => 'SORT BY';
-
-  @override
   String get sortDate => 'Date';
 
   @override
@@ -865,9 +850,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listNameHint => 'List name';
-
-  @override
-  String get listDescriptionHint => 'Description (optional)';
 
   @override
   String get listFormKind => 'Type';
@@ -985,9 +967,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get spotifyCredit => 'Data and covers from Spotify';
 
   @override
-  String get artistUnrated => 'No one has rated an album by this artist yet';
-
-  @override
   String get ratingLabel => 'RATING';
 
   @override
@@ -1064,25 +1043,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listCoverChange => 'Change cover';
 
   @override
-  String get listCoverHint => 'A photo instead of the mosaic';
+  String get listCoverHint => 'A photo of your own for the list';
 
   @override
   String get listCoverRemove => 'Remove cover';
 
   @override
-  String get listCoverRemoveHint =>
-      'Brings back the mosaic of the list\'s covers';
+  String get listCoverRemoveHint => 'Goes back to its first item\'s cover';
 
   @override
   String get listGoneBody => 'Its author deleted it.';
 
   @override
   String get listYours => 'Your list';
-
-  @override
-  String listBy(String name) {
-    return 'by $name';
-  }
 
   @override
   String get listEmptyMineTitle => 'Your list is empty';
@@ -1157,17 +1130,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get albumSelectHint => 'Tap the ones you want to add';
-
-  @override
-  String get albumLongPressHint => 'Press and hold one to add it to a list';
-
-  @override
-  String seeMore(int n) {
-    return 'See more ($n)';
-  }
-
-  @override
   String moreBy(String artist) {
     return 'More by $artist';
   }
@@ -1188,9 +1150,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addToList => 'Add to list';
-
-  @override
-  String get albumUnratedByAnyone => 'No one has rated this album yet';
 
   @override
   String get profileNotFound => 'Profile not found';
@@ -1219,11 +1178,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get favorites => 'Favorites';
 
   @override
-  String get favoritesMine => 'Three albums and three artists that define you';
-
-  @override
-  String get favoritesTheirs =>
-      'Three albums and three artists that define them';
+  String get favoritesMine => 'Three albums and three artists that define me';
 
   @override
   String get favoritesAlbumsLabel => 'ALBUMS';
@@ -1250,18 +1205,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get listsMine => 'Your lists';
-
-  @override
-  String listsOf(String name) {
-    return '$name\'s lists';
-  }
-
-  @override
-  String get listsMineSubtitle => 'Lists and rankings of songs or albums';
-
-  @override
-  String get listsTheirsSubtitle => 'Their lists and rankings';
+  String get listsMine => 'Mine';
 
   @override
   String get listsEmptyMine =>
@@ -1272,10 +1216,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listsSaved => 'Saved';
-
-  @override
-  String get listsSavedSubtitle =>
-      'Other people\'s lists you saved. Only you see them here.';
 
   @override
   String get listsSavedEmpty =>
@@ -1368,19 +1308,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String listsMineTab(int n) {
-    return 'Mine ($n)';
-  }
-
-  @override
-  String listsSavedTab(int n) {
-    return 'Saved ($n)';
-  }
-
-  @override
-  String get listsSearchHint => 'Search by name or what\'s inside';
-
-  @override
   String get listsFilterLists => 'Lists';
 
   @override
@@ -1402,9 +1329,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String listsShowing(int shown, int total) {
     return 'Showing $shown of $total';
   }
-
-  @override
-  String get listsClearFilters => 'Clear filters';
 
   @override
   String get listsNoMatchTitle => 'No lists match';
@@ -1853,4 +1777,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get artistNoRatings => 'No ratings';
+
+  @override
+  String get profileFollowsYou => 'follows you';
+
+  @override
+  String get followAction => '+ Follow';
+
+  @override
+  String get profileHowIRate => 'How I rate';
+
+  @override
+  String get profileHowTheyRate => 'How they rate';
+
+  @override
+  String profileAverageLabel(String avg) {
+    return 'Average $avg';
+  }
+
+  @override
+  String get listsSearchLabel => 'Search';
+
+  @override
+  String get listsSearchPlaceholder => 'by name or what\'s inside';
+
+  @override
+  String get listNewPlus => '+ New list';
+
+  @override
+  String get diaryFilterScore => 'Filter by score';
+
+  @override
+  String get listAddPlus => '+ Add';
+
+  @override
+  String listTracksWord(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'songs',
+      one: 'song',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String listAlbumsWord(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'albums',
+      one: 'album',
+    );
+    return '$_temp0';
+  }
 }

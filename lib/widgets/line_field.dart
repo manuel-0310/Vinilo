@@ -20,6 +20,7 @@ class LineField extends StatefulWidget {
     this.status,
     this.trailing,
     this.leading,
+    this.leadingGap = 12,
     this.error,
     this.obscure = false,
     this.keyboardType,
@@ -59,6 +60,9 @@ class LineField extends StatefulWidget {
 
   /// Algo a la izquierda del texto (la lupa del buscador), a 12.
   final Widget? leading;
+
+  /// Separación entre `leading` y el texto ("BUSCAR" de las listas va a 10).
+  final double leadingGap;
 
   /// Mensaje de error debajo de la línea.
   final String? error;
@@ -177,7 +181,7 @@ class _LineFieldState extends State<LineField> {
             children: [
               if (widget.leading != null) ...[
                 widget.leading!,
-                const SizedBox(width: 12),
+                SizedBox(width: widget.leadingGap),
               ],
               if (widget.prefix != null)
                 Text(widget.prefix!, style: textStyle.copyWith(color: c.placeholder)),

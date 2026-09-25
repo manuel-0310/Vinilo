@@ -380,16 +380,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get rateSheetPrompt => 'Toca o desliza para elegir tu nota';
-
-  @override
   String get rateSheetCommentHint => 'Agregar un comentario (opcional)';
-
-  @override
-  String get rateSheetSave => 'Guardar en mi diario';
-
-  @override
-  String get rateSheetUpdate => 'Actualizar mi nota';
 
   @override
   String get rateSheetDelete => 'Borrar nota';
@@ -627,9 +618,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nameHint => '¿Cómo te llamamos?';
 
   @override
-  String get yourUsernameLabel => 'TU @USUARIO';
-
-  @override
   String get yourColorLabel => 'TU COLOR';
 
   @override
@@ -774,9 +762,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get filterAll => 'Todas';
 
   @override
-  String get sortBy => 'ORDENAR POR';
-
-  @override
   String get sortDate => 'Fecha';
 
   @override
@@ -864,9 +849,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get listNameHint => 'Nombre de la lista';
-
-  @override
-  String get listDescriptionHint => 'Descripción (opcional)';
 
   @override
   String get listFormKind => 'Tipo';
@@ -984,10 +966,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get spotifyCredit => 'Datos y portadas de Spotify';
 
   @override
-  String get artistUnrated =>
-      'Nadie ha calificado un disco de este artista todavía';
-
-  @override
   String get ratingLabel => 'CALIFICACIÓN';
 
   @override
@@ -1064,25 +1042,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get listCoverChange => 'Cambiar portada';
 
   @override
-  String get listCoverHint => 'Una foto en lugar del mosaico';
+  String get listCoverHint => 'Una foto propia para la lista';
 
   @override
   String get listCoverRemove => 'Quitar portada';
 
   @override
-  String get listCoverRemoveHint =>
-      'Vuelve el mosaico con las portadas de la lista';
+  String get listCoverRemoveHint => 'Vuelve la portada de su primer elemento';
 
   @override
   String get listGoneBody => 'Su autor la borró.';
 
   @override
   String get listYours => 'Tu lista';
-
-  @override
-  String listBy(String name) {
-    return 'por $name';
-  }
 
   @override
   String get listEmptyMineTitle => 'Tu lista está vacía';
@@ -1159,18 +1131,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get albumSelectHint => 'Toca las que quieras agregar';
-
-  @override
-  String get albumLongPressHint =>
-      'Mantén pulsada una para agregarla a una lista';
-
-  @override
-  String seeMore(int n) {
-    return 'Ver más ($n)';
-  }
-
-  @override
   String moreBy(String artist) {
     return 'Más de $artist';
   }
@@ -1191,9 +1151,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get addToList => 'Agregar a lista';
-
-  @override
-  String get albumUnratedByAnyone => 'Nadie ha calificado este disco todavía';
 
   @override
   String get profileNotFound => 'Perfil no encontrado';
@@ -1222,10 +1179,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get favorites => 'Favoritos';
 
   @override
-  String get favoritesMine => 'Tres discos y tres artistas que te definen';
-
-  @override
-  String get favoritesTheirs => 'Tres discos y tres artistas que le definen';
+  String get favoritesMine => 'Tres discos y tres artistas que me definen';
 
   @override
   String get favoritesAlbumsLabel => 'DISCOS';
@@ -1252,18 +1206,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get listsMine => 'Tus listas';
-
-  @override
-  String listsOf(String name) {
-    return 'Listas de $name';
-  }
-
-  @override
-  String get listsMineSubtitle => 'Listas y rankings de canciones o discos';
-
-  @override
-  String get listsTheirsSubtitle => 'Sus listas y rankings';
+  String get listsMine => 'Mías';
 
   @override
   String get listsEmptyMine =>
@@ -1274,10 +1217,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get listsSaved => 'Guardadas';
-
-  @override
-  String get listsSavedSubtitle =>
-      'Listas de otras personas que guardaste. Solo tú las ves aquí.';
 
   @override
   String get listsSavedEmpty =>
@@ -1371,19 +1310,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String listsMineTab(int n) {
-    return 'Mías ($n)';
-  }
-
-  @override
-  String listsSavedTab(int n) {
-    return 'Guardadas ($n)';
-  }
-
-  @override
-  String get listsSearchHint => 'Buscar por nombre o por lo que tiene';
-
-  @override
   String get listsFilterLists => 'Listas';
 
   @override
@@ -1405,9 +1331,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String listsShowing(int shown, int total) {
     return 'Mostrando $shown de $total';
   }
-
-  @override
-  String get listsClearFilters => 'Quitar filtros';
 
   @override
   String get listsNoMatchTitle => 'Ninguna lista coincide';
@@ -1859,4 +1782,58 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get artistNoRatings => 'Sin notas';
+
+  @override
+  String get profileFollowsYou => 'te sigue';
+
+  @override
+  String get followAction => '+ Seguir';
+
+  @override
+  String get profileHowIRate => 'Cómo califico';
+
+  @override
+  String get profileHowTheyRate => 'Cómo califica';
+
+  @override
+  String profileAverageLabel(String avg) {
+    return 'Promedio $avg';
+  }
+
+  @override
+  String get listsSearchLabel => 'Buscar';
+
+  @override
+  String get listsSearchPlaceholder => 'por nombre o por lo que tiene';
+
+  @override
+  String get listNewPlus => '+ Nueva lista';
+
+  @override
+  String get diaryFilterScore => 'Filtrar por nota';
+
+  @override
+  String get listAddPlus => '+ Agregar';
+
+  @override
+  String listTracksWord(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'canciones',
+      one: 'canción',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String listAlbumsWord(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'discos',
+      one: 'disco',
+    );
+    return '$_temp0';
+  }
 }

@@ -8,6 +8,7 @@ import 'package:image/image.dart' as img;
 import '../l10n/l10n.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
+import 'v_buttons.dart';
 
 /// Abre el recortador a pantalla completa y devuelve la imagen ya recortada,
 /// redimensionada a `outputWidth` de ancho y codificada en JPEG. Null si la
@@ -207,20 +208,23 @@ class _ImageCropperState extends State<ImageCropper> {
     final image = _image;
     final topPad = MediaQuery.paddingOf(context).top;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
-    // Sobre el fondo oscuro del recortador el texto siempre va claro.
-    const ink = Color(0xFFF4EFE6);
-    const ink2 = Color(0xFFA9A296);
+    final ink = c.ink;
+    final ink2 = c.ink2;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0A09),
+      backgroundColor: c.bg,
       body: Column(
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(VSpace.page, topPad + 18, VSpace.page, 0),
             child: Column(
               children: [
-                Text(widget.title ?? context.l10n.cropTitle, style: VText.display(30, color: ink, height: 1)),
-                const SizedBox(height: 6),
+                Text(
+                  widget.title ?? context.l10n.cropTitle,
+                  textAlign: TextAlign.center,
+                  style: VText.display(46, weight: 800, height: 0.9, tracking: 0, color: ink),
+                ),
+                const SizedBox(height: 8),
                 Text(
                   context.l10n.cropHint,
                   textAlign: TextAlign.center,
@@ -237,7 +241,7 @@ class _ImageCropperState extends State<ImageCropper> {
                     ? (_error != null
                         ? Text(context.l10n.cropOpenFailed(describeError(_error, context.l10n)),
                             style: VText.ui(14, color: ink2))
-                        : const CircularProgressIndicator(color: ink2))
+                        : CircularProgressIndicator(strokeWidth: 1.6, color: ink2))
                     : LayoutBuilder(
                         builder: (context, constraints) {
                           var frameW = constraints.maxWidth;
@@ -277,31 +281,22 @@ class _ImageCropperState extends State<ImageCropper> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextButton(
+                  child: VSecondaryButton(
                     key: const ValueKey('crop-cancel'),
+                    label: context.l10n.cancel,
+                    center: true,
+                    height: 56,
                     onPressed: _exporting ? null : () => Navigator.of(context).pop(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: ink,
-                      minimumSize: const Size.fromHeight(56),
-                      backgroundColor: Colors.white.withValues(alpha: 0.08),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                    ),
-                    child: Text(context.l10n.cancel, style: VText.ui(16, weight: 700)),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   flex: 2,
-                  child: FilledButton(
+                  child: VPrimaryButton.accent(
                     key: const ValueKey('crop-confirm'),
-                    onPressed: image == null || _exporting ? null : _export,
-                    child: _exporting
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: c.onAccent),
-                          )
-                        : Text(context.l10n.cropUse),
+                    label: context.l10n.cropUse,
+                    busy: _exporting,
+                    onPressed: image == null ? null : _export,
                   ),
                 ),
               ],

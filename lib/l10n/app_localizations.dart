@@ -638,29 +638,11 @@ abstract class AppLocalizations {
   /// **'No se pudo abrir la galería: {error}'**
   String photoGalleryFailed(String error);
 
-  /// No description provided for @rateSheetPrompt.
-  ///
-  /// In es, this message translates to:
-  /// **'Toca o desliza para elegir tu nota'**
-  String get rateSheetPrompt;
-
   /// No description provided for @rateSheetCommentHint.
   ///
   /// In es, this message translates to:
   /// **'Agregar un comentario (opcional)'**
   String get rateSheetCommentHint;
-
-  /// No description provided for @rateSheetSave.
-  ///
-  /// In es, this message translates to:
-  /// **'Guardar en mi diario'**
-  String get rateSheetSave;
-
-  /// No description provided for @rateSheetUpdate.
-  ///
-  /// In es, this message translates to:
-  /// **'Actualizar mi nota'**
-  String get rateSheetUpdate;
 
   /// No description provided for @rateSheetDelete.
   ///
@@ -1070,12 +1052,6 @@ abstract class AppLocalizations {
   /// **'¿Cómo te llamamos?'**
   String get nameHint;
 
-  /// No description provided for @yourUsernameLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'TU @USUARIO'**
-  String get yourUsernameLabel;
-
   /// No description provided for @yourColorLabel.
   ///
   /// In es, this message translates to:
@@ -1304,12 +1280,6 @@ abstract class AppLocalizations {
   /// **'Todas'**
   String get filterAll;
 
-  /// No description provided for @sortBy.
-  ///
-  /// In es, this message translates to:
-  /// **'ORDENAR POR'**
-  String get sortBy;
-
   /// No description provided for @sortDate.
   ///
   /// In es, this message translates to:
@@ -1411,12 +1381,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Nombre de la lista'**
   String get listNameHint;
-
-  /// No description provided for @listDescriptionHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Descripción (opcional)'**
-  String get listDescriptionHint;
 
   /// No description provided for @listFormKind.
   ///
@@ -1622,12 +1586,6 @@ abstract class AppLocalizations {
   /// **'Datos y portadas de Spotify'**
   String get spotifyCredit;
 
-  /// No description provided for @artistUnrated.
-  ///
-  /// In es, this message translates to:
-  /// **'Nadie ha calificado un disco de este artista todavía'**
-  String get artistUnrated;
-
   /// No description provided for @ratingLabel.
   ///
   /// In es, this message translates to:
@@ -1745,7 +1703,7 @@ abstract class AppLocalizations {
   /// No description provided for @listCoverHint.
   ///
   /// In es, this message translates to:
-  /// **'Una foto en lugar del mosaico'**
+  /// **'Una foto propia para la lista'**
   String get listCoverHint;
 
   /// No description provided for @listCoverRemove.
@@ -1757,7 +1715,7 @@ abstract class AppLocalizations {
   /// No description provided for @listCoverRemoveHint.
   ///
   /// In es, this message translates to:
-  /// **'Vuelve el mosaico con las portadas de la lista'**
+  /// **'Vuelve la portada de su primer elemento'**
   String get listCoverRemoveHint;
 
   /// No description provided for @listGoneBody.
@@ -1771,12 +1729,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Tu lista'**
   String get listYours;
-
-  /// No description provided for @listBy.
-  ///
-  /// In es, this message translates to:
-  /// **'por {name}'**
-  String listBy(String name);
 
   /// No description provided for @listEmptyMineTitle.
   ///
@@ -1904,24 +1856,6 @@ abstract class AppLocalizations {
   /// **'No se pudo cargar el detalle: {error}'**
   String albumDetailError(String error);
 
-  /// No description provided for @albumSelectHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Toca las que quieras agregar'**
-  String get albumSelectHint;
-
-  /// No description provided for @albumLongPressHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Mantén pulsada una para agregarla a una lista'**
-  String get albumLongPressHint;
-
-  /// No description provided for @seeMore.
-  ///
-  /// In es, this message translates to:
-  /// **'Ver más ({n})'**
-  String seeMore(int n);
-
   /// No description provided for @moreBy.
   ///
   /// In es, this message translates to:
@@ -1957,12 +1891,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Agregar a lista'**
   String get addToList;
-
-  /// No description provided for @albumUnratedByAnyone.
-  ///
-  /// In es, this message translates to:
-  /// **'Nadie ha calificado este disco todavía'**
-  String get albumUnratedByAnyone;
 
   /// No description provided for @profileNotFound.
   ///
@@ -2003,14 +1931,8 @@ abstract class AppLocalizations {
   /// No description provided for @favoritesMine.
   ///
   /// In es, this message translates to:
-  /// **'Tres discos y tres artistas que te definen'**
+  /// **'Tres discos y tres artistas que me definen'**
   String get favoritesMine;
-
-  /// No description provided for @favoritesTheirs.
-  ///
-  /// In es, this message translates to:
-  /// **'Tres discos y tres artistas que le definen'**
-  String get favoritesTheirs;
 
   /// No description provided for @favoritesAlbumsLabel.
   ///
@@ -2057,26 +1979,8 @@ abstract class AppLocalizations {
   /// No description provided for @listsMine.
   ///
   /// In es, this message translates to:
-  /// **'Tus listas'**
+  /// **'Mías'**
   String get listsMine;
-
-  /// No description provided for @listsOf.
-  ///
-  /// In es, this message translates to:
-  /// **'Listas de {name}'**
-  String listsOf(String name);
-
-  /// No description provided for @listsMineSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Listas y rankings de canciones o discos'**
-  String get listsMineSubtitle;
-
-  /// No description provided for @listsTheirsSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Sus listas y rankings'**
-  String get listsTheirsSubtitle;
 
   /// No description provided for @listsEmptyMine.
   ///
@@ -2095,12 +1999,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Guardadas'**
   String get listsSaved;
-
-  /// No description provided for @listsSavedSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Listas de otras personas que guardaste. Solo tú las ves aquí.'**
-  String get listsSavedSubtitle;
 
   /// No description provided for @listsSavedEmpty.
   ///
@@ -2228,24 +2126,6 @@ abstract class AppLocalizations {
   /// **'{n, plural, =1{1 amigo} other{{n} amigos}}'**
   String countFriends(int n);
 
-  /// No description provided for @listsMineTab.
-  ///
-  /// In es, this message translates to:
-  /// **'Mías ({n})'**
-  String listsMineTab(int n);
-
-  /// No description provided for @listsSavedTab.
-  ///
-  /// In es, this message translates to:
-  /// **'Guardadas ({n})'**
-  String listsSavedTab(int n);
-
-  /// No description provided for @listsSearchHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Buscar por nombre o por lo que tiene'**
-  String get listsSearchHint;
-
   /// No description provided for @listsFilterLists.
   ///
   /// In es, this message translates to:
@@ -2287,12 +2167,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Mostrando {shown} de {total}'**
   String listsShowing(int shown, int total);
-
-  /// No description provided for @listsClearFilters.
-  ///
-  /// In es, this message translates to:
-  /// **'Quitar filtros'**
-  String get listsClearFilters;
 
   /// No description provided for @listsNoMatchTitle.
   ///
@@ -2977,6 +2851,78 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Sin notas'**
   String get artistNoRatings;
+
+  /// No description provided for @profileFollowsYou.
+  ///
+  /// In es, this message translates to:
+  /// **'te sigue'**
+  String get profileFollowsYou;
+
+  /// No description provided for @followAction.
+  ///
+  /// In es, this message translates to:
+  /// **'+ Seguir'**
+  String get followAction;
+
+  /// No description provided for @profileHowIRate.
+  ///
+  /// In es, this message translates to:
+  /// **'Cómo califico'**
+  String get profileHowIRate;
+
+  /// No description provided for @profileHowTheyRate.
+  ///
+  /// In es, this message translates to:
+  /// **'Cómo califica'**
+  String get profileHowTheyRate;
+
+  /// No description provided for @profileAverageLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Promedio {avg}'**
+  String profileAverageLabel(String avg);
+
+  /// No description provided for @listsSearchLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar'**
+  String get listsSearchLabel;
+
+  /// No description provided for @listsSearchPlaceholder.
+  ///
+  /// In es, this message translates to:
+  /// **'por nombre o por lo que tiene'**
+  String get listsSearchPlaceholder;
+
+  /// No description provided for @listNewPlus.
+  ///
+  /// In es, this message translates to:
+  /// **'+ Nueva lista'**
+  String get listNewPlus;
+
+  /// No description provided for @diaryFilterScore.
+  ///
+  /// In es, this message translates to:
+  /// **'Filtrar por nota'**
+  String get diaryFilterScore;
+
+  /// No description provided for @listAddPlus.
+  ///
+  /// In es, this message translates to:
+  /// **'+ Agregar'**
+  String get listAddPlus;
+
+  /// No description provided for @listTracksWord.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{canción} other{canciones}}'**
+  String listTracksWord(int n);
+
+  /// No description provided for @listAlbumsWord.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{disco} other{discos}}'**
+  String listAlbumsWord(int n);
 }
 
 class _AppLocalizationsDelegate

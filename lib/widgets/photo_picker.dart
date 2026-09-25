@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'image_cropper.dart';
 import 'sheet.dart';
+import 'v_icons.dart';
 
 import '../l10n/l10n.dart';
 
@@ -40,27 +41,24 @@ Future<PhotoPick?> pickPhoto(
         children: [
           SheetAction(
             key: const ValueKey('photo-camera'),
-            icon: Icons.photo_camera_rounded,
+            vicon: VIcon.camera,
             label: context.l10n.photoCamera,
             onTap: () => Navigator.of(ctx).pop(_Source.camera),
           ),
-          const SizedBox(height: 10),
           SheetAction(
             key: const ValueKey('photo-gallery'),
-            icon: Icons.photo_library_rounded,
+            vicon: VIcon.image,
             label: context.l10n.photoGallery,
             onTap: () => Navigator.of(ctx).pop(_Source.gallery),
           ),
-          if (canRemove) ...[
-            const SizedBox(height: 10),
+          if (canRemove)
             SheetAction(
               key: const ValueKey('photo-remove'),
-              icon: Icons.delete_outline_rounded,
+              vicon: VIcon.trash,
               label: removeLabel ?? context.l10n.photoRemove,
               danger: true,
               onTap: () => Navigator.of(ctx).pop(_Source.remove),
             ),
-          ],
         ],
       ),
     ),

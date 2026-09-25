@@ -269,10 +269,7 @@
       }
     }
   },
-  "rateSheetPrompt": "Toca o desliza para elegir tu nota",
   "rateSheetCommentHint": "Agregar un comentario (opcional)",
-  "rateSheetSave": "Guardar en mi diario",
-  "rateSheetUpdate": "Actualizar mi nota",
   "rateSheetDelete": "Borrar nota",
   "usernameOffline": "No se pudo comprobar. Revisa tu conexión.",
   "usernameHint": "tu_usuario",
@@ -386,7 +383,6 @@
   "photoChange": "Cambiar foto",
   "photoChoose": "Elegir una foto",
   "nameHint": "¿Cómo te llamamos?",
-  "yourUsernameLabel": "TU @USUARIO",
   "yourColorLabel": "TU COLOR",
   "bannerPlaceholder": "Foto de fondo",
   "homeFollowTitle": "Sigue a tus amigos",
@@ -467,7 +463,6 @@
   "diarySearchHint": "Disco o artista",
   "diaryNoMatch": "Ningún disco del diario coincide con esa búsqueda o ese filtro.",
   "filterAll": "Todas",
-  "sortBy": "ORDENAR POR",
   "sortDate": "Fecha",
   "sortScore": "Nota",
   "followersTitle": "Seguidores",
@@ -533,7 +528,6 @@
   "listNew": "Nueva lista",
   "listFormSubtitle": "Un ranking va numerado y se ordena arrastrando.",
   "listNameHint": "Nombre de la lista",
-  "listDescriptionHint": "Descripción (opcional)",
   "listFormKind": "Tipo",
   "listKindListHint": "Sin orden fijo",
   "listKindRankingHint": "Numerado, del 1 en adelante",
@@ -603,7 +597,6 @@
     }
   },
   "spotifyCredit": "Datos y portadas de Spotify",
-  "artistUnrated": "Nadie ha calificado un disco de este artista todavía",
   "ratingLabel": "CALIFICACIÓN",
   "countRatings": "{n, plural, =1{1 nota} other{{n} notas}}",
   "@countRatings": {
@@ -665,19 +658,11 @@
   "listMenuAddHint": "Busca un disco y elige",
   "listCoverChoose": "Elegir portada",
   "listCoverChange": "Cambiar portada",
-  "listCoverHint": "Una foto en lugar del mosaico",
+  "listCoverHint": "Una foto propia para la lista",
   "listCoverRemove": "Quitar portada",
-  "listCoverRemoveHint": "Vuelve el mosaico con las portadas de la lista",
+  "listCoverRemoveHint": "Vuelve la portada de su primer elemento",
   "listGoneBody": "Su autor la borró.",
   "listYours": "Tu lista",
-  "listBy": "por {name}",
-  "@listBy": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "listEmptyMineTitle": "Tu lista está vacía",
   "listEmptyTheirsTitle": "Todavía no tiene nada",
   "listEmptyMineTracks": "Busca un disco y elige sus canciones. También puedes hacerlo desde la pantalla de cualquier disco.",
@@ -720,16 +705,6 @@
       }
     }
   },
-  "albumSelectHint": "Toca las que quieras agregar",
-  "albumLongPressHint": "Mantén pulsada una para agregarla a una lista",
-  "seeMore": "Ver más ({n})",
-  "@seeMore": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "moreBy": "Más de {artist}",
   "@moreBy": {
     "placeholders": {
@@ -750,7 +725,6 @@
   "unrated": "Sin calificar",
   "rateThisAlbum": "Calificar este disco",
   "addToList": "Agregar a lista",
-  "albumUnratedByAnyone": "Nadie ha calificado este disco todavía",
   "profileNotFound": "Perfil no encontrado",
   "profileNotFoundBody": "Esta persona ya no está en Vinilo.",
   "statAlbums": "{n, plural, =1{DISCO} other{DISCOS}}",
@@ -764,8 +738,7 @@
   "statAverage": "PROMEDIO",
   "profileListsTab": "Listas",
   "favorites": "Favoritos",
-  "favoritesMine": "Tres discos y tres artistas que te definen",
-  "favoritesTheirs": "Tres discos y tres artistas que le definen",
+  "favoritesMine": "Tres discos y tres artistas que me definen",
   "favoritesAlbumsLabel": "DISCOS",
   "favoritesArtistsLabel": "ARTISTAS",
   "diary": "Diario",
@@ -780,21 +753,10 @@
       }
     }
   },
-  "listsMine": "Tus listas",
-  "listsOf": "Listas de {name}",
-  "@listsOf": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "listsMineSubtitle": "Listas y rankings de canciones o discos",
-  "listsTheirsSubtitle": "Sus listas y rankings",
+  "listsMine": "Mías",
   "listsEmptyMine": "Todavía no tienes listas. Crea una con \"Nueva lista\" o desde la pantalla de un disco.",
   "listsEmptyTheirs": "Todavía no tiene listas.",
   "listsSaved": "Guardadas",
-  "listsSavedSubtitle": "Listas de otras personas que guardaste. Solo tú las ves aquí.",
   "listsSavedEmpty": "Guarda listas de otras personas y aparecerán aquí.",
   "countLists": "{n, plural, =1{1 lista} other{{n} listas}}",
   "@countLists": {
@@ -844,23 +806,6 @@
       }
     }
   },
-  "listsMineTab": "Mías ({n})",
-  "@listsMineTab": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "listsSavedTab": "Guardadas ({n})",
-  "@listsSavedTab": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "listsSearchHint": "Buscar por nombre o por lo que tiene",
   "listsFilterLists": "Listas",
   "listsFilterRankings": "Rankings",
   "listsSortRecent": "Recientes",
@@ -878,7 +823,6 @@
       }
     }
   },
-  "listsClearFilters": "Quitar filtros",
   "listsNoMatchTitle": "Ninguna lista coincide",
   "listsNoMatchBody": "Prueba con otra búsqueda o quita los filtros.",
   "notificationsClear": "Borrar todas",
@@ -1238,5 +1182,38 @@
   "listFormDescription": "Descripción",
   "listFormOptional": "Opcional",
   "artistSortBest": "Mejor calificados",
-  "artistNoRatings": "Sin notas"
+  "artistNoRatings": "Sin notas",
+  "profileFollowsYou": "te sigue",
+  "followAction": "+ Seguir",
+  "profileHowIRate": "Cómo califico",
+  "profileHowTheyRate": "Cómo califica",
+  "profileAverageLabel": "Promedio {avg}",
+  "@profileAverageLabel": {
+    "placeholders": {
+      "avg": {
+        "type": "String"
+      }
+    }
+  },
+  "listsSearchLabel": "Buscar",
+  "listsSearchPlaceholder": "por nombre o por lo que tiene",
+  "listNewPlus": "+ Nueva lista",
+  "diaryFilterScore": "Filtrar por nota",
+  "listAddPlus": "+ Agregar",
+  "listTracksWord": "{n, plural, =1{canción} other{canciones}}",
+  "@listTracksWord": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "listAlbumsWord": "{n, plural, =1{disco} other{discos}}",
+  "@listAlbumsWord": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }

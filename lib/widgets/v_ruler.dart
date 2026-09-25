@@ -106,6 +106,7 @@ class RulerCells extends StatelessWidget {
     this.afterNumberColor,
     this.lines = false,
     this.selectedWeight = 600,
+    this.keyPrefix = 'ruler',
   });
 
   final int? selected;
@@ -132,6 +133,9 @@ class RulerCells extends StatelessWidget {
   /// Peso del número elegido (la bienvenida lo deja en 500).
   final int selectedWeight;
 
+  /// Llaves de prueba de las celdas: `{keyPrefix}-N`.
+  final String keyPrefix;
+
   /// Opacidad de cada celda anterior a la elegida, de la 1 a la 9.
   static const List<double> fillAlphas = [0.28, 0.34, 0.40, 0.46, 0.52, 0.58, 0.64, 0.72, 0.82];
 
@@ -150,7 +154,7 @@ class RulerCells extends StatelessWidget {
           for (var k = 1; k <= 10; k++)
             Expanded(
               child: GestureDetector(
-                key: ValueKey('ruler-$k'),
+                key: ValueKey('$keyPrefix-$k'),
                 behavior: HitTestBehavior.opaque,
                 onTap: onTap == null ? null : () => onTap!(k),
                 child: Container(

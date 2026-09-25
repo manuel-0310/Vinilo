@@ -156,9 +156,15 @@ class _AlbumScreenState extends State<AlbumScreen> {
   }
 
   Future<void> _loadPalette() async {
-    final color = await _services!.palette.dominant(
-      widget.album.smallCover ?? widget.album.bestCover,
-    );
+    final url = widget.album.smallCover ?? widget.album.bestCover;
+    // Si el tono ya se sacó (el disco se vio antes o viene de la ficha del
+    // artista), se usa desde el primer cuadro.
+    final known = _services!.palette.cached(url);
+    if (known != null) {
+      _coverColor = known;
+      return;
+    }
+    final color = await _services!.palette.dominant(url);
     if (color != null && mounted) setState(() => _coverColor = color);
   }
 

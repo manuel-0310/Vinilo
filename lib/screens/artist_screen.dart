@@ -370,7 +370,14 @@ class _AlbumRowState extends State<_AlbumRow> {
     final url = widget.album.smallCover;
     if (!_rated || url == null || _askedFor == url) return;
     _askedFor = url;
-    ServicesScope.of(context).palette.dominant(url).then((color) {
+    final palette = ServicesScope.of(context).palette;
+    // Si ya se sacó (al cambiar el orden, por ejemplo), sin esperar.
+    final known = palette.cached(url);
+    if (known != null) {
+      _coverColor = known;
+      return;
+    }
+    palette.dominant(url).then((color) {
       if (color != null && mounted && _askedFor == url) setState(() => _coverColor = color);
     });
   }

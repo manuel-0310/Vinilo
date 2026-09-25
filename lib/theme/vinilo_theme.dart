@@ -105,19 +105,6 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
   /// La misma paleta con otro color de énfasis.
   ViniloPalette withAccent(Color accent) => copyWith(accent: accent);
 
-  // Compatibilidad con los nombres del diseño anterior, mientras se
-  // reescriben las pantallas. Se borran al terminar el rediseño.
-  Color get seed => accent;
-  Color get text => ink;
-  Color get text2 => ink2;
-  Color get text3 => ink4;
-  Color get surface2 => const Color(0xFF1B1A18);
-  Color get surface3 => surface;
-  Color score(num value) => accent;
-  Color scoreOnDark(num value) => accent;
-  ViniloPalette withSeed(Color seed) => withAccent(seed);
-  static const Color defaultSeed = defaultAccent;
-
   static const ViniloPalette dark = ViniloPalette(
     brightness: Brightness.dark,
     bg: Color(0xFF0F0E0D),
@@ -281,10 +268,6 @@ class VText {
   static const String plexMono = 'PlexMono';
   static const String newsreader = 'Newsreader';
 
-  // Nombres de antes (las pantallas viejas los usan como familia).
-  static const String serif = archivo;
-  static const String sans = archivo;
-
   /// Títulos y numerales grandes. `stretch` es el `font-stretch` del
   /// prototipo (62 a 80) y `tracking`, el espaciado en em.
   static TextStyle display(
@@ -295,7 +278,6 @@ class VText {
     double stretch = 62,
     double tracking = -0.01,
     double? letterSpacing,
-    bool italic = false,
   }) {
     return _archivo(
       size,
@@ -362,9 +344,6 @@ class VText {
       leadingDistribution: TextLeadingDistribution.even,
     );
   }
-
-  /// Etiquetas pequeñas de antes: ahora son mono.
-  static TextStyle label(double size, {Color? color}) => mono(size, color: color);
 
   static TextStyle _archivo(
     double size, {

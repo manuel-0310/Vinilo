@@ -94,12 +94,3 @@ flutter:
       fonts:
         - asset: assets/fonts/Newsreader-Italic-Variable.ttf
           style: italic
-    # Las del diseño anterior; se borran al terminar el rediseño.
-    - family: InstrumentSerif
-      fonts:
-        - asset: assets/fonts/InstrumentSerif-Regular.ttf
-        - asset: assets/fonts/InstrumentSerif-Italic.ttf
-          style: italic
-    - family: Manrope
-      fonts:
-        - asset: assets/fonts/Manrope-Variable.ttf

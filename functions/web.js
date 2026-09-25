@@ -15,6 +15,11 @@
  * comparte (nunca correos ni uids), con etiquetas Open Graph para que
  * WhatsApp o iMessage muestren la tarjeta. Idioma según Accept-Language
  * (o ?lang=es|en). Todo texto que viene de las personas pasa por `esc`.
+ *
+ * El diseño es el del prototipo ("Web · disco compartido", "Web · artista
+ * compartido", "Web · enlace roto"): ancho de 1200 con márgenes de 48, una
+ * franja de 6 px del color de la portada, Archivo condensada, IBM Plex Mono
+ * e itálica Newsreader. Por debajo de 820 px todo se apila.
  */
 
 const { getFirestore } = require("firebase-admin/firestore");
@@ -24,7 +29,14 @@ const SITE = "https://red-social-c786b.web.app";
 // URL de la app en el App Store; mientras esté vacía, la página dice
 // "Muy pronto en el App Store". Se configura en functions/.env.
 const APP_STORE_URL = process.env.APP_STORE_URL || "";
-const DEFAULT_ACCENT = "#E8A04B";
+/** Bermellón, `oklch(0.7 0.19 38)`: el énfasis por defecto de la app. */
+const DEFAULT_ACCENT = "#fd6a3a";
+
+/** Los 14 colores de énfasis de la app (`VColors.accentPalette`). */
+const ACCENT_PALETTE = [
+  "#fd6a3a", "#f66b71", "#e3ae28", "#a0c849", "#53be70", "#2fbda7", "#2fb5d8",
+  "#4990e8", "#877fe6", "#bb82e3", "#de73bd", "#e44d7d", "#ac713e", "#efebe4",
+];
 
 // ---------------------------------------------------------------------------
 // Textos
@@ -40,36 +52,38 @@ const STRINGS = {
       "Califica tus discos del 1 al 10, lleva el diario de lo que escuchas y mira qué califican tus amigos.",
     ctaSoon: "Muy pronto en el App Store",
     ctaDownload: "Descargar en el App Store",
-    ratingLabel: "CALIFICACIÓN",
     ratings: (n) => plural(n, "1 calificación", `${n} calificaciones`),
-    noRatings: "Nadie lo ha calificado todavía en Vinilo.",
+    noRatingsShort: "Sin notas todavía",
     comments: "Comentarios",
     replies: "Respuestas",
     tracks: (n) => plural(n, "1 canción", `${n} canciones`),
     albums: (n) => plural(n, "1 disco", `${n} discos`),
+    songsHead: "Canciones",
+    albumsHead: "Discos",
     list: "Lista",
     ranking: "Ranking",
-    by: (name) => `de ${name}`,
     likes: (n) => plural(n, "1 me gusta", `${n} me gusta`),
     replyCount: (n) => plural(n, "1 respuesta", `${n} respuestas`),
     rated: "calificó",
     community: "Promedio de la comunidad",
-    followers: (n) => plural(n, "seguidor", "seguidores"),
-    following: (n) => plural(n, "seguido", "seguidos"),
-    ratingsWord: (n) => plural(n, "nota", "notas"),
-    averageWord: "promedio",
+    statAlbums: (n) => plural(n, "Disco", "Discos"),
+    statAverage: "Promedio",
+    followers: (n) => plural(n, "Seguidor", "Seguidores"),
+    following: (n) => plural(n, "Seguido", "Seguidos"),
     favorites: "Discos favoritos",
     favoriteArtists: "Artistas favoritos",
     recent: "Últimas notas",
     lists: "Listas",
+    artistRated: (n) => plural(n, "Artista · 1 disco calificado", `Artista · ${n} discos calificados`),
     ratedInVinilo: "Calificados en Vinilo",
     notRatedYet: "Todavía nadie ha calificado sus discos en Vinilo.",
     more: (n) => `y ${n} más`,
+    error404: "Error 404 · lado C",
     notFoundTitle: "No encontramos esto",
     notFoundBody: "Puede que lo hayan borrado o que el enlace esté incompleto.",
     home: "Ir al inicio",
     credits: "Datos de discos y artistas: Spotify.",
-    scoreLabels: ["Insufrible", "Malo", "Flojo", "Meh", "Regular", "Está bien", "Bueno", "Muy bueno", "Excelente", "Obra maestra"],
+    scoreLabels: ["Terrible", "Muy malo", "Malo", "Flojo", "Regular", "Aceptable", "Bueno", "Muy bueno", "Excelente", "Obra maestra"],
     types: { album: "Álbum", single: "Sencillo", compilation: "Recopilación", ep: "EP" },
     decimal: ",",
     descList: (owner, n) => `Una lista de ${owner} en Vinilo · ${n}`,
@@ -87,36 +101,38 @@ const STRINGS = {
       "Rate your albums from 1 to 10, keep a diary of what you listen to and see what your friends are rating.",
     ctaSoon: "Coming soon to the App Store",
     ctaDownload: "Download on the App Store",
-    ratingLabel: "RATING",
     ratings: (n) => plural(n, "1 rating", `${n} ratings`),
-    noRatings: "No one has rated it on Vinilo yet.",
+    noRatingsShort: "No ratings yet",
     comments: "Comments",
     replies: "Replies",
     tracks: (n) => plural(n, "1 song", `${n} songs`),
     albums: (n) => plural(n, "1 album", `${n} albums`),
+    songsHead: "Songs",
+    albumsHead: "Albums",
     list: "List",
     ranking: "Ranking",
-    by: (name) => `by ${name}`,
     likes: (n) => plural(n, "1 like", `${n} likes`),
     replyCount: (n) => plural(n, "1 reply", `${n} replies`),
     rated: "rated",
     community: "Community average",
-    followers: (n) => plural(n, "follower", "followers"),
-    following: () => "following",
-    ratingsWord: (n) => plural(n, "rating", "ratings"),
-    averageWord: "average",
+    statAlbums: (n) => plural(n, "Album", "Albums"),
+    statAverage: "Average",
+    followers: (n) => plural(n, "Follower", "Followers"),
+    following: () => "Following",
     favorites: "Favorite albums",
     favoriteArtists: "Favorite artists",
     recent: "Latest ratings",
     lists: "Lists",
+    artistRated: (n) => plural(n, "Artist · 1 album rated", `Artist · ${n} albums rated`),
     ratedInVinilo: "Rated on Vinilo",
     notRatedYet: "No one has rated their albums on Vinilo yet.",
     more: (n) => `and ${n} more`,
+    error404: "Error 404 · side C",
     notFoundTitle: "We couldn't find this",
     notFoundBody: "It may have been deleted, or the link is incomplete.",
     home: "Go home",
     credits: "Album and artist data: Spotify.",
-    scoreLabels: ["Unbearable", "Bad", "Weak", "Meh", "So-so", "Decent", "Good", "Very good", "Excellent", "Masterpiece"],
+    scoreLabels: ["Terrible", "Very bad", "Bad", "Weak", "So-so", "Decent", "Good", "Very good", "Excellent", "Masterpiece"],
     types: { album: "Album", single: "Single", compilation: "Compilation", ep: "EP" },
     decimal: ".",
     descList: (owner, n) => `A list by ${owner} on Vinilo · ${n}`,
@@ -187,11 +203,9 @@ function cssUrl(url) {
 }
 
 // ---------------------------------------------------------------------------
-// Color: el mismo énfasis y la misma escala de notas que la app (tema oscuro).
+// Color: el énfasis de la persona (el más parecido de la paleta, como
+// `VColors.nearest`) y el fondo de su avatar sin foto (`personTone`).
 // ---------------------------------------------------------------------------
-
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-const lerp = (a, b, t) => a + (b - a) * t;
 
 function argbToHex(value) {
   const n = Number(value);
@@ -199,63 +213,48 @@ function argbToHex(value) {
   return `#${(n & 0xffffff).toString(16).padStart(6, "0")}`;
 }
 
-function hexToRgb(hex) {
+function oklab(hex) {
   const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
-function hexToHsl(hex) {
-  const [r, g, b] = hexToRgb(hex).map((v) => v / 255);
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  if (max === min) return [0, 0, l];
-  const d = max - min;
-  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-  let h;
-  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
-  else if (max === g) h = ((b - r) / d + 2) * 60;
-  else h = ((r - g) / d + 4) * 60;
-  return [h, s, l];
-}
-
-function hslToHex(h, s, l) {
-  const k = (n) => (n + h / 30) % 12;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-  return `#${[f(0), f(8), f(4)]
-    .map((v) => Math.round(v * 255).toString(16).padStart(2, "0"))
-    .join("")}`;
-}
-
-/** `accentFor(seed, Brightness.dark)` de score.dart. */
-function accentFor(hex) {
-  const [h, s, l] = hexToHsl(hex);
-  return hslToHex(h, clamp(s, 0.45, 0.9), clamp(l, 0.58, 0.72));
-}
-
-/** `Score.color` sobre fondo oscuro: baja apagada, alta intensa. */
-function scoreColor(score, accent) {
-  const t = (clamp(Number(score) || 1, 1, 10) - 1) / 9;
-  const [h, s, l] = hexToHsl(accent);
-  return hslToHex(h, clamp(lerp(0.2, s, t), 0, 1), clamp(lerp(l - 0.15, l + 0.13, t), 0.08, 0.9));
-}
-
-function luminance(hex) {
-  const [r, g, b] = hexToRgb(hex).map((v) => {
+  const lin = (v) => {
     const c = v / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const r = lin((n >> 16) & 255);
+  const g = lin((n >> 8) & 255);
+  const b = lin(n & 255);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
 }
 
-/** Tinta o papel, lo que más contraste con el énfasis (`onAccentFor`). */
-function onAccentFor(accent) {
-  const ratio = (a, b) => {
-    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-    return (hi + 0.05) / (lo + 0.05);
-  };
-  return ratio(accent, "#1B1408") >= ratio(accent, "#FBF8F2") ? "#1B1408" : "#FBF8F2";
+/** El color de la paleta más parecido (distancia en OKLab). */
+function nearestAccent(hex) {
+  const [l, a, b] = oklab(hex);
+  let best = DEFAULT_ACCENT;
+  let bestD = Infinity;
+  for (const c of ACCENT_PALETTE) {
+    const [l2, a2, b2] = oklab(c);
+    const d = (l - l2) ** 2 + (a - a2) ** 2 + (b - b2) ** 2;
+    if (d < bestD) {
+      bestD = d;
+      best = c;
+    }
+  }
+  return best;
+}
+
+/** `personTone`: la misma tonalidad, apagada (L 0,44, croma hasta 0,12). */
+function personTone(hex) {
+  const [, a, b] = oklab(hex);
+  const c = Math.min(Math.hypot(a, b), 0.12);
+  let h = (Math.atan2(b, a) * 180) / Math.PI;
+  if (h < 0) h += 360;
+  return `oklch(0.44 ${c.toFixed(3)} ${h.toFixed(1)})`;
 }
 
 function formatAverage(value, t) {
@@ -266,45 +265,52 @@ function formatAverage(value, t) {
 // Piezas
 // ---------------------------------------------------------------------------
 
-function avatar(person, size = 34) {
-  const color = argbToHex(person.color);
+/** Avatar redondo: la foto o la inicial sobre su color apagado. */
+function avatar(person, size = 28) {
   const url = safeUrl(person.avatarUrl);
   const initial = (String(person.name || "?").trim()[0] || "?").toUpperCase();
   return url
     ? html`<img class="avatar" src="${url}" alt="" width="${size}" height="${size}" style="--size:${size}px">`
-    : html`<span class="avatar" style="--size:${size}px;--c:${color}">${initial}</span>`;
+    : html`<span class="avatar" style="--size:${size}px;--c:${personTone(argbToHex(person.color))}">${initial}</span>`;
 }
 
-function histogram(hist, accent) {
+/**
+ * La distribución de notas en una retícula de 10: la más votada llega a
+ * `height − 4` y las demás van proporcionales (y más transparentes); sin
+ * votos, una raya de 2 px. Debajo, los números del 1 al 10.
+ */
+function histogram(hist, height = 70) {
   const counts = Array.from({ length: 10 }, (_, i) => Number(hist?.[String(i + 1)]) || 0);
-  const max = Math.max(1, ...counts);
-  return html`<div class="hist" aria-hidden="true">${counts.map((n, i) => html`<span style="height:${Math.max(4, Math.round((n / max) * 100))}%;--c:${scoreColor(i + 1, accent)}"></span>`)}</div>`;
+  const max = Math.max(...counts);
+  return html`<div class="hist" style="height:${height}px" aria-hidden="true">${counts.map((n) => (n === 0 || max === 0
+    ? html`<span class="none"></span>`
+    : html`<span class="${n === max ? "" : "low"}" style="height:${Math.max(2, Math.round(((height - 4) * n) / max))}px"></span>`))}</div>
+  <div class="nums" aria-hidden="true">${counts.map((_, i) => html`<span>${i + 1}</span>`)}</div>`;
 }
 
-/** Bloque "CALIFICACIÓN 8,4 /10 · N calificaciones" con histograma. */
-function communityBlock(stats, t, accent) {
-  if (!stats || !stats.count) return html`<p class="muted center">${t.noRatings}</p>`;
-  const average = stats.sum / stats.count;
-  return html`<div class="card score-card">
-    <div>
-      <p class="label">${t.ratingLabel}</p>
-      <p><span class="big" style="color:${scoreColor(average, accent)}">${formatAverage(average, t)}</span><span class="out">/10</span></p>
-      <p class="muted small">${t.ratings(stats.count)}</p>
+/** "8,3 /10" con cuántas notas, y el histograma. */
+function communityBlock(stats, t, height = 70) {
+  if (!stats || !stats.count) {
+    return html`<div class="score-row"><span class="big dim">—</span><span class="mono">${t.noRatingsShort}</span></div>`;
+  }
+  return html`<div class="score-row">
+      <span class="big">${formatAverage(stats.sum / stats.count, t)}<span class="out"> /10</span></span>
+      <span class="mono">${t.ratings(stats.count)}</span>
     </div>
-    ${histogram(stats.hist, accent)}
-  </div>`;
+    ${histogram(stats.hist, height)}`;
 }
 
-function commentCard(entry, t, accent) {
-  return html`<article class="card comment">
-    <div class="row">
-      ${avatar(entry.user)}
-      <p class="grow"><strong>${entry.user.name}</strong></p>
-      <span class="numeral" style="color:${scoreColor(entry.score, accent)}">${entry.score}</span>
-    </div>
-    <p class="quote">${entry.note}</p>
-    ${entry.likes ? html`<p class="muted small">${t.likes(entry.likes)}</p>` : ""}
+/** Un comentario: la nota en 64, el nombre y la cita en Newsreader. */
+function commentRow(entry) {
+  return html`<article class="comment">
+    <span class="num-big">${entry.score}</span>
+    <p class="name">${entry.user.name}</p>
+    <p class="quote">“${entry.note}”</p>
   </article>`;
+}
+
+function blockHead(label, count) {
+  return html`<div class="block-head mono"><span>${label}</span>${count == null ? "" : html`<span>${count}</span>`}</div>`;
 }
 
 function albumMeta(album, t) {
@@ -315,12 +321,20 @@ function albumMeta(album, t) {
   ].filter(Boolean).join(" · ");
 }
 
-function page({ t, lang, title, description, image, path, accent = DEFAULT_ACCENT, glowSrc, body }) {
-  const onAccent = onAccentFor(accent);
+function ctaButton(t) {
+  return APP_STORE_URL
+    ? html`<a class="btn-line" href="${APP_STORE_URL}">${t.ctaDownload}</a>`
+    : html`<span class="btn-line">${t.ctaSoon}</span>`;
+}
+
+/**
+ * La página: franja de color, encabezado ("VINILO" y el lema), el cuerpo,
+ * "¿Todavía no tienes Vinilo?" y el pie. `toneSrc` es la imagen de la que
+ * el navegador saca el color de la franja y el tono (`--tone`); sin ella,
+ * el énfasis.
+ */
+function page({ t, lang, title, description, image, path, accent = DEFAULT_ACCENT, toneSrc, body, stripe = true, cta = true, footerLine = false }) {
   const url = `${SITE}${path}`;
-  const cta = APP_STORE_URL
-    ? html`<a class="btn" href="${APP_STORE_URL}">${t.ctaDownload}</a>`
-    : html`<span class="btn soon">${t.ctaSoon}</span>`;
   return `<!doctype html>${render(html`<html lang="${lang}">
 <head>
 <meta charset="utf-8">
@@ -328,7 +342,7 @@ function page({ t, lang, title, description, image, path, accent = DEFAULT_ACCEN
 <title>${title} · Vinilo</title>
 <meta name="description" content="${description}">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#0F0E0C">
+<meta name="theme-color" content="#0f0e0d">
 <meta property="og:site_name" content="Vinilo">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${title}">
@@ -339,39 +353,55 @@ ${safeUrl(image) ? html`<meta property="og:image" content="${safeUrl(image)}">` 
 <link rel="canonical" href="${url}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
+<link href="${new Raw(FONTS)}" rel="stylesheet">
 <style>${new Raw(CSS)}</style>
 </head>
-<body style="--accent:${accent};--on-accent:${onAccent};--glow:${accent}">
-<div class="glow"></div>
+<body style="--accent:${accent};--tone:${accent};--stripe:${accent}"${safeUrl(toneSrc) ? html` data-tone-src="${safeUrl(toneSrc)}"` : ""}>
 <div class="page">
-  <header class="top"><a class="brand" href="/">Vinilo</a><span class="muted small">${t.tagline}</span></header>
+  ${stripe ? html`<div class="stripe"></div>` : ""}
+  <header class="top"><a class="brand" href="/">Vinilo</a><span class="mono">${t.tagline}</span></header>
   <main>${body}</main>
-  <aside class="cta">
-    <div class="vinyl small-vinyl" aria-hidden="true"></div>
-    <h3>${t.ctaTitle}</h3>
-    <p class="muted">${t.ctaBody}</p>
-    ${cta}
-  </aside>
-  <footer>${t.credits}</footer>
+  ${cta ? html`<aside class="cta">
+    <div><h3>${t.ctaTitle}</h3><p>${t.ctaBody}</p></div>
+    ${ctaButton(t)}
+  </aside>` : ""}
+  <footer class="mono${footerLine ? " line" : ""}">${t.credits}</footer>
 </div>
-${glowSrc ? html`<img hidden data-glow-src="${safeUrl(glowSrc)}" alt=""><script>${new Raw(GLOW_SCRIPT)}</script>` : ""}
+${safeUrl(toneSrc) ? html`<script>${new Raw(TONE_SCRIPT)}</script>` : ""}
 </body>
 </html>`)}`;
 }
 
-function notFoundPage(t, lang, path) {
+/** Colores planos de las portadas del 404 si no hay portadas reales. */
+const FALLBACK_COVERS = ["oklch(0.62 0.21 38)", "oklch(0.42 0.14 255)", "oklch(0.52 0.13 150)"];
+
+/** "Error 404 · lado C": el título grande y "Ir al inicio"; al lado, tres
+ * portadas y la invitación. */
+function notFoundPage(t, lang, path, covers = []) {
   return page({
     t,
     lang,
     title: t.notFoundTitle,
     description: t.tagline,
     path,
-    body: html`<section class="hero">
-      <div class="vinyl" aria-hidden="true"></div>
-      <h1 class="title">${t.notFoundTitle}</h1>
-      <p class="muted">${t.notFoundBody}</p>
-      <p><a class="link" href="/">${t.home}</a></p>
+    stripe: false,
+    cta: false,
+    footerLine: true,
+    body: html`<section class="nf">
+      <div>
+        <p class="mono accent">${t.error404}</p>
+        <h1 class="title nf-title">${t.notFoundTitle}</h1>
+        <p class="desc">${t.notFoundBody}</p>
+        <a class="btn-ink" href="/">${t.home} <span>→</span></a>
+      </div>
+      <aside class="nf-side">
+        <div class="grid3 tight">${[0, 1, 2].map((i) => (safeUrl(covers[i])
+          ? html`<img class="art" src="${safeUrl(covers[i])}" alt="" loading="lazy">`
+          : html`<span class="art" style="background:${FALLBACK_COVERS[i]}"></span>`))}</div>
+        <h3>${t.ctaTitle}</h3>
+        <p>${t.ctaBody}</p>
+        ${ctaButton(t)}
+      </aside>
     </section>`,
   });
 }
@@ -381,6 +411,8 @@ function notFoundPage(t, lang, path) {
 // ---------------------------------------------------------------------------
 
 const ID = /^[A-Za-z0-9_-]{1,128}$/;
+/** Los ids de Spotify: 22 letras y números. Con otra forma, ni se pregunta. */
+const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/;
 const USERNAME = /^[a-z0-9._]{3,20}$/;
 
 function statsFrom(d) {
@@ -413,6 +445,13 @@ async function topComments(db, albumId, limit = 6) {
     .slice(0, limit);
 }
 
+/** El nombre enlazado a su perfil si se sabe su @usuario. */
+function personLink(name, username) {
+  return username && USERNAME.test(username)
+    ? html`<a href="/u/${username}"><strong>${name}</strong></a>`
+    : html`<strong>${name}</strong>`;
+}
+
 // ---------------------------------------------------------------------------
 // Páginas
 // ---------------------------------------------------------------------------
@@ -422,17 +461,17 @@ async function listPage(db, id, t, lang) {
   if (!snap.exists) return null;
   const d = snap.data();
   const owner = d.owner || {};
-  const accent = accentFor(argbToHex(owner.color));
+  const accent = nearestAccent(argbToHex(owner.color));
   const items = Array.isArray(d.items) ? d.items : [];
   const ranking = d.kind === "ranking";
   const tracks = d.itemType === "tracks";
   const count = tracks ? t.tracks(items.length) : t.albums(items.length);
-  const covers = items.map((i) => safeUrl(i.coverSmall || i.cover)).filter(Boolean);
-  const cover = safeUrl(d.coverUrl) || covers[0] || "";
+  const first = items[0] || {};
+  const cover = safeUrl(d.coverUrl) || safeUrl(first.cover || first.coverSmall);
+  const toneSrc = safeUrl(d.coverUrl) || safeUrl(first.coverSmall || first.cover);
   const shown = items.slice(0, 100);
-  const art = safeUrl(d.coverUrl)
-    ? html`<img class="cover" src="${safeUrl(d.coverUrl)}" alt="">`
-    : html`<div class="cover mosaic">${[0, 1, 2, 3].map((i) => (covers[i] ? html`<img src="${covers[i]}" alt="">` : html`<span></span>`))}</div>`;
+  const username = USERNAME.test(owner.username || "") ? owner.username : null;
+  const likes = Array.isArray(d.likedBy) ? d.likedBy.length : 0;
   return page({
     t,
     lang,
@@ -441,24 +480,37 @@ async function listPage(db, id, t, lang) {
     image: cover,
     path: `/l/${id}`,
     accent,
-    glowSrc: cover,
+    toneSrc,
     body: html`<section class="hero">
-      ${art}
-      <p class="label spaced">${ranking ? t.ranking : t.list} · ${count}</p>
-      <h1 class="title">${d.name}</h1>
-      ${d.description ? html`<p class="desc">${d.description}</p>` : ""}
-      <p class="owner">${avatar(owner, 26)}<span>${t.by(owner.name || "")}</span></p>
+      ${cover ? html`<img class="art" src="${cover}" alt="">` : html`<div class="art"></div>`}
+      <div class="col">
+        <p class="mono">${ranking ? t.ranking : t.list} · ${count}</p>
+        <h1 class="title">${d.name}</h1>
+        ${d.description ? html`<p class="desc">${d.description}</p>` : ""}
+        <p class="owner">${avatar(owner, 28)}${personLink(owner.name || "", username)}${username ? html`<span class="mono">@${username}</span>` : ""}</p>
+        ${likes ? html`<p class="mono foot">${t.likes(likes)}</p>` : ""}
+      </div>
     </section>
-    <section class="section">
-      ${shown.map((item, i) => html`<div class="item">
-        ${ranking ? html`<span class="num">${i + 1}</span>` : ""}
-        <img src="${safeUrl(item.coverSmall || item.cover)}" alt="" loading="lazy">
-        <div class="grow">
-          <p class="item-title">${item.name}</p>
-          <p class="muted small">${tracks && item.albumName ? `${item.artist} · ${item.albumName}` : [item.artist, item.year].filter(Boolean).join(" · ")}</p>
-        </div>
-      </div>`)}
-      ${items.length > shown.length ? html`<p class="muted center small">${t.more(items.length - shown.length)}</p>` : ""}
+    <section class="block">
+      ${blockHead(tracks ? t.songsHead : t.albumsHead, items.length)}
+      ${shown.map((item, i) => {
+        const meta = tracks && item.durationMs
+          ? `${Math.floor(item.durationMs / 60000)}:${String(Math.floor((item.durationMs % 60000) / 1000)).padStart(2, "0")}`
+          : item.year || "";
+        const place = i + 1;
+        return ranking
+          ? html`<div class="rank${place === 1 ? " first" : ""}">
+            <span data-rank="${place <= 3 ? place : "n"}" class="num">${place}</span>
+            <div class="grow"><p class="rank-title">${item.name}</p><p class="sub">${item.artist}</p></div>
+            <span class="mono">${meta}</span>
+          </div>`
+          : html`<div class="item">
+            <img src="${safeUrl(item.coverSmall || item.cover)}" alt="" loading="lazy">
+            <div class="grow"><p class="item-title">${item.name}</p><p class="sub">${item.artist}</p></div>
+            <span class="mono">${meta}</span>
+          </div>`;
+      })}
+      ${items.length > shown.length ? html`<p class="mono more">${t.more(items.length - shown.length)}</p>` : ""}
     </section>`,
   });
 }
@@ -468,6 +520,7 @@ async function albumPage(db, id, t, lang, deps) {
   let album = snap.exists ? snap.data() : null;
   const stats = statsFrom(album);
   if (!album) {
+    if (!SPOTIFY_ID.test(id)) return null;
     try {
       album = await deps.getAlbumDetail(id);
     } catch (err) {
@@ -476,28 +529,30 @@ async function albumPage(db, id, t, lang, deps) {
     }
   }
   const comments = stats && stats.count ? await topComments(db, id) : [];
-  const accent = DEFAULT_ACCENT;
   const cover = safeUrl(album.cover || album.coverSmall);
   const average = stats && stats.count ? formatAverage(stats.sum / stats.count, t) : null;
+  const artistId = Array.isArray(album.artistIds) ? album.artistIds[0] : null;
+  const artist = album.artist || "";
   return page({
     t,
     lang,
     title: album.name,
-    description: t.descAlbum(album.artist || "", average, stats ? t.ratings(stats.count) : ""),
+    description: t.descAlbum(artist, average, stats ? t.ratings(stats.count) : ""),
     image: cover,
     path: `/d/${id}`,
-    accent,
-    glowSrc: safeUrl(album.coverSmall || album.cover),
+    toneSrc: safeUrl(album.coverSmall || album.cover),
     body: html`<section class="hero">
-      ${cover ? html`<img class="cover" src="${cover}" alt="">` : html`<div class="cover"></div>`}
-      <h1 class="title">${album.name}</h1>
-      <p class="subtitle">${album.artist}</p>
-      <p class="meta">${albumMeta(album, t)}</p>
+      ${cover ? html`<img class="art" src="${cover}" alt="">` : html`<div class="art"></div>`}
+      <div class="col">
+        <p class="mono">${albumMeta(album, t)}</p>
+        <h1 class="title">${album.name}</h1>
+        ${artistId && ID.test(artistId) ? html`<a class="byline" href="/a/${artistId}">${artist}</a>` : html`<p class="byline">${artist}</p>`}
+        <div class="score">${communityBlock(stats, t)}</div>
+      </div>
     </section>
-    <section class="section">${communityBlock(stats, t, accent)}</section>
-    ${comments.length ? html`<section class="section">
-      <h2>${t.comments}</h2>
-      ${comments.map((c) => commentCard(c, t, accent))}
+    ${comments.length ? html`<section class="block">
+      ${blockHead(t.comments, comments.length)}
+      ${comments.map(commentRow)}
     </section>` : ""}`,
   });
 }
@@ -513,13 +568,11 @@ async function ratingPage(db, id, t, lang) {
     snap.ref.collection("replies").orderBy("createdAt").limit(20).get(),
   ]);
   const username = profileSnap?.exists ? profileSnap.get("username") : null;
-  const accent = accentFor(argbToHex(entry.user.color));
+  const accent = nearestAccent(argbToHex(entry.user.color));
   const stats = statsFrom(albumSnap?.exists ? albumSnap.data() : null);
   const cover = safeUrl(album.cover || album.coverSmall);
   const replies = repliesSnap.docs.map((r) => r.data());
-  const who = username && USERNAME.test(username)
-    ? html`<a href="/u/${username}"><strong>${entry.user.name}</strong></a>`
-    : html`<strong>${entry.user.name}</strong>`;
+  const facts = [entry.likes ? t.likes(entry.likes) : null, entry.replies ? t.replyCount(entry.replies) : null].filter(Boolean);
   return page({
     t,
     lang,
@@ -528,35 +581,39 @@ async function ratingPage(db, id, t, lang) {
     image: cover,
     path: `/n/${id}`,
     accent,
-    glowSrc: safeUrl(album.coverSmall || album.cover),
+    toneSrc: safeUrl(album.coverSmall || album.cover),
     body: html`<section class="hero">
-      <p class="owner">${avatar(entry.user, 30)}<span>${who} ${t.rated}</span></p>
-      ${cover ? html`<a href="/d/${album.id}"><img class="cover" src="${cover}" alt=""></a>` : ""}
-      <h1 class="title">${album.name}</h1>
-      <p class="subtitle">${album.artist}</p>
-      <p class="rating-line"><span class="huge" style="color:${scoreColor(entry.score, accent)}">${entry.score}</span><span class="out">/10</span></p>
-      <p class="label" style="color:${scoreColor(entry.score, accent)}">${t.scoreLabels[entry.score - 1] || ""}</p>
-      ${entry.note ? html`<p class="quote big-quote">“${entry.note}”</p>` : ""}
-      <p class="muted small">${[entry.likes ? t.likes(entry.likes) : null, entry.replies ? t.replyCount(entry.replies) : null].filter(Boolean).join(" · ")}</p>
-    </section>
-    ${replies.length ? html`<section class="section">
-      <h2>${t.replies}</h2>
-      ${replies.map((r) => html`<div class="reply row top-align">
-        ${avatar(r.user || {}, 30)}
-        <div class="grow">
-          <p><strong>${r.user?.name || ""}</strong>${r.user?.username ? html` <span class="muted small">@${r.user.username}</span>` : ""}</p>
-          <p class="reply-text">${r.text}</p>
+      ${cover && album.id && ID.test(album.id) ? html`<a href="/d/${album.id}"><img class="art" src="${cover}" alt=""></a>` : html`<div class="art"></div>`}
+      <div class="col">
+        <p class="owner">${avatar(entry.user, 28)}${personLink(entry.user.name || "", username)}<span class="dim">${t.rated}</span></p>
+        <h1 class="title">${album.name}</h1>
+        <p class="byline">${album.artist}</p>
+        <div class="score">
+          <div class="score-row">
+            <span class="big">${entry.score}<span class="out"> /10</span></span>
+            <span class="mono tone">${t.scoreLabels[entry.score - 1] || ""}</span>
+          </div>
+          ${entry.note ? html`<p class="quote big-quote">“${entry.note}”</p>` : ""}
+          ${facts.length ? html`<p class="mono foot">${facts.join(" · ")}</p>` : ""}
         </div>
+      </div>
+    </section>
+    ${replies.length ? html`<section class="block">
+      ${blockHead(t.replies, replies.length)}
+      ${replies.map((r) => html`<div class="reply">
+        <p class="name">${r.user?.name || ""}${r.user?.username ? html` <span class="mono">@${r.user.username}</span>` : ""}</p>
+        <p class="reply-text">${r.text}</p>
       </div>`)}
     </section>` : ""}
-    ${stats && stats.count ? html`<section class="section">
-      <p class="label spaced">${t.community}</p>
-      ${communityBlock(stats, t, DEFAULT_ACCENT)}
+    ${stats && stats.count ? html`<section class="block">
+      ${blockHead(t.community, null)}
+      <div class="community">${communityBlock(stats, t)}</div>
     </section>` : ""}`,
   });
 }
 
 async function artistPage(db, id, t, lang, deps) {
+  if (!SPOTIFY_ID.test(id)) return null;
   let artist;
   try {
     artist = await deps.getArtist(id);
@@ -575,7 +632,6 @@ async function artistPage(db, id, t, lang, deps) {
   for (const a of albums) {
     for (let i = 1; i <= 10; i++) hist[i] = (hist[i] || 0) + (Number(a.stats.hist?.[String(i)]) || 0);
   }
-  const accent = DEFAULT_ACCENT;
   const image = safeUrl(artist.image);
   return page({
     t,
@@ -584,23 +640,28 @@ async function artistPage(db, id, t, lang, deps) {
     description: t.descArtist(t.albums(albums.length)),
     image,
     path: `/a/${id}`,
-    accent,
-    glowSrc: safeUrl(artist.imageSmall || artist.image),
-    body: html`<section class="hero">
-      ${image ? html`<img class="cover round" src="${image}" alt="">` : html`<div class="cover round"></div>`}
-      <h1 class="title">${artist.name}</h1>
-      ${artist.genres?.length ? html`<p class="meta">${artist.genres.slice(0, 3).join(" · ")}</p>` : ""}
+    body: html`<section class="hero round">
+      ${image ? html`<img class="art circle" src="${image}" alt="">` : html`<div class="art circle"></div>`}
+      <div class="col">
+        <p class="mono">${t.artistRated(albums.length)}</p>
+        <h1 class="title xl">${artist.name}</h1>
+        <div class="score split">
+          ${count
+            ? html`<div><span class="big">${formatAverage(sum / count, t)}<span class="out"> /10</span></span><p class="mono gap">${t.ratings(count)}</p></div>
+              <div>${histogram(hist, 80)}</div>`
+            : html`<p class="desc">${t.notRatedYet}</p>`}
+        </div>
+      </div>
     </section>
-    <section class="section">${count ? communityBlock({ count, sum, hist }, t, accent) : html`<p class="muted center">${t.notRatedYet}</p>`}</section>
-    ${albums.length ? html`<section class="section">
-      <h2>${t.ratedInVinilo}</h2>
-      ${albums.map((a) => html`<a class="item" href="/d/${a.id}">
+    ${albums.length ? html`<section class="block">
+      ${blockHead(t.ratedInVinilo, albums.length)}
+      ${albums.map((a) => html`<a class="row" href="/d/${a.id}">
         <img src="${safeUrl(a.coverSmall || a.cover)}" alt="" loading="lazy">
         <div class="grow">
-          <p class="item-title">${a.name}</p>
-          <p class="muted small">${[a.year, t.ratings(a.stats.count)].filter(Boolean).join(" · ")}</p>
+          <p class="row-title">${a.name}</p>
+          <p class="mono">${[a.year, t.ratings(a.stats.count)].filter(Boolean).join(" · ")}</p>
         </div>
-        <span class="numeral" style="color:${scoreColor(a.stats.sum / a.stats.count, accent)}">${formatAverage(a.stats.sum / a.stats.count, t)}</span>
+        <span class="row-score">${formatAverage(a.stats.sum / a.stats.count, t)}</span>
       </a>`)}
     </section>` : ""}`,
   });
@@ -617,7 +678,7 @@ async function profilePage(db, handle, t, lang) {
   const snap = await db.collection("users").doc(uid).get();
   if (!snap.exists) return null;
   const d = snap.data();
-  const accent = accentFor(argbToHex(d.color));
+  const accent = nearestAccent(argbToHex(d.color));
   const [recentSnap, listsSnap] = await Promise.all([
     db.collection("ratings").where("uid", "==", uid).orderBy("updatedAt", "desc").limit(9).get()
       .catch(() => db.collection("ratings").where("uid", "==", uid).limit(9).get()),
@@ -631,58 +692,71 @@ async function profilePage(db, handle, t, lang) {
   const favorites = (Array.isArray(d.favorites) ? d.favorites : []).slice(0, 3);
   const artists = (Array.isArray(d.favoriteArtists) ? d.favoriteArtists : []).slice(0, 3);
   const ratingsCount = Number(d.ratingsCount) || 0;
-  const average = ratingsCount ? formatAverage((Number(d.ratingsSum) || 0) / ratingsCount, t) : null;
+  const average = ratingsCount ? formatAverage((Number(d.ratingsSum) || 0) / ratingsCount, t) : "—";
+  const followers = Number(d.followersCount) || 0;
+  const following = Number(d.followingCount) || 0;
   const banner = safeUrl(d.bannerUrl);
+  const photo = safeUrl(d.avatarUrl);
   const username = USERNAME.test(d.username || "") ? d.username : null;
-  const stat = (n, word) => html`<span><strong>${n}</strong> ${word}</span>`;
+  const initial = (String(d.name || "?").trim()[0] || "?").toUpperCase();
+  const stat = (value, label) => html`<div><p class="stat">${value}</p><p class="mono">${label}</p></div>`;
   return page({
     t,
     lang,
     title: username ? `${d.name} (@${username})` : d.name,
     description: d.bio || t.descProfile(d.name || ""),
-    image: safeUrl(d.avatarUrl) || banner,
+    image: photo || banner,
     path: `/u/${username || handle}`,
     accent,
     body: html`${banner ? html`<div class="banner" style="background-image:url('${cssUrl(banner)}')"></div>` : ""}
-    <section class="profile">
-      ${avatar({ name: d.name, color: d.color, avatarUrl: d.avatarUrl }, 88)}
-      <h1 class="title">${d.name}</h1>
-      ${username ? html`<p class="muted">@${username}</p>` : ""}
-      ${d.bio ? html`<p class="desc">${d.bio}</p>` : ""}
-      <p class="stats">
-        ${stat(ratingsCount, t.ratingsWord(ratingsCount))}
-        ${average ? stat(average, t.averageWord) : ""}
-        ${stat(Number(d.followersCount) || 0, t.followers(Number(d.followersCount) || 0))}
-        ${stat(Number(d.followingCount) || 0, t.following(Number(d.followingCount) || 0))}
-      </p>
+    <section class="hero round">
+      ${photo
+        ? html`<img class="art circle" src="${photo}" alt="">`
+        : html`<div class="art circle initial" style="background:${personTone(argbToHex(d.color))}">${initial}</div>`}
+      <div class="col">
+        ${username ? html`<p class="mono">@${username}</p>` : ""}
+        <h1 class="title xl">${d.name}</h1>
+        ${d.bio ? html`<p class="desc">${d.bio}</p>` : ""}
+        <div class="stats">
+          ${stat(ratingsCount, t.statAlbums(ratingsCount))}
+          ${stat(average, t.statAverage)}
+          ${stat(followers, t.followers(followers))}
+          ${stat(following, t.following(following))}
+        </div>
+      </div>
     </section>
-    ${favorites.length ? html`<section class="section">
-      <h2>${t.favorites}</h2>
-      <div class="grid3">${favorites.map((a) => html`<a href="/d/${a.id}"><img class="tile" src="${safeUrl(a.coverSmall || a.cover)}" alt="${a.name}" loading="lazy"></a>`)}</div>
+    ${favorites.length ? html`<section class="block">
+      ${blockHead(t.favorites, null)}
+      <div class="grid3 tight fav">${favorites.map((a) => html`<a href="/d/${a.id}"><img class="art" src="${safeUrl(a.cover || a.coverSmall)}" alt="${a.name}" loading="lazy"></a>`)}</div>
     </section>` : ""}
-    ${artists.length ? html`<section class="section">
-      <h2>${t.favoriteArtists}</h2>
-      <div class="grid3">${artists.map((a) => html`<a class="artist" href="/a/${a.id}"><img class="tile round" src="${safeUrl(a.image || a.imageSmall)}" alt="" loading="lazy"><span class="small">${a.name}</span></a>`)}</div>
+    ${artists.length ? html`<section class="block">
+      ${blockHead(t.favoriteArtists, null)}
+      <div class="grid3 fav">${artists.map((a) => html`<a class="artist" href="/a/${a.id}"><img class="art circle" src="${safeUrl(a.image || a.imageSmall)}" alt="" loading="lazy"><span class="name">${a.name}</span></a>`)}</div>
     </section>` : ""}
-    ${recent.length ? html`<section class="section">
-      <h2>${t.recent}</h2>
-      <div class="grid3">${recent.map((e) => html`<a class="recent" href="/n/${e.id}">
-        <img class="tile" src="${safeUrl(e.album.coverSmall || e.album.cover)}" alt="${e.album.name || ""}" loading="lazy">
-        <span class="badge" style="color:${scoreColor(e.score, accent)}">${e.score}</span>
-      </a>`)}</div>
+    ${recent.length ? html`<section class="block">
+      ${blockHead(t.recent, recent.length)}
+      ${recent.map((e) => html`<a class="row" href="/n/${e.id}">
+        <img src="${safeUrl(e.album.coverSmall || e.album.cover)}" alt="" loading="lazy">
+        <div class="grow">
+          <p class="row-title">${e.album.name || ""}</p>
+          <p class="mono">${e.album.artist || ""}</p>
+        </div>
+        <span class="row-score">${e.score}</span>
+      </a>`)}
     </section>` : ""}
-    ${lists.length ? html`<section class="section">
-      <h2>${t.lists}</h2>
+    ${lists.length ? html`<section class="block">
+      ${blockHead(t.lists, lists.length)}
       ${lists.map((l) => {
         const items = Array.isArray(l.items) ? l.items : [];
         const cover = safeUrl(l.coverUrl) || safeUrl(items[0]?.coverSmall || items[0]?.cover);
         const count = l.itemType === "tracks" ? t.tracks(items.length) : t.albums(items.length);
-        return html`<a class="item" href="/l/${l.id}">
-          <img src="${cover}" alt="" loading="lazy">
+        return html`<a class="row" href="/l/${l.id}">
+          ${cover ? html`<img src="${cover}" alt="" loading="lazy">` : html`<span class="ph"></span>`}
           <div class="grow">
-            <p class="item-title">${l.name}</p>
-            <p class="muted small">${l.kind === "ranking" ? t.ranking : t.list} · ${count}</p>
+            <p class="row-title">${l.name}</p>
+            <p class="mono">${l.kind === "ranking" ? t.ranking : t.list} · ${count}</p>
           </div>
+          <span class="arrow">→</span>
         </a>`;
       })}
     </section>` : ""}`,
@@ -690,89 +764,165 @@ async function profilePage(db, handle, t, lang) {
 }
 
 // ---------------------------------------------------------------------------
-// Estilo y resplandor
+// Estilo y color de portada
 // ---------------------------------------------------------------------------
 
+const FONTS = "https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@1,6..72,400&display=swap";
+
 const CSS = `
-:root{--bg:#0F0E0C;--surface:#181613;--surface2:#211E1A;--surface3:#2B2722;--line:rgba(255,255,255,.086);--text:#F4EFE6;--text2:#A9A296;--text3:#6F695F;--serif:'Instrument Serif',Georgia,serif;--sans:'Manrope',system-ui,-apple-system,sans-serif}
+:root{--bg:#0f0e0d;--surface:#2a2826;--ink:#efebe4;--ink2:rgba(239,235,228,.62);--ink3:rgba(239,235,228,.58);--ink4:rgba(239,235,228,.5);--line:rgba(239,235,228,.14);--line-soft:rgba(239,235,228,.08);--line-strong:rgba(239,235,228,.28);--sans:'Archivo',system-ui,-apple-system,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;--serif:'Newsreader',Georgia,serif}
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.45;min-height:100vh;overflow-x:hidden;position:relative}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 img{display:block}
-.glow{position:absolute;inset:0 0 auto 0;height:560px;background:radial-gradient(70% 60% at 50% 0%,color-mix(in srgb,var(--glow) 34%,transparent),transparent 72%);pointer-events:none;transition:background 1s ease}
-.page{position:relative;max-width:560px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom))}
-.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:6px 0 18px}
-.brand{font-family:var(--serif);font-style:italic;font-size:28px;letter-spacing:-.5px}
-.muted{color:var(--text2)}
-.small{font-size:12.5px}
-.center{text-align:center}
-.grow{flex:1;min-width:0}
-.label{font-size:11px;font-weight:700;letter-spacing:1.4px;color:var(--text3);text-transform:uppercase}
-.label.spaced{margin:22px 0 10px}
-.hero{text-align:center;padding-top:10px}
-.cover{width:min(70vw,300px);aspect-ratio:1;margin:0 auto;border-radius:18px;object-fit:cover;background:var(--surface2);box-shadow:0 26px 60px -20px color-mix(in srgb,var(--glow) 55%,#000)}
-.cover.round{border-radius:50%;width:min(52vw,220px)}
-.mosaic{display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
-.mosaic img,.mosaic span{width:100%;height:100%;object-fit:cover;background:var(--surface3)}
-.title{font-family:var(--serif);font-weight:400;font-size:38px;line-height:1.04;letter-spacing:-.5px;margin-top:22px;overflow-wrap:anywhere}
-.subtitle{color:var(--accent);font-weight:600;font-size:16px;margin-top:8px}
-.meta{color:var(--text3);font-size:13px;margin-top:6px}
-.desc{color:var(--text2);margin:12px auto 0;max-width:440px;white-space:pre-line}
-.owner{display:inline-flex;align-items:center;gap:8px;margin:14px 0 18px;color:var(--text2);font-size:14px}
-.owner strong{color:var(--text)}
-.section{margin-top:32px}
-.section h2{font-family:var(--serif);font-weight:400;font-size:27px;letter-spacing:-.3px;margin-bottom:12px}
-.card{background:color-mix(in srgb,var(--surface) 72%,transparent);border:1px solid var(--line);border-radius:22px;padding:16px 18px}
-.score-card{display:flex;align-items:center;gap:22px}
-.big{font-family:var(--serif);font-size:56px;line-height:.95}
-.huge{font-family:var(--serif);font-size:88px;line-height:.9}
-.out{color:var(--text3);font-size:14px;margin-left:6px}
-.rating-line{margin-top:18px}
-.hist{flex:1;display:flex;align-items:flex-end;gap:4px;height:70px}
-.hist span{flex:1;border-radius:3px;background:var(--c)}
-.comment{margin-bottom:10px}
-.row{display:flex;align-items:center;gap:12px}
-.top-align{align-items:flex-start}
-.numeral{font-family:var(--serif);font-size:32px;line-height:1}
-.quote{font-family:var(--serif);font-style:italic;font-size:19px;line-height:1.22;margin:10px 0 6px;overflow-wrap:anywhere}
-.big-quote{font-size:23px;margin:18px auto 10px;max-width:460px}
-.avatar{width:var(--size);height:var(--size);border-radius:50%;object-fit:cover;flex:none;display:inline-grid;place-items:center;font-weight:800;font-size:calc(var(--size)*.42);color:#1B1408;background:var(--c)}
-.item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
-.item img{width:50px;height:50px;border-radius:9px;object-fit:cover;background:var(--surface2);flex:none}
-.item-title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.num{font-family:var(--serif);font-size:26px;width:30px;text-align:center;color:var(--text3);flex:none}
-.reply{padding:10px 0;border-bottom:1px solid var(--line)}
-.reply-text{margin-top:2px;overflow-wrap:anywhere;white-space:pre-line}
-.banner{height:150px;margin:0 -16px -44px;background-size:cover;background-position:center;-webkit-mask-image:linear-gradient(#000 45%,transparent);mask-image:linear-gradient(#000 45%,transparent)}
-.profile{text-align:center;position:relative}
-.profile .avatar{margin:0 auto;box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent)}
-.profile .title{margin-top:16px}
-.stats{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin-top:14px;color:var(--text2);font-size:13.5px}
-.stats strong{color:var(--text)}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.tile{width:100%;aspect-ratio:1;border-radius:12px;object-fit:cover;background:var(--surface2)}
-.tile.round{border-radius:50%}
+.page{max-width:1200px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+main{flex:1}
+.stripe{height:6px;background:var(--stripe)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 48px;border-bottom:1px solid var(--line)}
+.brand{font-stretch:62%;font-weight:900;font-size:32px;line-height:1;text-transform:uppercase}
+.mono{font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.mono.accent{color:var(--accent)}
+.mono.tone{color:var(--tone)}
+.mono.gap{margin-top:10px}
+.mono.foot{margin-top:14px}
+.dim{color:var(--ink3)}
+.hero{display:grid;grid-template-columns:520px minmax(0,1fr);gap:56px;padding:48px}
+.hero.round{grid-template-columns:400px minmax(0,1fr);gap:64px;padding:56px 48px;align-items:center}
+.art{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:var(--surface)}
+.art.circle{border-radius:50%}
+.art.initial{display:flex;align-items:center;justify-content:center;font-weight:600;font-size:140px;color:var(--ink)}
+.col{display:flex;flex-direction:column;min-width:0}
+.title{font-stretch:62%;font-weight:800;font-size:120px;line-height:.84;letter-spacing:-.015em;margin-top:14px;overflow-wrap:anywhere}
+.title.xl{font-size:128px}
+.byline{display:block;font-weight:500;font-size:22px;color:var(--tone);margin-top:12px}
+a.byline:hover{text-decoration:underline;text-underline-offset:4px}
+.desc{font-size:19px;color:var(--ink2);margin-top:20px;white-space:pre-line;overflow-wrap:anywhere}
+.owner{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;font-size:15px}
+.owner .mono{margin-left:4px}
+.avatar{width:var(--size);height:var(--size);border-radius:50%;object-fit:cover;flex:none;display:inline-flex;align-items:center;justify-content:center;font-weight:600;font-size:calc(var(--size)*.42);color:var(--ink);background:var(--c)}
+.score{margin-top:auto;border-top:1px solid var(--line);padding-top:14px}
+.score.split{margin-top:36px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:40px;align-items:end}
+.score-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
+.big{font-stretch:62%;font-weight:700;font-size:112px;line-height:.8;color:var(--tone)}
+.big.dim{color:rgba(239,235,228,.28)}
+.out{font-stretch:100%;font-weight:500;font-size:18px;color:var(--ink4)}
+.hist{display:grid;grid-template-columns:repeat(10,1fr);align-items:end;margin-top:18px;border-bottom:1px solid var(--line)}
+.score.split .hist{margin-top:0}
+.hist span{margin:0 3px;background:var(--tone)}
+.hist span.low{opacity:.6}
+.hist span.none{height:2px;background:rgba(239,235,228,.2)}
+.nums{display:grid;grid-template-columns:repeat(10,1fr);margin-top:8px;font:500 11px var(--mono);color:var(--ink4);text-align:center}
+.block{padding:0 48px}
+.block+.block{margin-top:24px}
+.block-head{display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line)}
+.comment{display:grid;grid-template-columns:120px 200px minmax(0,1fr);gap:24px;align-items:baseline;padding:22px 0;border-top:1px solid var(--line-soft)}
+.num-big{font-stretch:62%;font-weight:700;font-size:64px;line-height:.8;color:var(--tone)}
+.name{font-weight:600;font-size:16px}
+.name .mono{margin-left:6px}
+.quote{font-family:var(--serif);font-style:italic;font-size:28px;line-height:1.2;overflow-wrap:anywhere}
+.big-quote{font-size:34px;margin-top:22px}
+.reply{display:grid;grid-template-columns:200px minmax(0,1fr);gap:24px;align-items:baseline;padding:18px 0;border-top:1px solid var(--line-soft)}
+.reply-text{font-size:19px;white-space:pre-line;overflow-wrap:anywhere}
+.community{padding:8px 0 4px;max-width:640px}
+.item,.rank{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:20px;align-items:center;padding:14px 0;border-top:1px solid var(--line-soft)}
+.item img{width:64px;height:64px;object-fit:cover;background:var(--surface)}
+.item-title{font-weight:600;font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:15px;color:var(--ink3);margin-top:2px}
+.rank{grid-template-columns:120px minmax(0,1fr) auto}
+.num{font-stretch:62%;font-weight:700;font-size:44px;line-height:.8;color:var(--ink4)}
+.num[data-rank="1"]{font-weight:800;font-size:96px;color:var(--tone)}
+.num[data-rank="2"],.num[data-rank="3"]{font-size:64px;color:var(--tone)}
+.rank-title{font-weight:600;font-size:19px;overflow-wrap:anywhere}
+.rank.first .rank-title{font-stretch:75%;font-weight:700;font-size:36px;line-height:1}
+.more{padding:14px 0}
+.row{display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:24px;align-items:center;padding:16px 0;border-top:1px solid var(--line-soft)}
+.row img,.row .ph{width:88px;height:88px;object-fit:cover;background:var(--surface)}
+.row-title{font-stretch:75%;font-weight:700;font-size:32px;line-height:1;overflow-wrap:anywhere}
+.row .mono{margin-top:8px}
+.row-score{font-stretch:62%;font-weight:700;font-size:72px;line-height:.8;color:var(--accent)}
+.arrow{font-size:22px;color:var(--ink4)}
+a.row:hover .row-title,a.item:hover .item-title{text-decoration:underline;text-underline-offset:4px}
+.banner{height:260px;background-size:cover;background-position:center}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:32px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stats>div{padding:12px 0 12px 14px;border-left:1px solid var(--line)}
+.stats>div:first-child{padding-left:0;border-left:0}
+.stat{font-stretch:65%;font-weight:700;font-size:44px;line-height:1}
+.stats .mono{margin-top:6px;font-size:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding:12px 0 8px}
+.grid3.tight{gap:2px}
+.fav{max-width:720px}
 .artist{text-align:center}
-.artist span{display:block;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.recent{position:relative}
-.badge{position:absolute;right:6px;bottom:6px;font-family:var(--serif);font-size:22px;line-height:1;padding:3px 8px 4px;border-radius:10px;background:rgba(15,14,12,.78)}
-.link{color:var(--accent);font-weight:700;display:inline-block;margin-top:14px}
-.cta{margin-top:42px;text-align:center;padding:26px 22px 24px;border-radius:26px;background:var(--surface);border:1px solid var(--line)}
-.cta h3{font-family:var(--serif);font-weight:400;font-size:29px;letter-spacing:-.3px;margin-top:12px}
-.cta p{margin:8px auto 0;max-width:380px}
-.btn{display:inline-block;margin-top:18px;padding:14px 22px;border-radius:999px;background:var(--accent);color:var(--on-accent);font-weight:800}
-.btn.soon{background:var(--surface3);color:var(--text2)}
-.vinyl{width:120px;height:120px;border-radius:50%;margin:0 auto;background:conic-gradient(from 40deg,transparent 0 8%,rgba(255,255,255,.07) 13%,transparent 20% 58%,rgba(255,255,255,.05) 63%,transparent 70%),radial-gradient(circle,var(--bg) 0 3%,var(--accent) 3.5% 17%,#0b0a09 17.5% 19%,transparent 19.5%),repeating-radial-gradient(circle,#1b1916 0 2px,#0c0b0a 2px 4px);box-shadow:0 18px 44px -18px #000;animation:spin 9s linear infinite}
-.small-vinyl{width:64px;height:64px}
-@keyframes spin{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.vinyl{animation:none}}
-footer{margin-top:26px;text-align:center;color:var(--text3);font-size:11.5px}
+.artist .name{display:block;margin-top:12px}
+.cta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:32px;align-items:center;margin:40px 48px 0;padding:32px 0;border-top:1px solid var(--line-strong)}
+.cta h3,.nf-side h3{font-stretch:70%;font-weight:700;font-size:40px;line-height:1}
+.cta p{font-size:16px;color:var(--ink2);margin-top:8px}
+.btn-line{display:inline-flex;align-items:center;height:56px;padding:0 24px;border:1px solid var(--line-strong);font-weight:500;font-size:15px;color:rgba(239,235,228,.75);white-space:nowrap}
+a.btn-line:hover{border-color:var(--ink);color:var(--ink)}
+.btn-ink{display:inline-flex;gap:10px;align-items:center;height:52px;padding:0 22px;margin-top:28px;background:var(--ink);color:var(--bg);font-weight:600;font-size:15px}
+.btn-ink:hover{background:var(--accent)}
+footer{padding:20px 48px 28px}
+footer.line{padding:18px 48px;border-top:1px solid var(--line)}
+.nf{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:56px;padding:48px;min-height:560px}
+.nf-title{font-size:132px;margin-top:16px}
+.nf-side{border-left:1px solid var(--line);padding-left:32px;display:flex;flex-direction:column;justify-content:flex-end}
+.nf-side .grid3{margin-bottom:24px;padding:0}
+.nf-side h3{font-size:32px}
+.nf-side p{font-size:15px;line-height:1.45;color:var(--ink2);margin-top:10px}
+.nf-side .btn-line{height:52px;margin-top:20px;padding:0 18px}
+@media (max-width:819px){
+.top{padding:16px 20px}
+.brand{font-size:26px}
+.top .mono{font-size:9.5px;text-align:right}
+.hero,.hero.round{grid-template-columns:minmax(0,1fr);gap:24px;padding:20px 20px 32px}
+.hero.round .art{max-width:280px}
+.title{font-size:clamp(52px,16vw,96px)}
+.title.xl{font-size:clamp(56px,17vw,104px)}
+.byline{font-size:19px}
+.desc{font-size:16px;margin-top:14px}
+.score{margin-top:28px}
+.score.split{grid-template-columns:minmax(0,1fr);gap:20px;margin-top:28px}
+.big{font-size:84px}
+.block{padding:0 20px}
+.comment{grid-template-columns:64px minmax(0,1fr);gap:6px 16px;padding:18px 0}
+.comment .num-big{grid-row:span 2;font-size:48px}
+.quote{font-size:21px}
+.big-quote{font-size:24px}
+.reply{grid-template-columns:minmax(0,1fr);gap:4px}
+.reply-text{font-size:16px}
+.item,.rank{gap:14px}
+.item{grid-template-columns:48px minmax(0,1fr) auto}
+.item img{width:48px;height:48px}
+.item-title,.rank-title{font-size:16px}
+.rank{grid-template-columns:56px minmax(0,1fr) auto}
+.num{font-size:28px}
+.num[data-rank="1"]{font-size:60px}
+.num[data-rank="2"],.num[data-rank="3"]{font-size:40px}
+.rank.first .rank-title{font-size:24px}
+.row{grid-template-columns:64px minmax(0,1fr) auto;gap:14px}
+.row img,.row .ph{width:64px;height:64px}
+.row-title{font-size:22px}
+.row-score{font-size:44px}
+.banner{height:160px}
+.stats{margin-top:24px}
+.stat{font-size:28px}
+.stats .mono{font-size:9px}
+.grid3{gap:12px}
+.cta{grid-template-columns:minmax(0,1fr);gap:20px;margin:32px 20px 0;padding:28px 0}
+.cta h3{font-size:32px}
+footer,footer.line{padding:20px}
+.nf{grid-template-columns:minmax(0,1fr);gap:40px;padding:28px 20px;min-height:0}
+.nf-title{font-size:clamp(60px,18vw,110px)}
+.nf-side{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:28px}
+}
 `;
 
-// Tiñe el resplandor con el color de la portada (como PaletteService en la
-// app). Si la imagen no deja leerse (CORS), queda el color de énfasis.
-const GLOW_SCRIPT = `(function(){var el=document.querySelector('[data-glow-src]');if(!el)return;var img=new Image();img.crossOrigin='anonymous';img.onload=function(){try{var c=document.createElement('canvas');c.width=c.height=12;var x=c.getContext('2d');x.drawImage(img,0,0,12,12);var d=x.getImageData(0,0,12,12).data,r=0,g=0,b=0,n=0;for(var i=0;i<d.length;i+=4){var w=Math.max(d[i],d[i+1],d[i+2])-Math.min(d[i],d[i+1],d[i+2])+8;r+=d[i]*w;g+=d[i+1]*w;b+=d[i+2]*w;n+=w;}document.body.style.setProperty('--glow','rgb('+Math.round(r/n)+','+Math.round(g/n)+','+Math.round(b/n)+')');}catch(e){}};img.src=el.getAttribute('data-glow-src');})();`;
+// El color de la portada, como la app: el dominante (24 tonalidades más un
+// grupo para los grises, con más peso a lo saturado) va a la franja, y su
+// tono claro (la misma tonalidad con luminosidad 0,76–0,86, `coverTone`) a
+// la nota, el artista y el histograma. Si la imagen no deja leerse (CORS),
+// queda el énfasis.
+const TONE_SCRIPT = `(function(){var src=document.body.getAttribute('data-tone-src');if(!src)return;var img=new Image();img.crossOrigin='anonymous';img.onload=function(){try{var S=48,cv=document.createElement('canvas');cv.width=cv.height=S;var x=cv.getContext('2d');x.drawImage(img,0,0,S,S);var d=x.getImageData(0,0,S,S).data,B=25,w=[],R=[],G=[],Bl=[];for(var k=0;k<B;k++){w[k]=0;R[k]=0;G[k]=0;Bl[k]=0;}for(var i=0;i<d.length;i+=4){var r=d[i]/255,g=d[i+1]/255,b=d[i+2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,s=mx===mn?0:(l>.5?(mx-mn)/(2-mx-mn):(mx-mn)/(mx+mn));if(l<.08||l>.94)continue;var h=0;if(mx!==mn){if(mx===r)h=((g-b)/(mx-mn)+(g<b?6:0))*60;else if(mx===g)h=((b-r)/(mx-mn)+2)*60;else h=((r-g)/(mx-mn)+4)*60;}var gray=s<.12,wt=.12+(gray?0:s*(1-Math.abs(l-.5))),k2=gray?24:Math.floor(h/360*24)%24;w[k2]+=wt;R[k2]+=d[i]*wt;G[k2]+=d[i+1]*wt;Bl[k2]+=d[i+2]*wt;}var best=-1,bw=0;for(k=0;k<B;k++)if(w[k]>bw){bw=w[k];best=k;}if(best<0)return;var cr=R[best]/bw,cg=G[best]/bw,cb=Bl[best]/bw;function lin(v){v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4);}var lr=lin(cr),lg=lin(cg),lb=lin(cb),L1=Math.cbrt(.4122214708*lr+.5363325363*lg+.0514459929*lb),M1=Math.cbrt(.2119034982*lr+.6806995451*lg+.1073969566*lb),S1=Math.cbrt(.0883024619*lr+.2817188376*lg+.6299787005*lb),L=.2104542553*L1+.793617785*M1-.0040720468*S1,A=1.9779984951*L1-2.428592205*M1+.4505937099*S1,Bb=.0259040371*L1+.7827717662*M1-.808675766*S1,C=Math.sqrt(A*A+Bb*Bb),H=Math.atan2(Bb,A)*180/Math.PI;if(H<0)H+=360;var tl=Math.min(.86,Math.max(.76,L)),tc=C<.02?C*2:Math.min(.15,.6*C+.05);var st=document.body.style;st.setProperty('--stripe','rgb('+Math.round(cr)+','+Math.round(cg)+','+Math.round(cb)+')');st.setProperty('--tone','oklch('+tl.toFixed(3)+' '+tc.toFixed(3)+' '+H.toFixed(1)+')');}catch(e){}};img.src=src;})();`;
 
 // ---------------------------------------------------------------------------
 // Manejador
@@ -780,8 +930,8 @@ const GLOW_SCRIPT = `(function(){var el=document.querySelector('[data-glow-src]'
 
 /**
  * Las 8 portadas más calificadas, para la rejilla de la bienvenida de la
- * app. Son datos públicos (la misma portada de Spotify); se salta los discos
- * sin portada o sin notas.
+ * app (y las tres del 404). Son datos públicos (la misma portada de
+ * Spotify); se salta los discos sin portada o sin notas.
  */
 async function welcomeCovers(db) {
   const snap = await db.collection("albums").orderBy("ratingsCount", "desc").limit(24).get();
@@ -808,6 +958,17 @@ function send(res, status, body) {
   res.set("Cache-Control", "private, max-age=300");
   res.set("Content-Type", "text/html; charset=utf-8");
   res.status(status).send(body);
+}
+
+/** El 404 con tres portadas reales (o los colores planos si fallan). */
+async function sendNotFound(res, status, t, lang, path) {
+  let covers = [];
+  try {
+    covers = (await welcomeCovers(getFirestore())).slice(0, 3);
+  } catch (_) {
+    covers = [];
+  }
+  send(res, status, notFoundPage(t, lang, path, covers));
 }
 
 /**
@@ -842,27 +1003,27 @@ function createWebHandler(deps) {
     const match = path.match(/^\/([ldnau])\/([^/]+)$/);
     try {
       if (!match) {
-        send(res, 404, notFoundPage(t, lang, path));
+        await sendNotFound(res, 404, t, lang, path);
         return;
       }
       let id;
       try {
         id = decodeURIComponent(match[2]);
       } catch (_) {
-        send(res, 404, notFoundPage(t, lang, path));
+        await sendNotFound(res, 404, t, lang, path);
         return;
       }
       const body = await routes[match[1]](getFirestore(), id, t, lang);
       if (!body) {
-        send(res, 404, notFoundPage(t, lang, path));
+        await sendNotFound(res, 404, t, lang, path);
         return;
       }
       send(res, 200, body);
     } catch (err) {
       logger.error("No se pudo armar la página", { path, message: err.message });
-      send(res, 500, notFoundPage(t, lang, path));
+      await sendNotFound(res, 500, t, lang, path);
     }
   };
 }
 
-module.exports = { createWebHandler, pickLang, esc, accentFor, scoreColor, onAccentFor };
+module.exports = { createWebHandler, pickLang, esc, nearestAccent, personTone };
