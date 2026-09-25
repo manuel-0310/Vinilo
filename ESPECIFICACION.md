@@ -25,6 +25,35 @@ Referencia visual: `Vinilo App.dc.html` (ábrelo en el navegador junto a `suppor
 | `scrim` | `rgba(8,8,7,.72)` | Fondo detrás de un bottom sheet |
 | `accent` | variable, por defecto `oklch(0.7 0.19 38)` (bermellón ≈ `#f0602e`) | Ver abajo |
 
+### Modo claro
+Mismos tokens, solo cambian los valores. Estructura, tipografía y medidas no cambian.
+
+| Token | Oscuro | Claro | Uso |
+|---|---|---|---|
+| `bg` | `#0f0e0d` | `#f3efe7` | Fondo de la app (papel cálido, no blanco puro) |
+| `sheet` | `#171615` | `#fbf9f5` | Bottom sheets y modales |
+| `surface` | `#2a2826` | `#e2ddd3` | Placeholder de fotos / portadas sin cargar |
+| `ink` | `#efebe4` | `#161412` | Texto principal, botón primario neutro |
+| `ink-2` | `rgba(239,235,228,.62)` | `rgba(22,20,18,.68)` | Texto secundario |
+| `ink-3` | `rgba(239,235,228,.58)` | `rgba(22,20,18,.62)` | Etiquetas mono |
+| `ink-4` | `rgba(239,235,228,.50)` | `rgba(22,20,18,.55)` | Terciario, contadores |
+| `line` | `rgba(239,235,228,.14)` | `rgba(22,20,18,.14)` | Separadores principales |
+| `line-soft` | `rgba(239,235,228,.08)` | `rgba(22,20,18,.08)` | Separadores entre filas |
+| `line-strong` | `rgba(239,235,228,.28)` | `rgba(22,20,18,.30)` | Bordes de botones secundarios e inputs |
+| `scrim` | `rgba(8,8,7,.72)` | `rgba(22,20,18,.40)` | Fondo detrás de un bottom sheet |
+| `on-ink` | `#0f0e0d` | `#f3efe7` | Texto sobre botón primario `ink` |
+
+**Acento en modo claro** — se divide en dos tokens:
+- `accent` (rellenos: botones primarios, regla de calificación, barras, línea de pestaña activa, punto de notificación): mismo valor que en oscuro. Texto encima: `#0f0e0d`.
+- `accent-text` (acento usado como texto o línea fina sobre `bg` claro: "Ver todo", notas numéricas, "Siguiendo", borde de input con foco): misma tonalidad y croma, luminosidad `0.52`. Ej.: `oklch(0.7 0.19 38)` → `oklch(0.52 0.19 38)`. En oscuro `accent-text` = `accent`.
+- La opción de paleta `#efebe4` pasa a ser `#161412` en claro (texto encima: `#f3efe7`).
+
+**Otros ajustes en claro**
+- Color de portada (nota grande y artista en detalle de disco): luminosidad ~`0.48` en vez de `0.76`.
+- Regla de calificación: mismas opacidades; números no seleccionados en `ink` (`#161412`).
+- Barra inferior inactiva: `ink` al 55% (igual que oscuro).
+- Ícono de app y splash: se mantienen oscuros en ambos modos.
+
 ### Color de énfasis (variable global)
 Se elige en **Configuración** y se guarda en el perfil. Debe ser un token global (theme/context) porque afecta: botones primarios, enlaces ("Ver todo"), pestaña activa de la barra inferior (línea superior de 2px × 32px), punto de notificaciones, botón "Siguiendo", notas numéricas del inicio y de "Calificado por", barras de gráficas, borde de input con foco, opción seleccionada y el panel de calificar.
 
