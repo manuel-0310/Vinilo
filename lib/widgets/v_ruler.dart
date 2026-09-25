@@ -103,6 +103,7 @@ class RulerCells extends StatelessWidget {
     this.selectedColor,
     this.fill,
     this.numberColor,
+    this.afterNumberColor,
     this.lines = false,
     this.selectedWeight = 600,
   });
@@ -120,6 +121,10 @@ class RulerCells extends StatelessWidget {
 
   /// Color de los números que no están elegidos (por defecto, tinta).
   final Color? numberColor;
+
+  /// Color de los números posteriores a la elegida, si es otro (en el disco
+  /// calificado van apagados).
+  final Color? afterNumberColor;
 
   /// Líneas arriba y abajo (la escala de la bienvenida).
   final bool lines;
@@ -162,7 +167,11 @@ class RulerCells extends StatelessWidget {
                       fontSize,
                       tracking: 0,
                       weight: k == selected ? selectedWeight : 500,
-                      color: k == selected ? c.onAccent : (numberColor ?? c.ink),
+                      color: switch (selected) {
+                        final s? when k == s => c.onAccent,
+                        final s? when afterNumberColor != null && k > s => afterNumberColor,
+                        _ => numberColor ?? c.ink,
+                      },
                     ),
                   ),
                 ),

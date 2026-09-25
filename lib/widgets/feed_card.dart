@@ -187,15 +187,17 @@ class RepliesButton extends StatelessWidget {
 
   final RatingEntry entry;
 
-  /// Otro texto ("Responder" en los comentarios del disco).
+  /// Otro texto para cuando no hay respuestas ("Responder" en los
+  /// comentarios del disco); con respuestas siempre dice cuántas.
   final String? label;
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
     final count = entry.repliesCount;
-    final text = label ??
-        (count == 0 ? context.l10n.feedComment : context.l10n.feedReplies(count));
+    final text = count == 0
+        ? (label ?? context.l10n.feedComment)
+        : context.l10n.feedReplies(count);
     return _MonoAction(
       onTap: () => openThread(
         context,

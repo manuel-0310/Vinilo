@@ -32,6 +32,8 @@ enum VIcon {
   chevronDown,
   signOut,
   send,
+  track,
+  disc,
 }
 
 /// Un ícono de `VIcon` a `size` px. El grosor del trazo escala con el
@@ -191,6 +193,18 @@ const Map<VIcon, _IconSpec> _specs = {
   VIcon.chevronDown: _IconSpec(20, 1.6, [_PathShape('M4 8l6 6 6-6')]),
   VIcon.signOut: _IconSpec(20, 1.6, [_PathShape('M8 4H4v12h4M13 6l4 4-4 4M17 10H8')]),
   VIcon.send: _IconSpec(20, 1.6, [_PathShape('M4 10h12M11 5l5 5-5 5')]),
+  // Las cajas "Canciones" y "Discos" de Nueva lista, del tamaño de las de
+  // Lista y Ranking: una nota, y una funda cuadrada con su disco.
+  VIcon.track: _IconSpec(22, 1.5, [
+    _PathShape('M9 16V4.5l10-2V14'),
+    _CircleShape(6.5, 16, 2.5),
+    _CircleShape(16.5, 14, 2.5),
+  ]),
+  VIcon.disc: _IconSpec(22, 1.5, [
+    _PathShape('M3 3h16v16H3z'),
+    _CircleShape(11, 11, 4.5),
+    _CircleShape(11, 11, 1, fill: true),
+  ]),
 };
 
 class _IconPainter extends CustomPainter {

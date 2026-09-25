@@ -869,7 +869,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get listDescriptionHint => 'Descripción (opcional)';
 
   @override
-  String get listFormKind => 'TIPO';
+  String get listFormKind => 'Tipo';
 
   @override
   String get listKindListHint => 'Sin orden fijo';
@@ -878,7 +878,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get listKindRankingHint => 'Numerado, del 1 en adelante';
 
   @override
-  String get listFormContent => '¿DE QUÉ?';
+  String get listFormContent => 'Contenido';
 
   @override
   String get listTypeTracksHint => 'De cualquier disco';
@@ -1779,4 +1779,84 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get searchClear => 'Borrar búsqueda';
+
+  @override
+  String get albumYourRatingEdit => 'Tu nota · editar';
+
+  @override
+  String albumCommunity(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n notas',
+      one: '1 nota',
+    );
+    return 'Comunidad · $_temp0';
+  }
+
+  @override
+  String get albumTapToChange => 'Toca para cambiar';
+
+  @override
+  String get albumBarsCommunity => 'Barras: comunidad';
+
+  @override
+  String get albumHoldToAdd => 'Mantén pulsada para agregar';
+
+  @override
+  String get albumFriendsAverage => 'Promedio amigos';
+
+  @override
+  String get albumTapPhoto => 'Toca una foto para ver su calificación';
+
+  @override
+  String get albumFeaturedComments => 'Comentarios destacados';
+
+  @override
+  String albumCommentsShown(int shown, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total comentarios',
+      one: '1 comentario',
+    );
+    return '$shown de $_temp0';
+  }
+
+  @override
+  String get albumSeeArtist => 'Ver artista';
+
+  @override
+  String get ratingSavedShort => 'Nota guardada';
+
+  @override
+  String get rateSheetHint => 'Toca o desliza';
+
+  @override
+  String get rateSheetSaveMine => 'Guardar mi nota';
+
+  @override
+  String pickerOverlineTrack(String name) {
+    return 'Canción · $name';
+  }
+
+  @override
+  String pickerOverlineAlbum(String name) {
+    return 'Disco · $name';
+  }
+
+  @override
+  String get listFormName => 'Nombre';
+
+  @override
+  String get listFormDescription => 'Descripción';
+
+  @override
+  String get listFormOptional => 'Opcional';
+
+  @override
+  String get artistSortBest => 'Mejor calificados';
+
+  @override
+  String get artistNoRatings => 'Sin notas';
 }

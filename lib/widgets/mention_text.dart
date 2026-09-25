@@ -52,11 +52,11 @@ class _MentionTextState extends State<MentionText> {
         else
           TextSpan(
             text: piece.text,
-            // Manrope es variable: el grosor va en `fontVariations`.
+            // Archivo es variable: el grosor va también en `fontVariations`.
             style: TextStyle(
               color: c.accent,
-              fontWeight: FontWeight.w700,
-              fontVariations: const [FontVariation('wght', 700)],
+              fontWeight: FontWeight.w600,
+              fontVariations: const [FontVariation('wdth', 100), FontVariation('wght', 600)],
             ),
             recognizer: _tapFor(piece.handle!),
           ),

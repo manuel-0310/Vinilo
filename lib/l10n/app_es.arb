@@ -534,10 +534,10 @@
   "listFormSubtitle": "Un ranking va numerado y se ordena arrastrando.",
   "listNameHint": "Nombre de la lista",
   "listDescriptionHint": "Descripción (opcional)",
-  "listFormKind": "TIPO",
+  "listFormKind": "Tipo",
   "listKindListHint": "Sin orden fijo",
   "listKindRankingHint": "Numerado, del 1 en adelante",
-  "listFormContent": "¿DE QUÉ?",
+  "listFormContent": "Contenido",
   "listTypeTracksHint": "De cualquier disco",
   "listTypeAlbumsHint": "Álbumes completos",
   "listCreate": "Crear lista",
@@ -1187,5 +1187,56 @@
       }
     }
   },
-  "searchClear": "Borrar búsqueda"
+  "searchClear": "Borrar búsqueda",
+  "albumYourRatingEdit": "Tu nota · editar",
+  "albumCommunity": "Comunidad · {n, plural, =1{1 nota} other{{n} notas}}",
+  "@albumCommunity": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "albumTapToChange": "Toca para cambiar",
+  "albumBarsCommunity": "Barras: comunidad",
+  "albumHoldToAdd": "Mantén pulsada para agregar",
+  "albumFriendsAverage": "Promedio amigos",
+  "albumTapPhoto": "Toca una foto para ver su calificación",
+  "albumFeaturedComments": "Comentarios destacados",
+  "albumCommentsShown": "{shown} de {total, plural, =1{1 comentario} other{{total} comentarios}}",
+  "@albumCommentsShown": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "albumSeeArtist": "Ver artista",
+  "ratingSavedShort": "Nota guardada",
+  "rateSheetHint": "Toca o desliza",
+  "rateSheetSaveMine": "Guardar mi nota",
+  "pickerOverlineTrack": "Canción · {name}",
+  "@pickerOverlineTrack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerOverlineAlbum": "Disco · {name}",
+  "@pickerOverlineAlbum": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listFormName": "Nombre",
+  "listFormDescription": "Descripción",
+  "listFormOptional": "Opcional",
+  "artistSortBest": "Mejor calificados",
+  "artistNoRatings": "Sin notas"
 }

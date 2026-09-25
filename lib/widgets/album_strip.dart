@@ -19,12 +19,16 @@ class AlbumStrip extends StatelessWidget {
     this.averages = const {},
     this.size = 136,
     this.keyPrefix = 'strip',
+    this.yearOnly = false,
   });
 
   final List<Album> albums;
   final String heroPrefix;
   final Map<String, double> averages;
   final double size;
+
+  /// Debajo del título solo el año ("Más de…", donde el artista ya se sabe).
+  final bool yearOnly;
 
   /// Llaves de prueba: `{keyPrefix}-N`.
   final String keyPrefix;
@@ -53,6 +57,7 @@ class AlbumStrip extends StatelessWidget {
                 album: album,
                 average: averages[album.id],
                 heroTag: heroTag,
+                yearOnly: yearOnly,
               ),
             ),
           );
@@ -72,12 +77,16 @@ class AlbumTile extends StatelessWidget {
     this.average,
     this.heroTag,
     this.subtitleSize = 12,
+    this.yearOnly = false,
   });
 
   final Album album;
   final double? average;
   final String? heroTag;
   final double subtitleSize;
+
+  /// Solo el año debajo del título, sin el artista.
+  final bool yearOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +113,11 @@ class AlbumTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    avg == null ? album.subtitle : album.artist,
+                    yearOnly
+                        ? (album.year == null ? '' : '${album.year}')
+                        : avg == null
+                            ? album.subtitle
+                            : album.artist,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: VText.ui(subtitleSize, color: c.ink3),

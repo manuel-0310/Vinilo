@@ -1,4 +1,4 @@
-# Rediseño de Vinilo: plan de trabajo (continuar desde la fase 2)
+# Rediseño de Vinilo: plan de trabajo (continuar desde la fase 6)
 
 ## Contexto
 
@@ -38,26 +38,26 @@ Manuel solo acepta el rediseño si la app queda **idéntica** al prototipo.
 
 | # | Fase | Estado |
 |---|---|---|
-| 1 | Sistema base (fuentes, tokens, componentes, íconos, barra inferior) | **Hecha** (2026-09-25). Falta que Manuel la revise en el iPhone |
-| 2 | Acceso: Bienvenida, Iniciar sesión, Crear cuenta | **Hecha** (2026-09-25). Falta que Manuel la revise y desplegar `web` (`/portadas`) con su permiso |
-| 3 | Inicio y búsqueda: Inicio, Notificaciones, Buscar, Resultados | **Hecha** (2026-09-25). Falta que Manuel la revise |
-| 4 | Disco: sin calificar, calificado, Calificar, Agregar a una lista, Nueva lista, final | Pendiente |
-| 5 | Perfil de artista | Pendiente |
+| 1 | Sistema base (fuentes, tokens, componentes, íconos, barra inferior) | **Hecha** (2026-09-25). Revisada por Manuel |
+| 2 | Acceso: Bienvenida, Iniciar sesión, Crear cuenta | **Hecha** (2026-09-25). Revisada por Manuel. Falta desplegar `web` (`/portadas`) con su permiso |
+| 3 | Inicio y búsqueda: Inicio, Notificaciones, Buscar, Resultados | **Hecha** (2026-09-25). Revisada por Manuel |
+| 4 | Disco: sin calificar, calificado, Calificar, Agregar a una lista, Nueva lista, final | **Hecha** (2026-09-25). Falta que Manuel la revise |
+| 5 | Perfil de artista | **Hecha** (2026-09-25). Falta que Manuel la revise |
 | 6 | Perfiles: amigo (siguiendo y sin seguir), Mi perfil, Mi perfil · listas | Pendiente |
 | 7 | Lista, Ranking y Configuración | Pendiente |
 | 8 | Web: disco compartido, artista compartido, enlace roto | Pendiente |
 | 9 | Ícono, limpieza y cierre | Pendiente |
 
 **Estado del repo:**
-- el proyecto está en la Mac de Manuel, en `/Users/manuelcastillo/Proyectos Personales/vinilo`;
-- rama `rediseno`, con los cambios de la fase 1 **sin commit**: no se descartan;
-- `flutter analyze` sin avisos y `flutter test` con 148 pruebas en verde (al cerrar la fase 3).
+- el proyecto está en la Mac de Manuel, en `/Users/manuelcastillo/Proyectos Personales/vinilo`, y en GitHub (`manuel-0310/Vinilo`);
+- rama `rediseno`: las fases 1 a 3 están en el commit "Primeras 3 fases del rediseño"; las fases 4 y 5 las hizo un agente en la nube y las subió a `rediseno` (Manuel hace `git pull` para revisarlas);
+- `flutter analyze` sin avisos y `flutter test` con 157 pruebas en verde (al cerrar la fase 5).
 
 **Primer paso del agente que continúa:**
 1. Leer completos este archivo, `CLAUDE.md` y `ESPECIFICACION.md`.
-2. Comprobar que está en la rama `rediseno` y correr `flutter analyze` y `flutter test` para confirmar ese punto de partida.
-3. Preguntarle a Manuel cómo le fue revisando la fase 1 en el iPhone.
-4. Empezar la fase 2 solo cuando él lo diga.
+2. Comprobar que está en la rama `rediseno` (con `git pull`) y correr `flutter analyze` y `flutter test` para confirmar ese punto de partida.
+3. Preguntarle a Manuel cómo le fue revisando las fases 4 y 5 en el iPhone.
+4. Empezar la fase 6 solo cuando él lo diga.
 
 **Cuándo leer cada archivo de diseño:**
 - **Al empezar:** `ESPECIFICACION.md` completo, que es corto.
@@ -211,6 +211,22 @@ Manuel solo acepta el rediseño si la app queda **idéntica** al prototipo.
 - **Datos:** `WebService` (`services.web.welcomeCovers()`, `GET /portadas` de la función `web`), `siblingFunctionUrl` (`util/function_url.dart`), `looksLikeEmail` (`util/email.dart`), `RatingsRepo.popularThisWeek` + `models/popular.dart`, `freshCount` (`models/feed.dart`), `dayGroup` (`util/format.dart`), `AppNotification.parts` (la frase en trozos con negritas), `SpotifyApi.searchArtistsPage` + `ArtistPage`.
 - **Rutas nuevas:** `openPopular` y `openSearchAll(query:, kind:)`.
 - **El prototipo no fija `box-sizing`:** un borde suma al tamaño (el punto de la campana es 8 + 2 de anillo por lado = 12).
+
+### Lo que sumaron las fases 4 y 5: usar esto también
+
+- **Tono de portada:** `PaletteService.dominant` devuelve el color dominante tal cual (sin los límites del resplandor viejo) y los grises van en su propio grupo, así una portada gris da un gris. Se usa `coverTone(color)` para la nota, el artista, el botón y los comentarios, y el color crudo para las celdas de la regla; sin color, el énfasis. `PaletteService.pick` es público para las pruebas (`test/palette_test.dart`).
+- **`RulerCells(afterNumberColor:)`:** los números después de la nota elegida van apagados (tinta al 50 %) en el disco calificado.
+- **`ShareButton(style:, fill:)`:** ya es un `VIconButton` cuadrado con `VIcon.share`; por defecto `filled` (sobre fotos) y `bordered` en pantallas lisas.
+- **`AlbumStrip(yearOnly:)` / `AlbumTile(yearOnly:)`:** debajo del título solo el año ("Más de…").
+- **`RepliesButton(label:)`:** el texto reemplaza solo "Comentar" cuando no hay respuestas; con respuestas siempre dice "N respuestas".
+- **`CommentCard`:** la fila de "Comentarios destacados" (nota en 52 en `tone`, nombre, hora, cita Newsreader 21 entre comillas, ♥ y "Responder"), sin margen a los lados y con `last`. En el hilo, `onReply` y `replyKey` hacen que "Responder" escriba ahí mismo. La usan el disco, "Ver todos" (`comments_screen.dart`) y el hilo.
+- **`VPageHeader(titleKey:, topTrailing:)`:** algo a la derecha del botón de volver (compartir en el hilo).
+- **`showListPicker(overline:)`:** "Canción · Tabú", "Disco · Bocanada" o "3 canciones · Bocanada" sobre el título.
+- **`ScoreHistogram`** (`histogram.dart`) ya dibuja `Histogram10` en énfasis con "1" y "10"; el perfil lo sigue usando hasta la fase 6.
+- **Íconos nuevos:** `VIcon.track` (nota) y `VIcon.disc` (funda con su disco), para las cajas Canciones y Discos de Nueva lista.
+- **`sortDiscography`** (`models/artist_stats.dart`): recientes (el orden de Spotify) o mejor calificados (promedio, luego más notas, sin notas al final).
+- **Hoja de Calificar:** `rating_sheet.dart` ya usa `RatingBars`; `rating_dial.dart` quedó sin uso y se borra en la fase 9. `ratingNoteMaxLength` = 180.
+- **Llaves nuevas:** `rating-close`, `rating-number`, `rating-verdict`, `album-meta`, `album-title`, `album-community`, `album-rate`, `album-ruler`, `album-bar`, `album-buttons`, `album-footer`, `album-retry`, `friends-average`, `more-artist`, `more-N`, `comment-like-N`, `ruler-N`, `reply-left`, `artist-overline`, `artist-name`, `artist-sort`, `artist-retry`. `rate-button` ahora es "Calificar este disco" (ya no hay lápiz flotante); `rating-edit` es "Tu nota · editar" y `rated-N` la nota al lado.
 
 ---
 
@@ -370,7 +386,7 @@ Manuel solo acepta el rediseño si la app queda **idéntica** al prototipo.
 - **Comentarios destacados:** se muestran 2 (antes 3), igual que "2 de N comentarios"; "Ver todos" abre `CommentsScreen`.
 - **Sin diseño:** comentarios completos e hilo (misma fila de comentario; el campo de respuesta es un `LineField` con enviar), selección de canciones (barra plana), menú de listas del disco (`SheetAction` plano) y agregar un disco a una lista.
 
-**Verificación:** `flutter analyze` y `flutter test`.
+**Verificación:** `flutter analyze` y `flutter test` (hecho: 155 pruebas al cerrar la fase 4; nuevas `test/palette_test.dart` y `test/rating_sheet_test.dart`).
 
 **Qué prueba Manuel (`R`):**
 1. Abrir un disco sin nota y revisar la portada, los botones, la meta, la comunidad y el botón.
@@ -404,6 +420,8 @@ Manuel solo acepta el rediseño si la app queda **idéntica** al prototipo.
 - "N discos" sale de `AlbumPage.total`.
 - El tono de cada fila se saca de la portada pequeña, con la caché de `PaletteService`.
 - Se quitan los géneros (Spotify los manda vacíos) y el resplandor.
+
+**Verificación:** `flutter analyze` y `flutter test` (hecho: 157 pruebas; `artist_stats_test.dart` cubre el orden).
 
 **Qué prueba Manuel (`R`):** desde un disco, tocar el artista y revisar el encabezado, la calificación, la discografía, el cambio de orden, que siga cargando al bajar, y compartir.
 
@@ -597,6 +615,13 @@ Van también los ajustes chicos que se anotaron en cada fase: 2 comentarios dest
 - **Suavizado del texto:** difiere en subpíxeles entre Chrome en Mac y Flutter en iOS.
 - **Tema claro:** por ahora se ve igual que el oscuro, hasta que llegue su diseño.
 - **Botones de acceso:** Apple, Google, Términos y Privacidad se ven pero no hacen nada, por decisión de Manuel.
+- **Disco (fase 4):**
+  - el pie muestra el texto de derechos tal como lo manda Spotify ("℗ 1999 …", "(P) 1999 …" o "© …"), y no muestra el sello (el modo desarrollo de Spotify no lo manda);
+  - las canciones con artistas invitados llevan una segunda línea con ellos, que el prototipo no tiene (sus canciones no tienen invitados);
+  - "Comentarios destacados": si un comentario tiene respuestas, dice "N respuestas" en vez de "Responder";
+  - la barra fija aparece con un fundido corto al pasar la portada, y la portada no rebota al tirar hacia abajo (así no se ve el fondo encima);
+  - sin diseño en el prototipo: la selección de canciones (casillas cuadradas y una barra plana abajo), el menú de listas del disco, "Ver todos" los comentarios, el hilo y agregar desde una lista.
+- **Artista (fase 5):** sin notas, el bloque dice "—" y "Sin notas" (el prototipo no tiene ese estado); el tono de cada disco se calcula de su portada pequeña.
 
 ## Verificación (resumen)
 

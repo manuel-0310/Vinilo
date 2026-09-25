@@ -183,6 +183,8 @@ class VPageHeader extends StatelessWidget {
     this.onAction,
     this.actionKey,
     this.titleSize = 50,
+    this.titleKey,
+    this.topTrailing,
   });
 
   final String title;
@@ -192,6 +194,10 @@ class VPageHeader extends StatelessWidget {
   final VoidCallback? onAction;
   final Key? actionKey;
   final double titleSize;
+  final Key? titleKey;
+
+  /// Algo a la derecha del botón de volver (compartir en el hilo).
+  final Widget? topTrailing;
 
   @override
   Widget build(BuildContext context) {
@@ -200,13 +206,16 @@ class VPageHeader extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: VIconButton(
-              key: const ValueKey('back'),
-              icon: VIcon.back,
-              onTap: () => Navigator.of(context).maybePop(),
-            ),
+          child: Row(
+            children: [
+              VIconButton(
+                key: const ValueKey('back'),
+                icon: VIcon.back,
+                onTap: () => Navigator.of(context).maybePop(),
+              ),
+              const Spacer(),
+              ?topTrailing,
+            ],
           ),
         ),
         Padding(
@@ -220,6 +229,7 @@ class VPageHeader extends StatelessWidget {
                   children: [
                     Text(
                       title,
+                      key: titleKey,
                       style: VText.display(titleSize, weight: 800, height: 0.88, tracking: 0),
                     ),
                     if (subtitle != null) ...[

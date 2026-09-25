@@ -1421,7 +1421,7 @@ abstract class AppLocalizations {
   /// No description provided for @listFormKind.
   ///
   /// In es, this message translates to:
-  /// **'TIPO'**
+  /// **'Tipo'**
   String get listFormKind;
 
   /// No description provided for @listKindListHint.
@@ -1439,7 +1439,7 @@ abstract class AppLocalizations {
   /// No description provided for @listFormContent.
   ///
   /// In es, this message translates to:
-  /// **'¿DE QUÉ?'**
+  /// **'Contenido'**
   String get listFormContent;
 
   /// No description provided for @listTypeTracksHint.
@@ -2857,6 +2857,126 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Borrar búsqueda'**
   String get searchClear;
+
+  /// No description provided for @albumYourRatingEdit.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu nota · editar'**
+  String get albumYourRatingEdit;
+
+  /// No description provided for @albumCommunity.
+  ///
+  /// In es, this message translates to:
+  /// **'Comunidad · {n, plural, =1{1 nota} other{{n} notas}}'**
+  String albumCommunity(int n);
+
+  /// No description provided for @albumTapToChange.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca para cambiar'**
+  String get albumTapToChange;
+
+  /// No description provided for @albumBarsCommunity.
+  ///
+  /// In es, this message translates to:
+  /// **'Barras: comunidad'**
+  String get albumBarsCommunity;
+
+  /// No description provided for @albumHoldToAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Mantén pulsada para agregar'**
+  String get albumHoldToAdd;
+
+  /// No description provided for @albumFriendsAverage.
+  ///
+  /// In es, this message translates to:
+  /// **'Promedio amigos'**
+  String get albumFriendsAverage;
+
+  /// No description provided for @albumTapPhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca una foto para ver su calificación'**
+  String get albumTapPhoto;
+
+  /// No description provided for @albumFeaturedComments.
+  ///
+  /// In es, this message translates to:
+  /// **'Comentarios destacados'**
+  String get albumFeaturedComments;
+
+  /// No description provided for @albumCommentsShown.
+  ///
+  /// In es, this message translates to:
+  /// **'{shown} de {total, plural, =1{1 comentario} other{{total} comentarios}}'**
+  String albumCommentsShown(int shown, int total);
+
+  /// No description provided for @albumSeeArtist.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver artista'**
+  String get albumSeeArtist;
+
+  /// No description provided for @ratingSavedShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Nota guardada'**
+  String get ratingSavedShort;
+
+  /// No description provided for @rateSheetHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca o desliza'**
+  String get rateSheetHint;
+
+  /// No description provided for @rateSheetSaveMine.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar mi nota'**
+  String get rateSheetSaveMine;
+
+  /// No description provided for @pickerOverlineTrack.
+  ///
+  /// In es, this message translates to:
+  /// **'Canción · {name}'**
+  String pickerOverlineTrack(String name);
+
+  /// No description provided for @pickerOverlineAlbum.
+  ///
+  /// In es, this message translates to:
+  /// **'Disco · {name}'**
+  String pickerOverlineAlbum(String name);
+
+  /// No description provided for @listFormName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get listFormName;
+
+  /// No description provided for @listFormDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Descripción'**
+  String get listFormDescription;
+
+  /// No description provided for @listFormOptional.
+  ///
+  /// In es, this message translates to:
+  /// **'Opcional'**
+  String get listFormOptional;
+
+  /// No description provided for @artistSortBest.
+  ///
+  /// In es, this message translates to:
+  /// **'Mejor calificados'**
+  String get artistSortBest;
+
+  /// No description provided for @artistNoRatings.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin notas'**
+  String get artistNoRatings;
 }
 
 class _AppLocalizationsDelegate

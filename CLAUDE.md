@@ -11,7 +11,7 @@ App tipo Letterboxd pero para álbumes de música: buscar un álbum, ponerle not
 **La app se está rediseñando para que quede idéntica al prototipo del diseñador** (`Vinilo App.dc.html` + `ESPECIFICACION.md`, copiados en la raíz del proyecto junto con `support.js` y el ícono `viniloicon copy.icon/`). El plan, las decisiones de Manuel, el estado de cada fase y lo que ya existe del sistema nuevo están en **`docs/REDISENO.md`**: leerlo completo antes de tocar cualquier pantalla.
 - **Rama:** se trabaja en `rediseno`.
 - **Qué manda:** donde la sección "Dirección visual" de abajo (fuentes, dial, resplandor, barra Liquid Glass) choque con ese plan o con la especificación, mandan ellos. Esa sección se reescribe al final del rediseño.
-- **Fase 1:** hecha el 2026-09-25 (fuentes Archivo, Plex Mono y Newsreader; tokens nuevos en `ViniloPalette`; componentes `v_*.dart`; barra inferior `VBottomBar`).
+- **Fases hechas (2026-09-25):** 1 (fuentes Archivo, Plex Mono y Newsreader; tokens nuevos en `ViniloPalette`; componentes `v_*.dart`; barra inferior `VBottomBar`), 2 (acceso), 3 (inicio y búsqueda), 4 (disco, Calificar y hojas de listas) y 5 (artista). El estado al día está en la tabla de `docs/REDISENO.md`.
 
 ## Dirección visual (diseño anterior, ver "Rediseño en curso")
 

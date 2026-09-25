@@ -870,7 +870,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listDescriptionHint => 'Description (optional)';
 
   @override
-  String get listFormKind => 'TYPE';
+  String get listFormKind => 'Type';
 
   @override
   String get listKindListHint => 'No fixed order';
@@ -879,7 +879,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listKindRankingHint => 'Numbered, from 1 down';
 
   @override
-  String get listFormContent => 'OF WHAT?';
+  String get listFormContent => 'Content';
 
   @override
   String get listTypeTracksHint => 'From any album';
@@ -1773,4 +1773,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchClear => 'Clear search';
+
+  @override
+  String get albumYourRatingEdit => 'Your rating · edit';
+
+  @override
+  String albumCommunity(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n ratings',
+      one: '1 rating',
+    );
+    return 'Community · $_temp0';
+  }
+
+  @override
+  String get albumTapToChange => 'Tap to change';
+
+  @override
+  String get albumBarsCommunity => 'Bars: community';
+
+  @override
+  String get albumHoldToAdd => 'Press and hold to add';
+
+  @override
+  String get albumFriendsAverage => 'Friends\' average';
+
+  @override
+  String get albumTapPhoto => 'Tap a photo to see their rating';
+
+  @override
+  String get albumFeaturedComments => 'Featured comments';
+
+  @override
+  String albumCommentsShown(int shown, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total comments',
+      one: '1 comment',
+    );
+    return '$shown of $_temp0';
+  }
+
+  @override
+  String get albumSeeArtist => 'See artist';
+
+  @override
+  String get ratingSavedShort => 'Rating saved';
+
+  @override
+  String get rateSheetHint => 'Tap or slide';
+
+  @override
+  String get rateSheetSaveMine => 'Save my rating';
+
+  @override
+  String pickerOverlineTrack(String name) {
+    return 'Song · $name';
+  }
+
+  @override
+  String pickerOverlineAlbum(String name) {
+    return 'Album · $name';
+  }
+
+  @override
+  String get listFormName => 'Name';
+
+  @override
+  String get listFormDescription => 'Description';
+
+  @override
+  String get listFormOptional => 'Optional';
+
+  @override
+  String get artistSortBest => 'Top rated';
+
+  @override
+  String get artistNoRatings => 'No ratings';
 }
