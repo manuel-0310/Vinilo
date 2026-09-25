@@ -50,6 +50,7 @@ class RatingEntry {
     required this.album,
     required this.user,
     this.likedBy = const [],
+    this.repliesCount = 0,
   });
 
   final String id;
@@ -62,6 +63,9 @@ class RatingEntry {
   final Album album;
   final RaterInfo user;
   final List<String> likedBy;
+
+  /// Cuántas respuestas tiene su hilo (`ratings/{id}/replies`).
+  final int repliesCount;
 
   static String docId(String uid, String albumId) => '${uid}_$albumId';
 
@@ -82,6 +86,7 @@ class RatingEntry {
         Map<String, dynamic>.from((d['user'] as Map?) ?? {}),
       ),
       likedBy: List<String>.from((d['likedBy'] as List?) ?? const []),
+      repliesCount: (d['repliesCount'] as num?)?.toInt() ?? 0,
     );
   }
 

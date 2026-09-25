@@ -12,6 +12,7 @@ import '../models/user_profile.dart';
 import '../util/chunks.dart';
 import '../util/streams.dart';
 import 'notifications_repo.dart';
+import 'replies_repo.dart';
 
 /// Notas y agregados por álbum en Firestore.
 ///
@@ -22,10 +23,14 @@ import 'notifications_repo.dart';
 /// Los agregados se mantienen con una transacción para que promedio e
 /// histograma siempre cuadren con las notas.
 class RatingsRepo {
-  RatingsRepo(this._db, this._notifications);
+  RatingsRepo(this._db, this._notifications, {RepliesRepo? replies})
+      : _replies = replies;
 
   final FirebaseFirestore _db;
   final NotificationsRepo _notifications;
+
+  /// Para borrar el hilo de una nota antes que la nota.
+  final RepliesRepo? _replies;
 
   CollectionReference<Map<String, dynamic>> get _ratings =>
       _db.collection('ratings');
@@ -237,10 +242,14 @@ class RatingsRepo {
     });
   }
 
+  /// Borra la nota con su hilo de respuestas (primero el hilo: las reglas
+  /// dejan a la dueña borrarlas mientras la nota existe) y la descuenta del
+  /// disco y de la persona.
   Future<void> remove({required String uid, required String albumId}) async {
     final ratingRef = _ratings.doc(RatingEntry.docId(uid, albumId));
     final albumRef = _albums.doc(albumId);
     final userRef = _users.doc(uid);
+    await _replies?.deleteAllFor(ratingRef.id);
 
     await _db.runTransaction((tx) async {
       final ratingSnap = await tx.get(ratingRef);

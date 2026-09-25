@@ -10,10 +10,12 @@ import '../models/user_profile.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
+import '../util/share_links.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/list_mosaic.dart';
 import '../widgets/misc.dart';
 import '../widgets/photo_picker.dart';
+import '../widgets/share_button.dart';
 import '../widgets/sheet.dart';
 import '../widgets/user_avatar.dart';
 import 'add_to_list_sheet.dart';
@@ -333,16 +335,26 @@ class _ListScreenState extends State<ListScreen> {
             children: [
               _body(context, c, me, list, mine),
               _back(topPad),
-              if (mine)
-                Positioned(
-                  top: topPad + 8,
-                  right: 16,
-                  child: GlassIconButton(
-                    key: const ValueKey('list-menu'),
-                    icon: Icons.more_horiz_rounded,
-                    onTap: () => _ownerMenu(list),
-                  ),
+              Positioned(
+                top: topPad + 8,
+                right: 16,
+                child: Row(
+                  children: [
+                    ShareButton(
+                      key: const ValueKey('share-list'),
+                      message: (l) => shareListMessage(list, l, mine: mine),
+                    ),
+                    if (mine) ...[
+                      const SizedBox(width: 8),
+                      GlassIconButton(
+                        key: const ValueKey('list-menu'),
+                        icon: Icons.more_horiz_rounded,
+                        onTap: () => _ownerMenu(list),
+                      ),
+                    ],
+                  ],
                 ),
+              ),
             ],
           );
         },

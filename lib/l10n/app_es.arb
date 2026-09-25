@@ -961,5 +961,195 @@
         "type": "int"
       }
     }
+  },
+  "notifReply": "{name} respondió a tu nota de {album}: «{text}»",
+  "@notifReply": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "album": {
+        "type": "String"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "notifMention": "{name} te respondió en una nota de {album}: «{text}»",
+  "@notifMention": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "album": {
+        "type": "String"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "threadTitle": "Respuestas",
+  "countReplies": "{n, plural, =0{Sin respuestas} =1{1 respuesta} other{{n} respuestas}}",
+  "@countReplies": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "replyAction": "Responder",
+  "replyHint": "Escribe una respuesta…",
+  "replyHintTo": "Responder a {name}…",
+  "@replyHintTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "replyingTo": "Respondiendo a {handle}",
+  "@replyingTo": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "replySend": "Enviar",
+  "replyDelete": "Borrar respuesta",
+  "replyDeleteHint": "Se quita del hilo para todas las personas.",
+  "replyDeleted": "Respuesta borrada",
+  "replySendFailed": "No se pudo enviar: {error}",
+  "@replySendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "replyDeleteFailed": "No se pudo borrar: {error}",
+  "@replyDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "threadEmptyTitle": "Nadie ha respondido todavía",
+  "threadEmptyBody": "Sé la primera persona en responderle a {name}.",
+  "@threadEmptyBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "threadRatingGoneTitle": "Esta nota ya no existe",
+  "threadRatingGoneBody": "Quien la escribió la borró, y con ella sus respuestas.",
+  "mentionNotFound": "No encontramos a {handle}",
+  "@mentionNotFound": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAction": "Compartir",
+  "linkCopied": "Enlace copiado",
+  "shareListMine": "Mira mi lista «{name}» en Vinilo",
+  "@shareListMine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRankingMine": "Mira mi ranking «{name}» en Vinilo",
+  "@shareRankingMine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareListOf": "Mira la lista «{name}» de {owner} en Vinilo",
+  "@shareListOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "owner": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRankingOf": "Mira el ranking «{name}» de {owner} en Vinilo",
+  "@shareRankingOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "owner": {
+        "type": "String"
+      }
+    }
+  },
+  "shareAlbum": "{album} de {artist}, en Vinilo",
+  "@shareAlbum": {
+    "placeholders": {
+      "album": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRatingMine": "Le di {score}/10 a {album} de {artist} en Vinilo",
+  "@shareRatingMine": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      },
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRatingOf": "{name} le dio {score}/10 a {album} en Vinilo",
+  "@shareRatingOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "score": {
+        "type": "int"
+      },
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "shareArtist": "{artist} en Vinilo: mira cómo califica la comunidad sus discos",
+  "@shareArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "shareProfileMine": "Sigue mi diario de discos en Vinilo",
+  "shareProfileOf": "Mira el diario de discos de {name} en Vinilo",
+  "@shareProfileOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

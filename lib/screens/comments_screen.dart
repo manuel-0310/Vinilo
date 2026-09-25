@@ -102,6 +102,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
                         key: ValueKey('comment-$i'),
                         entry: comments[i],
                         maxLines: null,
+                        index: i,
                       ).animate().fadeIn(delay: (40 * (i % 8)).ms),
                     ),
                   SliverToBoxAdapter(child: SizedBox(height: bottomPad + 30)),

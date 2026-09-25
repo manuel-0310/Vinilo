@@ -17,6 +17,7 @@ import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
 import '../util/search_text.dart';
+import '../util/share_links.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/artist_avatar.dart';
 import '../widgets/diary_row.dart';
@@ -24,6 +25,7 @@ import '../widgets/follow_button.dart';
 import '../widgets/histogram.dart';
 import '../widgets/list_row_tile.dart';
 import '../widgets/misc.dart';
+import '../widgets/share_button.dart';
 import '../widgets/user_avatar.dart';
 import 'list_form_sheet.dart';
 import 'routes.dart';
@@ -358,25 +360,38 @@ class _ProfileBody extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            if (isMe)
-                              Padding(
-                                padding: EdgeInsets.only(top: banner != null ? 42 : 0),
-                                // Editar el perfil vive dentro de Configuración.
-                                child: _HeaderButton(
-                                  key: const ValueKey('settings'),
-                                  icon: Icons.settings_rounded,
-                                  tooltip: context.l10n.settingsTitle,
-                                  onTap: () => openSettings(context),
-                                ),
-                              )
-                            else
-                              Padding(
-                                padding: EdgeInsets.only(top: banner != null ? 42 : 0),
-                                child: FollowButton(
-                                  person: profile.person,
-                                  testKey: 'follow-profile',
-                                ),
+                            Padding(
+                              padding: EdgeInsets.only(top: banner != null ? 42 : 0),
+                              child: Row(
+                                children: [
+                                  Builder(
+                                    builder: (buttonContext) => _HeaderButton(
+                                      key: const ValueKey('share-profile'),
+                                      icon: Icons.ios_share_rounded,
+                                      tooltip: context.l10n.shareAction,
+                                      onTap: () => shareMessage(
+                                        buttonContext,
+                                        shareProfileMessage(profile, context.l10n, mine: isMe),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  if (isMe)
+                                    // Editar el perfil vive dentro de Configuración.
+                                    _HeaderButton(
+                                      key: const ValueKey('settings'),
+                                      icon: Icons.settings_rounded,
+                                      tooltip: context.l10n.settingsTitle,
+                                      onTap: () => openSettings(context),
+                                    )
+                                  else
+                                    FollowButton(
+                                      person: profile.person,
+                                      testKey: 'follow-profile',
+                                    ),
+                                ],
                               ),
+                            ),
                           ],
                         ),
                       ),
@@ -957,7 +972,7 @@ class _FollowCounts extends StatelessWidget {
   }
 }
 
-/// Botón redondo y compacto del encabezado del perfil (editar, configuración).
+/// Botón redondo y compacto del encabezado del perfil (compartir, configuración).
 class _HeaderButton extends StatelessWidget {
   const _HeaderButton({
     super.key,

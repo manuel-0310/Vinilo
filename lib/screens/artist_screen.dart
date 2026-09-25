@@ -10,10 +10,12 @@ import '../services/services.dart';
 import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
+import '../util/share_links.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/artist_avatar.dart';
 import '../widgets/histogram.dart';
 import '../widgets/misc.dart';
+import '../widgets/share_button.dart';
 import 'routes.dart';
 
 /// Ficha de un artista: foto, nombre, géneros, su calificación en Vinilo
@@ -263,6 +265,14 @@ class _ArtistScreenState extends State<ArtistScreen> {
                   key: const ValueKey('back'),
                   icon: Icons.arrow_back_ios_new_rounded,
                   onTap: () => Navigator.of(context).maybePop(),
+                ),
+              ),
+              Positioned(
+                top: topPad + 8,
+                right: 16,
+                child: ShareButton(
+                  key: const ValueKey('share-artist'),
+                  message: (l) => shareArtistMessage(artist, l),
                 ),
               ),
             ],

@@ -2539,6 +2539,192 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{n, plural, =1{seguido} other{seguidos}}'**
   String followingWord(int n);
+
+  /// No description provided for @notifReply.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} respondió a tu nota de {album}: «{text}»'**
+  String notifReply(String name, String album, String text);
+
+  /// No description provided for @notifMention.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} te respondió en una nota de {album}: «{text}»'**
+  String notifMention(String name, String album, String text);
+
+  /// No description provided for @threadTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Respuestas'**
+  String get threadTitle;
+
+  /// No description provided for @countReplies.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =0{Sin respuestas} =1{1 respuesta} other{{n} respuestas}}'**
+  String countReplies(int n);
+
+  /// No description provided for @replyAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Responder'**
+  String get replyAction;
+
+  /// No description provided for @replyHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe una respuesta…'**
+  String get replyHint;
+
+  /// No description provided for @replyHintTo.
+  ///
+  /// In es, this message translates to:
+  /// **'Responder a {name}…'**
+  String replyHintTo(String name);
+
+  /// No description provided for @replyingTo.
+  ///
+  /// In es, this message translates to:
+  /// **'Respondiendo a {handle}'**
+  String replyingTo(String handle);
+
+  /// No description provided for @replySend.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar'**
+  String get replySend;
+
+  /// No description provided for @replyDelete.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar respuesta'**
+  String get replyDelete;
+
+  /// No description provided for @replyDeleteHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Se quita del hilo para todas las personas.'**
+  String get replyDeleteHint;
+
+  /// No description provided for @replyDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Respuesta borrada'**
+  String get replyDeleted;
+
+  /// No description provided for @replySendFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo enviar: {error}'**
+  String replySendFailed(String error);
+
+  /// No description provided for @replyDeleteFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo borrar: {error}'**
+  String replyDeleteFailed(String error);
+
+  /// No description provided for @threadEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nadie ha respondido todavía'**
+  String get threadEmptyTitle;
+
+  /// No description provided for @threadEmptyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sé la primera persona en responderle a {name}.'**
+  String threadEmptyBody(String name);
+
+  /// No description provided for @threadRatingGoneTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta nota ya no existe'**
+  String get threadRatingGoneTitle;
+
+  /// No description provided for @threadRatingGoneBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Quien la escribió la borró, y con ella sus respuestas.'**
+  String get threadRatingGoneBody;
+
+  /// No description provided for @mentionNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos a {handle}'**
+  String mentionNotFound(String handle);
+
+  /// No description provided for @shareAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir'**
+  String get shareAction;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In es, this message translates to:
+  /// **'Enlace copiado'**
+  String get linkCopied;
+
+  /// No description provided for @shareListMine.
+  ///
+  /// In es, this message translates to:
+  /// **'Mira mi lista «{name}» en Vinilo'**
+  String shareListMine(String name);
+
+  /// No description provided for @shareRankingMine.
+  ///
+  /// In es, this message translates to:
+  /// **'Mira mi ranking «{name}» en Vinilo'**
+  String shareRankingMine(String name);
+
+  /// No description provided for @shareListOf.
+  ///
+  /// In es, this message translates to:
+  /// **'Mira la lista «{name}» de {owner} en Vinilo'**
+  String shareListOf(String name, String owner);
+
+  /// No description provided for @shareRankingOf.
+  ///
+  /// In es, this message translates to:
+  /// **'Mira el ranking «{name}» de {owner} en Vinilo'**
+  String shareRankingOf(String name, String owner);
+
+  /// No description provided for @shareAlbum.
+  ///
+  /// In es, this message translates to:
+  /// **'{album} de {artist}, en Vinilo'**
+  String shareAlbum(String album, String artist);
+
+  /// No description provided for @shareRatingMine.
+  ///
+  /// In es, this message translates to:
+  /// **'Le di {score}/10 a {album} de {artist} en Vinilo'**
+  String shareRatingMine(int score, String album, String artist);
+
+  /// No description provided for @shareRatingOf.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} le dio {score}/10 a {album} en Vinilo'**
+  String shareRatingOf(String name, int score, String album);
+
+  /// No description provided for @shareArtist.
+  ///
+  /// In es, this message translates to:
+  /// **'{artist} en Vinilo: mira cómo califica la comunidad sus discos'**
+  String shareArtist(String artist);
+
+  /// No description provided for @shareProfileMine.
+  ///
+  /// In es, this message translates to:
+  /// **'Sigue mi diario de discos en Vinilo'**
+  String get shareProfileMine;
+
+  /// No description provided for @shareProfileOf.
+  ///
+  /// In es, this message translates to:
+  /// **'Mira el diario de discos de {name} en Vinilo'**
+  String shareProfileOf(String name);
 }
 
 class _AppLocalizationsDelegate

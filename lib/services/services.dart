@@ -10,6 +10,7 @@ import 'lists_repo.dart';
 import 'notifications_repo.dart';
 import 'palette.dart';
 import 'ratings_repo.dart';
+import 'replies_repo.dart';
 import 'spotify_api.dart';
 import 'user_repo.dart';
 
@@ -23,6 +24,7 @@ class Services {
     required this.follows,
     required this.notifications,
     required this.lists,
+    required this.replies,
     required this.account,
   });
 
@@ -32,18 +34,26 @@ class Services {
     final notifications = NotificationsRepo(db);
     final follows = FollowRepo(db, notifications);
     final lists = ListsRepo(db, notifications);
+    final replies = RepliesRepo(db, notifications);
     return Services._(
       auth: auth,
       spotify: SpotifyApi(
         baseUrl: SpotifyApi.configuredUrl,
         idToken: auth.idToken,
       ),
-      users: UserRepo(db, FirebaseStorage.instance, follows: follows, lists: lists),
-      ratings: RatingsRepo(db, notifications),
+      users: UserRepo(
+        db,
+        FirebaseStorage.instance,
+        follows: follows,
+        lists: lists,
+        replies: replies,
+      ),
+      ratings: RatingsRepo(db, notifications, replies: replies),
       palette: PaletteService(),
       follows: follows,
       notifications: notifications,
       lists: lists,
+      replies: replies,
       account: AccountService(auth: auth, spotifyUrl: SpotifyApi.configuredUrl),
     );
   }
@@ -56,6 +66,7 @@ class Services {
   final FollowRepo follows;
   final NotificationsRepo notifications;
   final ListsRepo lists;
+  final RepliesRepo replies;
   final AccountService account;
 }
 

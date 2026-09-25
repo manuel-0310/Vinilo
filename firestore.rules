@@ -130,7 +130,9 @@ service cloud.firestore {
         && ratingId == request.auth.uid + '_' + request.resource.data.albumId
         && request.resource.data.uid == request.auth.uid
         && validRating(request.resource.data);
-      // La dueña edita su nota; cualquier cuenta da o quita su "me gusta".
+      // La dueña edita su nota; cualquier cuenta da o quita su "me gusta" y
+      // mueve en uno el contador de respuestas (el mismo lote que crea o
+      // borra la respuesta).
       allow update: if hasAccount() && (
         (resource.data.uid == request.auth.uid
           && request.resource.data.uid == resource.data.uid
@@ -138,8 +140,40 @@ service cloud.firestore {
           && validRating(request.resource.data))
         || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy'])
           && onlyToggledSelf(resource.data.get('likedBy', []), request.resource.data.likedBy))
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['repliesCount'])
+          && (request.resource.data.repliesCount == resource.data.get('repliesCount', 0) + 1
+            || request.resource.data.repliesCount == resource.data.get('repliesCount', 0) - 1))
       );
       allow delete: if hasAccount() && resource.data.uid == request.auth.uid;
+
+      // Respuestas (un solo nivel). Se crean a nombre propio sobre una nota
+      // que existe, con `ratingUid` = su dueña; no se editan (solo se copia
+      // el nombre y la foto nuevos de su autora); las borra su autora o la
+      // dueña de la nota.
+      match /replies/{replyId} {
+        allow read: if signedIn();
+        allow create: if hasAccount()
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() >= 1
+          && request.resource.data.text.size() <= 280
+          && request.resource.data.mentions is list
+          && request.resource.data.mentions.size() <= 20
+          && request.resource.data.ratingUid
+            == get(/databases/$(database)/documents/ratings/$(ratingId)).data.uid;
+        allow update: if hasAccount()
+          && resource.data.uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['user']);
+        allow delete: if hasAccount()
+          && (resource.data.uid == request.auth.uid
+            || resource.data.ratingUid == request.auth.uid);
+      }
+    }
+
+    // Las respuestas de una persona en todos los hilos (propagar su nombre
+    // y su foto): consulta de grupo de colecciones, solo lectura.
+    match /{path=**}/replies/{replyId} {
+      allow read: if signedIn();
     }
 
     // Seguimientos: `{follower}_{followed}`. Cada persona crea o borra solo
@@ -214,7 +248,7 @@ service cloud.firestore {
       return d.from == request.auth.uid
         && d.to is string
         && d.to != request.auth.uid
-        && d.type in ['follow', 'likeRating', 'likeList', 'saveList']
+        && d.type in ['follow', 'likeRating', 'likeList', 'saveList', 'reply', 'mention']
         && d.read == false;
     }
 

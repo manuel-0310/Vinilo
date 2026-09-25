@@ -1560,4 +1560,141 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String notifReply(String name, String album, String text) {
+    return '$name replied to your rating of $album: “$text”';
+  }
+
+  @override
+  String notifMention(String name, String album, String text) {
+    return '$name replied to you on a rating of $album: “$text”';
+  }
+
+  @override
+  String get threadTitle => 'Replies';
+
+  @override
+  String countReplies(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n replies',
+      one: '1 reply',
+      zero: 'No replies',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get replyAction => 'Reply';
+
+  @override
+  String get replyHint => 'Write a reply…';
+
+  @override
+  String replyHintTo(String name) {
+    return 'Reply to $name…';
+  }
+
+  @override
+  String replyingTo(String handle) {
+    return 'Replying to $handle';
+  }
+
+  @override
+  String get replySend => 'Send';
+
+  @override
+  String get replyDelete => 'Delete reply';
+
+  @override
+  String get replyDeleteHint => 'It\'s removed from the thread for everyone.';
+
+  @override
+  String get replyDeleted => 'Reply deleted';
+
+  @override
+  String replySendFailed(String error) {
+    return 'Couldn\'t send: $error';
+  }
+
+  @override
+  String replyDeleteFailed(String error) {
+    return 'Couldn\'t delete: $error';
+  }
+
+  @override
+  String get threadEmptyTitle => 'No replies yet';
+
+  @override
+  String threadEmptyBody(String name) {
+    return 'Be the first to reply to $name.';
+  }
+
+  @override
+  String get threadRatingGoneTitle => 'This rating is gone';
+
+  @override
+  String get threadRatingGoneBody =>
+      'Its author deleted it, along with its replies.';
+
+  @override
+  String mentionNotFound(String handle) {
+    return 'Couldn\'t find $handle';
+  }
+
+  @override
+  String get shareAction => 'Share';
+
+  @override
+  String get linkCopied => 'Link copied';
+
+  @override
+  String shareListMine(String name) {
+    return 'Check out my list “$name” on Vinilo';
+  }
+
+  @override
+  String shareRankingMine(String name) {
+    return 'Check out my ranking “$name” on Vinilo';
+  }
+
+  @override
+  String shareListOf(String name, String owner) {
+    return 'Check out “$name”, a list by $owner on Vinilo';
+  }
+
+  @override
+  String shareRankingOf(String name, String owner) {
+    return 'Check out “$name”, a ranking by $owner on Vinilo';
+  }
+
+  @override
+  String shareAlbum(String album, String artist) {
+    return '$album by $artist, on Vinilo';
+  }
+
+  @override
+  String shareRatingMine(int score, String album, String artist) {
+    return 'I gave $album by $artist a $score/10 on Vinilo';
+  }
+
+  @override
+  String shareRatingOf(String name, int score, String album) {
+    return '$name gave $album a $score/10 on Vinilo';
+  }
+
+  @override
+  String shareArtist(String artist) {
+    return '$artist on Vinilo: see how the community rates their albums';
+  }
+
+  @override
+  String get shareProfileMine => 'Follow my album diary on Vinilo';
+
+  @override
+  String shareProfileOf(String name) {
+    return 'Check out $name\'s album diary on Vinilo';
+  }
 }

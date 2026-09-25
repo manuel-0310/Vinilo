@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show ScaffoldMessenger, SnackBar, Text;
 
 import '../models/album.dart';
 import '../models/artist.dart';
 import '../models/music_list.dart';
 import '../models/rating.dart';
+import '../l10n/l10n.dart';
 import '../services/services.dart';
 import 'album_screen.dart';
 import 'artist_screen.dart';
@@ -13,6 +15,7 @@ import 'follow_list_screen.dart';
 import 'list_screen.dart';
 import 'notifications_screen.dart';
 import 'profile_screen.dart';
+import 'rating_thread_screen.dart';
 import 'settings_screen.dart';
 
 Future<void> openAlbum(
@@ -35,6 +38,39 @@ Future<void> openUser(BuildContext context, String uid) {
         uid: uid,
         isMe: me?.uid == uid,
         standalone: true,
+      ),
+    ),
+  );
+}
+
+/// El perfil de quien tiene ese @usuario (al tocar una mención). Si ya no
+/// existe, lo dice en un aviso.
+Future<void> openUserByHandle(BuildContext context, String handle) async {
+  final uid = await ServicesScope.of(context).users.uidForUsername(handle);
+  if (!context.mounted) return;
+  if (uid == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.mentionNotFound('@$handle'))),
+    );
+    return;
+  }
+  await openUser(context, uid);
+}
+
+/// El hilo de respuestas de una nota. `initial` evita el parpadeo mientras
+/// llega el documento; `compose` abre el teclado para responder de una vez.
+Future<void> openThread(
+  BuildContext context, {
+  required String ratingId,
+  RatingEntry? initial,
+  bool compose = false,
+}) {
+  return Navigator.of(context).push(
+    CupertinoPageRoute(
+      builder: (_) => RatingThreadScreen(
+        ratingId: ratingId,
+        initial: initial,
+        compose: compose,
       ),
     ),
   );

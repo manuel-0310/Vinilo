@@ -14,6 +14,7 @@ import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
 import '../util/ranking.dart';
+import '../util/share_links.dart';
 import '../util/streams.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/album_strip.dart';
@@ -22,6 +23,7 @@ import '../widgets/histogram.dart';
 import '../widgets/misc.dart';
 import '../widgets/rating_sheet.dart';
 import '../widgets/score_widgets.dart';
+import '../widgets/share_button.dart';
 import '../widgets/sheet.dart';
 import '../widgets/user_avatar.dart';
 import 'list_form_sheet.dart';
@@ -611,6 +613,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                             itemBuilder: (_, i) => CommentCard(
                               key: ValueKey('comment-$i'),
                               entry: shown[i],
+                              index: i,
                             ).animate().fadeIn(delay: (40 * i).ms),
                           ),
                           if (hidden > 0)
@@ -705,10 +708,22 @@ class _AlbumScreenState extends State<AlbumScreen> {
               Positioned(
                 top: topPad + 8,
                 right: 16,
-                child: GlassIconButton(
-                  key: const ValueKey('list-actions'),
-                  icon: Icons.playlist_add_rounded,
-                  onTap: _listActions,
+                child: Row(
+                  children: [
+                    // Con nota, se comparte la mía; sin nota, el disco.
+                    ShareButton(
+                      key: const ValueKey('share-album'),
+                      message: (l) => mine != null
+                          ? shareRatingMessage(mine, l, mine: true)
+                          : shareAlbumMessage(album, l),
+                    ),
+                    const SizedBox(width: 8),
+                    GlassIconButton(
+                      key: const ValueKey('list-actions'),
+                      icon: Icons.playlist_add_rounded,
+                      onTap: _listActions,
+                    ),
+                  ],
                 ),
               ),
               // Barra fija abajo mientras se eligen canciones para una lista.

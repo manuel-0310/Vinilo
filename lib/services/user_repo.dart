@@ -13,6 +13,7 @@ import '../models/user_profile.dart';
 import '../util/username.dart';
 import 'follow_repo.dart';
 import 'lists_repo.dart';
+import 'replies_repo.dart';
 
 /// Alguien más tiene ese @usuario.
 class UsernameTakenException implements Exception {
@@ -26,14 +27,21 @@ class UsernameTakenException implements Exception {
 }
 
 class UserRepo {
-  UserRepo(this._db, this._storage, {FollowRepo? follows, ListsRepo? lists})
-      : _follows = follows,
-        _lists = lists;
+  UserRepo(
+    this._db,
+    this._storage, {
+    FollowRepo? follows,
+    ListsRepo? lists,
+    RepliesRepo? replies,
+  })  : _follows = follows,
+        _lists = lists,
+        _replies = replies;
 
   final FirebaseFirestore _db;
   final FirebaseStorage _storage;
   final FollowRepo? _follows;
   final ListsRepo? _lists;
+  final RepliesRepo? _replies;
 
   CollectionReference<Map<String, dynamic>> get _users =>
       _db.collection('users');
@@ -51,6 +59,13 @@ class UserRepo {
   Future<UserProfile?> fetch(String uid) async {
     final snap = await _users.doc(uid).get();
     return snap.exists ? UserProfile.fromDoc(snap) : null;
+  }
+
+  /// De quién es un @usuario (null si nadie lo tiene). Sirve para abrir el
+  /// perfil al tocar una mención.
+  Future<String?> uidForUsername(String username) async {
+    final snap = await _usernames.doc(username.toLowerCase()).get();
+    return snap.data()?['uid'] as String?;
   }
 
   /// True si nadie tiene ese @usuario, o si lo tiene `forUid` (la misma
@@ -216,6 +231,7 @@ class UserRepo {
     );
     await _follows?.propagatePerson(person);
     await _lists?.propagateOwner(person);
+    await _replies?.propagateAuthor(person);
   }
 
   /// Cambia el color de la persona (avatar, resplandor y énfasis de su app)

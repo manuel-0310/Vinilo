@@ -1565,4 +1565,141 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String notifReply(String name, String album, String text) {
+    return '$name respondió a tu nota de $album: «$text»';
+  }
+
+  @override
+  String notifMention(String name, String album, String text) {
+    return '$name te respondió en una nota de $album: «$text»';
+  }
+
+  @override
+  String get threadTitle => 'Respuestas';
+
+  @override
+  String countReplies(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n respuestas',
+      one: '1 respuesta',
+      zero: 'Sin respuestas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get replyAction => 'Responder';
+
+  @override
+  String get replyHint => 'Escribe una respuesta…';
+
+  @override
+  String replyHintTo(String name) {
+    return 'Responder a $name…';
+  }
+
+  @override
+  String replyingTo(String handle) {
+    return 'Respondiendo a $handle';
+  }
+
+  @override
+  String get replySend => 'Enviar';
+
+  @override
+  String get replyDelete => 'Borrar respuesta';
+
+  @override
+  String get replyDeleteHint => 'Se quita del hilo para todas las personas.';
+
+  @override
+  String get replyDeleted => 'Respuesta borrada';
+
+  @override
+  String replySendFailed(String error) {
+    return 'No se pudo enviar: $error';
+  }
+
+  @override
+  String replyDeleteFailed(String error) {
+    return 'No se pudo borrar: $error';
+  }
+
+  @override
+  String get threadEmptyTitle => 'Nadie ha respondido todavía';
+
+  @override
+  String threadEmptyBody(String name) {
+    return 'Sé la primera persona en responderle a $name.';
+  }
+
+  @override
+  String get threadRatingGoneTitle => 'Esta nota ya no existe';
+
+  @override
+  String get threadRatingGoneBody =>
+      'Quien la escribió la borró, y con ella sus respuestas.';
+
+  @override
+  String mentionNotFound(String handle) {
+    return 'No encontramos a $handle';
+  }
+
+  @override
+  String get shareAction => 'Compartir';
+
+  @override
+  String get linkCopied => 'Enlace copiado';
+
+  @override
+  String shareListMine(String name) {
+    return 'Mira mi lista «$name» en Vinilo';
+  }
+
+  @override
+  String shareRankingMine(String name) {
+    return 'Mira mi ranking «$name» en Vinilo';
+  }
+
+  @override
+  String shareListOf(String name, String owner) {
+    return 'Mira la lista «$name» de $owner en Vinilo';
+  }
+
+  @override
+  String shareRankingOf(String name, String owner) {
+    return 'Mira el ranking «$name» de $owner en Vinilo';
+  }
+
+  @override
+  String shareAlbum(String album, String artist) {
+    return '$album de $artist, en Vinilo';
+  }
+
+  @override
+  String shareRatingMine(int score, String album, String artist) {
+    return 'Le di $score/10 a $album de $artist en Vinilo';
+  }
+
+  @override
+  String shareRatingOf(String name, int score, String album) {
+    return '$name le dio $score/10 a $album en Vinilo';
+  }
+
+  @override
+  String shareArtist(String artist) {
+    return '$artist en Vinilo: mira cómo califica la comunidad sus discos';
+  }
+
+  @override
+  String get shareProfileMine => 'Sigue mi diario de discos en Vinilo';
+
+  @override
+  String shareProfileOf(String name) {
+    return 'Mira el diario de discos de $name en Vinilo';
+  }
 }

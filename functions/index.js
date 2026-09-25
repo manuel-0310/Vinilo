@@ -22,8 +22,14 @@
  *
  *   POST /delete   → { ok: true, deleted: {...} } borra la cuenta de quien
  *                    manda el token (exige haber escrito la contraseña hace
- *                    menos de 5 minutos) y todo lo suyo con el Admin SDK.
+ *                    menos de 5 minutos) y todo lo suyo con el Admin SDK:
+ *                    también los hilos de sus notas y sus respuestas en
+ *                    notas ajenas.
  *   GET  /         → { ok: true }
+ *
+ * Vinilo — página web pública (función `web`, en web.js): lo que se comparte
+ * desde la app (/l/, /d/, /n/, /a/, /u/), servido por Firebase Hosting en
+ * https://red-social-c786b.web.app.
  */
 
 const { onRequest } = require("firebase-functions/https");
@@ -33,6 +39,7 @@ const { initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getStorage } = require("firebase-admin/storage");
+const { createWebHandler } = require("./web");
 
 initializeApp();
 
@@ -224,6 +231,11 @@ function pageResult(paging, offset) {
   return { items, total, nextOffset: hasMore ? offset + PAGE_SIZE : null };
 }
 
+/** Ficha de un artista (nombre, foto y géneros). */
+async function getArtist(id) {
+  return normalizeArtist(await spotifyGet(`/artists/${id}`));
+}
+
 // ---------------------------------------------------------------------------
 // Auth: la app manda el ID token del usuario anónimo de Firebase.
 // ---------------------------------------------------------------------------
@@ -284,9 +296,7 @@ async function route(req) {
   if (albumMatch) return getAlbumDetail(albumMatch[1]);
 
   const artistDetailMatch = path.match(/^\/artist\/([A-Za-z0-9]+)$/);
-  if (artistDetailMatch) {
-    return normalizeArtist(await spotifyGet(`/artists/${artistDetailMatch[1]}`));
-  }
+  if (artistDetailMatch) return getArtist(artistDetailMatch[1]);
 
   const artistMatch = path.match(/^\/artist\/([A-Za-z0-9]+)\/albums$/);
   if (artistMatch) {
@@ -393,6 +403,26 @@ function removeRating(db, ref) {
 }
 
 /**
+ * Borra una respuesta (`ratings/{id}/replies/{replyId}`) y baja en uno el
+ * contador `repliesCount` de su nota, en la misma transacción.
+ */
+function removeReply(db, ref) {
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return false;
+    const ratingRef = ref.parent.parent;
+    const rating = await tx.get(ratingRef);
+    if (rating.exists) {
+      tx.update(ratingRef, {
+        repliesCount: Math.max(0, (Number(rating.get("repliesCount")) || 1) - 1),
+      });
+    }
+    tx.delete(ref);
+    return true;
+  });
+}
+
+/**
  * Borra un seguimiento y baja en uno el contador de la otra persona
  * (`followersCount` de a quién seguía o `followingCount` de quien la seguía).
  */
@@ -416,13 +446,24 @@ async function deleteAccountData(uid) {
   const db = getFirestore();
   const deleted = {};
 
-  // 1. Sus notas, ajustando promedios e histogramas de cada disco.
+  // 1. Sus notas con su hilo de respuestas (las de todas las personas),
+  //    ajustando promedios e histogramas de cada disco.
   const ratings = await db.collection("ratings").where("uid", "==", uid).get();
   let ratingsRemoved = 0;
   for (const doc of ratings.docs) {
+    await db.recursiveDelete(doc.ref.collection("replies"));
     if (await removeRating(db, doc.ref)) ratingsRemoved++;
   }
   deleted.ratings = ratingsRemoved;
+
+  // 1b. Sus respuestas en notas de otras personas, bajando el contador de
+  //     cada hilo (índice de grupo de colecciones sobre `replies.uid`).
+  const replies = await db.collectionGroup("replies").where("uid", "==", uid).get();
+  let repliesRemoved = 0;
+  for (const doc of replies.docs) {
+    if (await removeReply(db, doc.ref)) repliesRemoved++;
+  }
+  deleted.replies = repliesRemoved;
 
   // 2. Sus "me gusta" en notas de otras personas.
   const liked = await db.collection("ratings").where("likedBy", "array-contains", uid).get();
@@ -527,4 +568,19 @@ exports.account = onRequest(
       });
     }
   },
+);
+
+// ---------------------------------------------------------------------------
+// Página web pública (lo que se comparte desde la app), ver web.js
+// ---------------------------------------------------------------------------
+
+exports.web = onRequest(
+  {
+    region: "us-central1",
+    secrets: [SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET],
+    maxInstances: 10,
+    memory: "256MiB",
+    timeoutSeconds: 30,
+  },
+  createWebHandler({ getAlbumDetail, getArtist }),
 );

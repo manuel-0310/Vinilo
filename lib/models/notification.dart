@@ -5,13 +5,16 @@ import 'album.dart';
 import 'follow.dart';
 import 'rating.dart';
 
-/// Qué pasó: alguien empezó a seguirme, le gustó mi nota, le gustó mi lista
-/// o guardó mi lista.
+/// Qué pasó: alguien empezó a seguirme, le gustó mi nota, le gustó mi lista,
+/// guardó mi lista, respondió a mi nota o me respondió (me mencionó) en el
+/// hilo de una nota.
 enum NotificationType {
   follow('follow'),
   likeRating('likeRating'),
   likeList('likeList'),
-  saveList('saveList');
+  saveList('saveList'),
+  reply('reply'),
+  mention('mention');
 
   const NotificationType(this.key);
 
@@ -41,6 +44,7 @@ class AppNotification {
     this.ratingId,
     this.listId,
     this.listName,
+    this.snippet,
   });
 
   final String id;
@@ -50,9 +54,12 @@ class AppNotification {
   final DateTime createdAt;
   final bool read;
 
-  /// Disco de la nota (para `likeRating`).
+  /// Disco de la nota (para `likeRating`, `reply` y `mention`).
   final Album? album;
   final String? ratingId;
+
+  /// Un trozo de la respuesta (para `reply` y `mention`).
+  final String? snippet;
 
   /// Lista (para `likeList` y `saveList`).
   final String? listId;
@@ -87,6 +94,7 @@ class AppNotification {
       ratingId: d['ratingId'] as String?,
       listId: d['listId'] as String?,
       listName: d['listName'] as String?,
+      snippet: d['text'] as String?,
     );
   }
 
@@ -104,6 +112,7 @@ class AppNotification {
         if (ratingId != null) 'ratingId': ratingId,
         if (listId != null) 'listId': listId,
         if (listName != null) 'listName': listName,
+        if (snippet != null) 'text': snippet,
       };
 
   /// Frase completa, con el nombre de quien la provocó, en el idioma de
@@ -114,5 +123,13 @@ class AppNotification {
           l.notifLikeRating(from.name, album?.name ?? l.notifSomeAlbum),
         NotificationType.likeList => l.notifLikeList(from.name, listName ?? ''),
         NotificationType.saveList => l.notifSaveList(from.name, listName ?? ''),
+        NotificationType.reply => l.notifReply(
+            from.name, album?.name ?? l.notifSomeAlbum, snippet ?? ''),
+        NotificationType.mention => l.notifMention(
+            from.name, album?.name ?? l.notifSomeAlbum, snippet ?? ''),
       };
+
+  /// Las que llevan al hilo de una nota.
+  bool get opensThread =>
+      type == NotificationType.reply || type == NotificationType.mention;
 }

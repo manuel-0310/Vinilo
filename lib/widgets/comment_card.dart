@@ -9,13 +9,17 @@ import 'feed_card.dart';
 import 'score_widgets.dart';
 import 'user_avatar.dart';
 
-/// Un comentario sobre un disco: quién, cuándo, qué dijo, su nota y el botón
-/// de "me gusta". Al tocar el cuerpo se abre el perfil de la persona.
+/// Un comentario sobre un disco: quién, cuándo, qué dijo, su nota, el "me
+/// gusta" y sus respuestas. Al tocarlo se abre su hilo; la foto y el nombre
+/// llevan al perfil de la persona.
 class CommentCard extends StatelessWidget {
-  const CommentCard({super.key, required this.entry, this.maxLines = 4});
+  const CommentCard({super.key, required this.entry, this.maxLines = 4, this.index});
 
   final RatingEntry entry;
   final int? maxLines;
+
+  /// Posición en la lista; solo sirve para las llaves de prueba.
+  final int? index;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +31,7 @@ class CommentCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => openUser(context, entry.user.uid),
+          onTap: () => openThread(context, ratingId: entry.id, initial: entry),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
             child: Column(
@@ -35,28 +39,38 @@ class CommentCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    UserAvatar(
-                      name: entry.user.name,
-                      color: entry.user.color,
-                      url: entry.user.avatarUrl,
-                      size: 34,
-                    ),
-                    const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            entry.user.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: VText.ui(14, weight: 700),
-                          ),
-                          Text(
-                            timeAgo(entry.updatedAt, context.l10n),
-                            style: VText.ui(11, color: c.text3),
-                          ),
-                        ],
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => openUser(context, entry.user.uid),
+                        child: Row(
+                          children: [
+                            UserAvatar(
+                              name: entry.user.name,
+                              color: entry.user.color,
+                              url: entry.user.avatarUrl,
+                              size: 34,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    entry.user.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: VText.ui(14, weight: 700),
+                                  ),
+                                  Text(
+                                    timeAgo(entry.updatedAt, context.l10n),
+                                    style: VText.ui(11, color: c.text3),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -71,7 +85,16 @@ class CommentCard extends StatelessWidget {
                   style: VText.display(18, italic: true, height: 1.2),
                 ),
                 const SizedBox(height: 10),
-                LikeButton(entry: entry),
+                Row(
+                  children: [
+                    LikeButton(entry: entry),
+                    const SizedBox(width: 8),
+                    RepliesButton(
+                      key: index == null ? null : ValueKey('comment-replies-$index'),
+                      entry: entry,
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

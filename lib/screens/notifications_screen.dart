@@ -105,6 +105,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case NotificationType.saveList:
         final id = n.listId;
         if (id != null) openList(context, listId: id);
+      case NotificationType.reply:
+      case NotificationType.mention:
+        final id = n.ratingId;
+        if (id != null) openThread(context, ratingId: id);
     }
   }
 
@@ -265,6 +269,8 @@ class _NotificationRow extends StatelessWidget {
     Widget? trailing;
     switch (item.type) {
       case NotificationType.likeRating:
+      case NotificationType.reply:
+      case NotificationType.mention:
         trailing = AlbumCover(url: item.album?.smallCover, size: 44, radius: 9);
       case NotificationType.likeList:
       case NotificationType.saveList:

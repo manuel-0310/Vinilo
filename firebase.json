@@ -1,1 +1,97 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"red-social-c786b","appId":"1:409695014933:android:480a41c47c69bb6b05fe1c","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"red-social-c786b","appId":"1:409695014933:ios:637be17ad428bb5c05fe1c","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"red-social-c786b","configurations":{"android":"1:409695014933:android:480a41c47c69bb6b05fe1c","ios":"1:409695014933:ios:637be17ad428bb5c05fe1c","web":"1:409695014933:web:a60e56d0107b71dd05fe1c"}}}}},"functions":[{"source":"functions","codebase":"default","runtime":"nodejs22","ignore":["node_modules",".git","firebase-debug.log","firebase-debug.*.log","*.local"]}],"firestore":{"rules":"firestore.rules","indexes":"firestore.indexes.json"},"storage":{"rules":"storage.rules"}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "red-social-c786b",
+          "appId": "1:409695014933:android:480a41c47c69bb6b05fe1c",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "red-social-c786b",
+          "appId": "1:409695014933:ios:637be17ad428bb5c05fe1c",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "red-social-c786b",
+          "configurations": {
+            "android": "1:409695014933:android:480a41c47c69bb6b05fe1c",
+            "ios": "1:409695014933:ios:637be17ad428bb5c05fe1c",
+            "web": "1:409695014933:web:a60e56d0107b71dd05fe1c"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs22",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "hosting": {
+    "public": "hosting",
+    "ignore": [
+      "firebase.json",
+      "**/.*"
+    ],
+    "cleanUrls": true,
+    "rewrites": [
+      {
+        "source": "/l/**",
+        "function": {
+          "functionId": "web",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/d/**",
+        "function": {
+          "functionId": "web",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/n/**",
+        "function": {
+          "functionId": "web",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/a/**",
+        "function": {
+          "functionId": "web",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/u/**",
+        "function": {
+          "functionId": "web",
+          "region": "us-central1"
+        }
+      }
+    ]
+  }
+}

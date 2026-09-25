@@ -71,7 +71,15 @@ class SheetScaffold extends StatelessWidget {
         const SizedBox(height: 12),
         const SheetHandle(),
         header,
-        if (height == null || scrollable && height == null) body else Expanded(child: body),
+        // Ajustada a su contenido, el cuerpo se desplaza cuando no cabe en
+        // la pantalla (con la biografía, "Editar perfil" ya no cabía y el
+        // botón de guardar quedaba fuera).
+        if (height != null)
+          Expanded(child: body)
+        else if (scrollable)
+          Flexible(child: body)
+        else
+          body,
       ],
     );
 

@@ -128,6 +128,8 @@ class FeedCard extends StatelessWidget {
               Row(
                 children: [
                   LikeButton(key: ValueKey('feed-like-$index'), entry: entry),
+                  const SizedBox(width: 8),
+                  RepliesButton(key: ValueKey('feed-replies-$index'), entry: entry),
                   const Spacer(),
                   Text(
                     Score.label(entry.score, context.l10n).toUpperCase(),
@@ -136,6 +138,49 @@ class FeedCard extends StatelessWidget {
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// El globo de respuestas de una nota, con cuántas tiene: abre su hilo. Si
+/// todavía no tiene ninguna, entra directo a escribir.
+class RepliesButton extends StatelessWidget {
+  const RepliesButton({super.key, required this.entry});
+
+  final RatingEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final count = entry.repliesCount;
+    return Tooltip(
+      message: context.l10n.replyAction,
+      child: Material(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(999),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => openThread(
+            context,
+            ratingId: entry.id,
+            initial: entry,
+            compose: count == 0,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.mode_comment_outlined, size: 16, color: c.text3),
+                if (count > 0) ...[
+                  const SizedBox(width: 6),
+                  Text('$count', style: VText.ui(12, weight: 700, color: c.text3)),
+                ],
+              ],
+            ),
           ),
         ),
       ),
