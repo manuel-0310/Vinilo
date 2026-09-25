@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
 import '../l10n/l10n.dart';
+import '../util/function_url.dart';
 import 'auth_service.dart';
 
 /// Por qué no se pudo borrar la cuenta. La pantalla lo traduce con
@@ -66,12 +67,7 @@ class AccountService {
   /// `ACCOUNT_FN_URL` la fija a mano si algún día cambia de sitio.
   static Uri? endpointFrom({required String override, required String spotifyUrl}) {
     if (override.isNotEmpty) return Uri.parse(override);
-    if (spotifyUrl.isEmpty) return null;
-    final uri = Uri.parse(spotifyUrl);
-    final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
-    if (segments.isEmpty || segments.last != 'spotify') return null;
-    segments[segments.length - 1] = 'account';
-    return uri.replace(pathSegments: segments);
+    return siblingFunctionUrl(spotifyUrl, 'account');
   }
 
   /// Vuelve a comprobar la contraseña (Firebase exige un inicio de sesión

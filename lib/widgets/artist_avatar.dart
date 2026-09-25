@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../models/artist.dart';
 import '../theme/vinilo_theme.dart';
 
-/// Foto redonda de un artista con la inicial de respaldo. Sin `size` ocupa
-/// el ancho disponible (cuadrado).
+/// Foto redonda de un artista (las personas y los artistas son círculos),
+/// con la inicial sobre `surface` si no hay foto. Sin `size` ocupa el
+/// ancho disponible (cuadrado).
 class ArtistAvatar extends StatelessWidget {
   const ArtistAvatar({
     super.key,
@@ -18,21 +19,22 @@ class ArtistAvatar extends StatelessWidget {
   final double? size;
   final String? heroTag;
 
-  /// Con color, la foto lleva una sombra de ese color (ficha del artista).
+  /// Se ignora: el rediseño no tiene sombras. Se conserva mientras las
+  /// pantallas viejas la pasen.
   final Color? shadowColor;
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
     final fallback = Container(
-      color: c.surface2,
+      color: c.surface,
       alignment: Alignment.center,
       child: FittedBox(
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Text(
             artist.name.isEmpty ? '?' : artist.name.characters.first.toUpperCase(),
-            style: VText.display(40, color: c.text2, height: 1),
+            style: VText.ui(40, weight: 600, color: c.ink2, height: 1),
           ),
         ),
       ),
@@ -48,26 +50,6 @@ class ArtistAvatar extends StatelessWidget {
               errorBuilder: (_, _, _) => fallback,
             ),
     );
-    if (shadowColor != null) {
-      child = DecoratedBox(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: shadowColor!.withValues(alpha: 0.45),
-              blurRadius: 40,
-              offset: const Offset(0, 22),
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: child,
-      );
-    }
     if (heroTag != null) child = Hero(tag: heroTag!, child: child);
     if (size != null) {
       return SizedBox(width: size, height: size, child: child);

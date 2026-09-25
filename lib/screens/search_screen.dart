@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../l10n/l10n.dart';
 import '../models/album.dart';
@@ -10,11 +9,15 @@ import '../models/follow.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
-import '../widgets/album_cover.dart';
+import '../widgets/album_grid.dart';
 import '../widgets/artist_avatar.dart';
-import '../widgets/misc.dart';
+import '../widgets/line_field.dart';
 import '../widgets/person_row.dart';
+import '../widgets/v_buttons.dart';
+import '../widgets/v_icons.dart';
+import '../widgets/v_sections.dart';
 import 'routes.dart';
+import 'search_all_screen.dart';
 
 const _suggestions = [
   'Radiohead',
@@ -27,6 +30,12 @@ const _suggestions = [
   'Café Tacvba',
 ];
 
+/// Cuántas búsquedas recientes se muestran (se guardan hasta 8).
+const _recentShown = 4;
+
+/// Buscar: "Buscar" en 56, el campo con la lupa y, sin texto, "Recientes"
+/// (tocar una la vuelve a buscar) y "Para empezar". Con texto, Personas (si
+/// alguien coincide), Artistas y Álbumes, cada uno con "Ver todos".
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -45,7 +54,6 @@ class _SearchScreenState extends State<SearchScreen> {
   List<Artist>? _artists;
   List<PersonInfo>? _people;
   bool _loading = false;
-  bool _loadingMore = false;
   Object? _error;
 
   @override
@@ -71,6 +79,7 @@ class _SearchScreenState extends State<SearchScreen> {
       });
       return;
     }
+    setState(() {}); // Aparece la ×.
     _debounce = Timer(const Duration(milliseconds: 380), () => _search(q));
   }
 
@@ -124,26 +133,6 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  Future<void> _loadMore() async {
-    final next = _page?.nextOffset;
-    if (next == null || _loadingMore) return;
-    setState(() => _loadingMore = true);
-    final id = _requestId;
-    try {
-      final more =
-          await ServicesScope.of(context).spotify.search(_query, offset: next);
-      if (id != _requestId || !mounted) return;
-      setState(() => _page = _page!.merge(more));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.loadMoreFailed(describeError(e, context.l10n)))),
-      );
-    } finally {
-      if (mounted) setState(() => _loadingMore = false);
-    }
-  }
-
   void _submit(String q) {
     final text = q.trim();
     if (text.isEmpty) return;
@@ -170,46 +159,52 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
+    final l = context.l10n;
     final me = CurrentUser.of(context);
     final topPad = MediaQuery.paddingOf(context).top;
+    final people = _people ?? const <PersonInfo>[];
+    final artists = _artists ?? const <Artist>[];
 
     return Scaffold(
       body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(VSpace.page, topPad + 14, VSpace.page, 0),
+              padding: EdgeInsets.fromLTRB(VSpace.page, topPad + 18, VSpace.page, 0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(context.l10n.searchTitle, style: VText.display(42)),
-                  const SizedBox(height: 14),
-                  TextField(
-                    key: const ValueKey('search-field'),
+                  Text(
+                    l.searchTitle,
+                    style: VText.display(56, weight: 800, height: 0.88, tracking: 0),
+                  ),
+                  const SizedBox(height: 18),
+                  LineField(
+                    fieldKey: const ValueKey('search-field'),
                     controller: _controller,
                     focusNode: _focus,
+                    hint: l.searchHint,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     textInputAction: TextInputAction.search,
-                    onChanged: _onChanged,
-                    onSubmitted: _submit,
-                    style: VText.ui(16, weight: 600),
-                    decoration: InputDecoration(
-                      hintText: context.l10n.searchHint,
-                      prefixIcon: Icon(
-                        Icons.search_rounded,
-                        color: c.text3,
-                      ),
-                      suffixIcon: _controller.text.isEmpty
-                          ? null
-                          : IconButton(
-                              onPressed: _clear,
-                              icon: Icon(
-                                Icons.close_rounded,
-                                color: c.text3,
+                    autocorrect: false,
+                    leading: VIconView(VIcon.search, size: 20, color: c.ink),
+                    trailing: _controller.text.isEmpty
+                        ? null
+                        : Pressable(
+                            key: const ValueKey('search-clear'),
+                            onTap: _clear,
+                            builder: (context, pressed) => Semantics(
+                              label: l.searchClear,
+                              button: true,
+                              child: Opacity(
+                                opacity: pressed ? 0.5 : 1,
+                                child: VIconView(VIcon.close, size: 16, color: c.inkA(0.6)),
                               ),
                             ),
-                    ),
+                          ),
+                    onChanged: _onChanged,
+                    onSubmitted: _submit,
                   ),
                 ],
               ),
@@ -218,126 +213,102 @@ class _SearchScreenState extends State<SearchScreen> {
           if (_query.isEmpty)
             SliverToBoxAdapter(
               child: _Suggestions(
-                recent: me.recentSearches,
+                recent: me.recentSearches.take(_recentShown).toList(),
                 onPick: _submit,
               ),
             )
           else if (_error != null)
             SliverToBoxAdapter(
-              child: EmptyState(
-                title: context.l10n.spotifyNoResponse,
-                message: describeError(_error, context.l10n),
-                labelColor: c.danger,
-                action: TextButton(
+              child: VEmptyState(
+                title: l.spotifyNoResponse,
+                message: describeError(_error, l),
+                padding: const EdgeInsets.fromLTRB(VSpace.page, 26, VSpace.page, 24),
+                action: VSecondaryButton(
+                  key: const ValueKey('search-retry'),
+                  label: l.retry,
                   onPressed: () => _search(_query),
-                  child: Text(context.l10n.retry),
                 ),
               ),
             )
           else if (_loading && _page == null)
-            const _GridSkeleton()
+            const SliverPadding(
+              padding: EdgeInsets.only(top: 22),
+              sliver: AlbumGridSkeleton(),
+            )
           else if (_page != null &&
               _page!.items.isEmpty &&
-              (_artists?.isEmpty ?? true) &&
-              (_people?.isEmpty ?? true))
+              artists.isEmpty &&
+              people.isEmpty)
             SliverToBoxAdapter(
-              child: EmptyState(
-                title: context.l10n.searchNothingTitle,
-                message: _query.startsWith('@')
-                    ? context.l10n.searchNoUsername
-                    : context.l10n.searchNothingBody,
+              child: VEmptyState(
+                title: l.searchNothingTitle,
+                message: _query.startsWith('@') ? l.searchNoUsername : l.searchNothingBody,
+                padding: const EdgeInsets.fromLTRB(VSpace.page, 26, VSpace.page, 24),
               ),
             )
           else if (_page != null) ...[
-            if (_people != null && _people!.isNotEmpty)
+            if (people.isNotEmpty)
               SliverToBoxAdapter(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SectionHeader(context.l10n.searchPeople, top: 22),
-                    for (final (i, p) in _people!.indexed)
-                      PersonRow(key: ValueKey('person-hit-$i'), person: p)
-                          .animate()
-                          .fadeIn(delay: (40 * i).ms, duration: 380.ms)
-                          .slideX(begin: 0.05, curve: Curves.easeOutCubic),
-                  ],
-                ),
-              ),
-            if (_artists != null && _artists!.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SectionHeader(
-                      context.l10n.searchArtists,
-                      top: _people != null && _people!.isNotEmpty ? 26 : 22,
+                    VSectionHeader(
+                      l.searchPeople,
+                      line: false,
+                      padding: const EdgeInsets.fromLTRB(VSpace.page, 22, VSpace.page, 10),
                     ),
-                    _ArtistStrip(artists: _artists!),
+                    for (final (i, p) in people.indexed)
+                      PersonRow(
+                        key: ValueKey('person-hit-$i'),
+                        person: p,
+                        trailing: const SizedBox.shrink(),
+                      ),
                   ],
                 ),
               ),
-            if (_page!.items.isNotEmpty)
+            if (artists.isNotEmpty)
               SliverToBoxAdapter(
-                child: SectionHeader(
-                  context.l10n.searchAlbums,
-                  top: (_artists != null && _artists!.isNotEmpty) ||
-                          (_people != null && _people!.isNotEmpty)
-                      ? 26
-                      : 22,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    VSectionHeader(
+                      l.searchArtists,
+                      line: false,
+                      padding: EdgeInsets.fromLTRB(VSpace.page, people.isEmpty ? 22 : 26, VSpace.page, 10),
+                      action: l.seeAllPlural,
+                      onAction: () => openSearchAll(context, query: _query, kind: SearchAllKind.artists),
+                      actionKey: const ValueKey('artists-all'),
+                    ),
+                    _ArtistStrip(artists: artists),
+                  ],
                 ),
               ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(VSpace.page, 0, VSpace.page, 0),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 22,
-                  crossAxisSpacing: 14,
-                  childAspectRatio: 0.76,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) {
-                    final album = _page!.items[i];
-                    return _ResultTile(
-                      key: ValueKey('result-$i'),
-                      album: album,
-                      index: i,
-                      onTap: () {
-                        _remember(_query);
-                        openAlbum(context, album, heroTag: 'search-${album.id}');
-                      },
-                    );
-                  },
-                  childCount: _page!.items.length,
+            if (_page!.items.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: VSectionHeader(
+                  l.searchAlbums,
+                  line: false,
+                  padding: EdgeInsets.fromLTRB(
+                    VSpace.page,
+                    artists.isEmpty && people.isEmpty ? 22 : 26,
+                    VSpace.page,
+                    10,
+                  ),
+                  action: l.seeAllPlural,
+                  onAction: () => openSearchAll(context, query: _query, kind: SearchAllKind.albums),
+                  actionKey: const ValueKey('albums-all'),
                 ),
               ),
-            ),
-            if (_page!.items.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
-                child: Center(
-                  child: _loadingMore
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : _page!.nextOffset == null
-                          ? Text(
-                              _loading ? '' : context.l10n.searchEnd,
-                              style: VText.ui(12, color: c.text3),
-                            )
-                          : Pill(
-                              onTap: _loadMore,
-                              child: Text(
-                                context.l10n.loadMore,
-                                style: VText.ui(13, weight: 700),
-                              ),
-                            ),
-                ),
+              AlbumGrid(
+                albums: _page!.items,
+                heroPrefix: 'search',
+                keyPrefix: 'result',
+                onOpen: (album, heroTag) {
+                  _remember(_query);
+                  openAlbum(context, album, heroTag: heroTag);
+                },
               ),
-            ),
+            ],
           ],
           const SliverToBoxAdapter(
             child: SizedBox(height: VSpace.tabBarClearance),
@@ -348,59 +319,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
-class _ResultTile extends StatelessWidget {
-  const _ResultTile({
-    super.key,
-    required this.album,
-    required this.index,
-    required this.onTap,
-  });
-
-  final Album album;
-  final int index;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AlbumCover(
-            url: album.smallCover,
-            radius: 14,
-            heroTag: 'search-${album.id}',
-          ),
-          const SizedBox(height: 8),
-          Text(
-            album.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: VText.ui(14, weight: 700, height: 1.25),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            album.subtitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: VText.ui(12, color: c.text2, height: 1.3),
-          ),
-        ],
-      ),
-    )
-        .animate()
-        .fadeIn(delay: (35 * (index % 10)).ms, duration: 380.ms)
-        .scale(
-          begin: const Offset(0.96, 0.96),
-          end: const Offset(1, 1),
-          curve: Curves.easeOutCubic,
-        );
-  }
-}
-
-/// Fila horizontal de artistas encontrados: foto redonda y nombre.
+/// Fila horizontal de artistas encontrados: círculo de 80 y el nombre
+/// (13/600) centrado debajo.
 class _ArtistStrip extends StatelessWidget {
   const _ArtistStrip({required this.artists});
 
@@ -409,76 +329,43 @@ class _ArtistStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 124,
+      // Círculo, 8 de aire y dos líneas de 13 × 1,2.
+      height: 80 + 8 + 32,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
         itemCount: artists.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 16),
+        separatorBuilder: (_, _) => const SizedBox(width: 14),
         itemBuilder: (context, i) {
           final a = artists[i];
           return GestureDetector(
             key: ValueKey('artist-hit-$i'),
             onTap: () => openArtist(context, a),
             child: SizedBox(
-              width: 84,
+              width: 80,
               child: Column(
                 children: [
-                  ArtistAvatar(artist: a, size: 84),
+                  ArtistAvatar(artist: a, size: 80),
                   const SizedBox(height: 8),
                   Text(
                     a.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: VText.ui(12, weight: 700, height: 1.2),
+                    style: VText.ui(13, weight: 600, height: 1.2),
                   ),
                 ],
               ),
             ),
-          )
-              .animate()
-              .fadeIn(delay: (40 * i).ms, duration: 380.ms)
-              .slideX(begin: 0.08, curve: Curves.easeOutCubic);
+          );
         },
       ),
     );
   }
 }
 
-class _GridSkeleton extends StatelessWidget {
-  const _GridSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(VSpace.page, 22, VSpace.page, 0),
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 22,
-          crossAxisSpacing: 14,
-          childAspectRatio: 0.76,
-        ),
-        delegate: SliverChildBuilderDelegate(
-          (_, _) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              AspectRatio(aspectRatio: 1, child: Skeleton(radius: 14)),
-              SizedBox(height: 10),
-              Skeleton(width: 120, height: 12, radius: 6),
-              SizedBox(height: 6),
-              Skeleton(width: 80, height: 10, radius: 5),
-            ],
-          ),
-          childCount: 6,
-        ),
-      ),
-    );
-  }
-}
-
+/// Sin texto: "Recientes" (filas de 17 con ↖) y "Para empezar" (nombres
+/// en 30 condensados, separados por "/").
 class _Suggestions extends StatelessWidget {
   const _Suggestions({required this.recent, required this.onPick});
 
@@ -488,57 +375,73 @@ class _Suggestions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(VSpace.page, 28, VSpace.page, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (recent.isNotEmpty) ...[
-            Text(context.l10n.searchRecent, style: VText.label(11, color: c.text3)),
-            const SizedBox(height: 10),
-            for (final q in recent)
-              InkWell(
-                onTap: () => onPick(q),
-                borderRadius: BorderRadius.circular(10),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.history_rounded,
-                        size: 18,
-                        color: c.text3,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(q, style: VText.ui(15, weight: 600)),
-                      ),
-                      Icon(
-                        Icons.north_west_rounded,
-                        size: 16,
-                        color: c.text3,
-                      ),
-                    ],
+    final l = context.l10n;
+    final big = VText.display(30, weight: 700, stretch: 70, height: 1.15, tracking: 0);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (recent.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(VSpace.page, 26, VSpace.page, 8),
+            child: VMono(l.searchRecent),
+          ),
+          for (final (i, q) in recent.indexed)
+            Pressable(
+              key: ValueKey('recent-$i'),
+              onTap: () => onPick(q),
+              builder: (context, pressed) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 12),
+                decoration: BoxDecoration(
+                  color: pressed ? c.inkA(0.04) : null,
+                  border: Border(
+                    top: BorderSide(color: c.lineSoft),
+                    bottom: i == recent.length - 1
+                        ? BorderSide(color: c.lineSoft)
+                        : BorderSide.none,
                   ),
                 ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        q,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: VText.ui(17),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    VIconView(VIcon.arrowUpLeft, size: 14, color: c.placeholder),
+                  ],
+                ),
               ),
-            const SizedBox(height: 26),
-          ],
-          Text(context.l10n.searchSuggestions, style: VText.label(11, color: c.text3)),
-          const SizedBox(height: 12),
-          Wrap(
+            ),
+        ],
+        Padding(
+          padding: EdgeInsets.fromLTRB(VSpace.page, recent.isEmpty ? 26 : 30, VSpace.page, 10),
+          child: VMono(l.searchSuggestions),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+          child: Wrap(
             spacing: 10,
-            runSpacing: 10,
+            runSpacing: 2,
             children: [
-              for (final (i, s) in _suggestions.indexed)
-                Pill(
+              for (final (i, s) in _suggestions.indexed) ...[
+                if (i > 0) Text('/', style: big.copyWith(color: c.inkA(0.3))),
+                Pressable(
+                  key: ValueKey('suggestion-$i'),
                   onTap: () => onPick(s),
-                  child: Text(s, style: VText.ui(14, weight: 600)),
-                ).animate().fadeIn(delay: (40 * i).ms, duration: 350.ms),
+                  builder: (context, pressed) => Text(
+                    s,
+                    style: big.copyWith(color: pressed ? c.accent : c.ink),
+                  ),
+                ),
+              ],
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

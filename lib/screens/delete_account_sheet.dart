@@ -128,10 +128,10 @@ class _DeleteAccountState extends State<_DeleteAccount> {
               onSubmitted: (_) => _delete(),
               style: VText.ui(16, weight: 600),
               decoration: InputDecoration(
-                hintText: l10n.authPasswordHint,
+                hintText: l10n.authPasswordLabel,
                 prefixIcon: Icon(Icons.lock_outline_rounded, color: c.text3),
                 suffixIcon: IconButton(
-                  tooltip: _obscure ? l10n.authShowPassword : l10n.authHidePassword,
+                  tooltip: _obscure ? l10n.authShow : l10n.authHide,
                   onPressed: () => setState(() => _obscure = !_obscure),
                   icon: Icon(
                     _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,

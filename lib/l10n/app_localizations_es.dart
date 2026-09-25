@@ -212,22 +212,22 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get score1 => 'Insufrible';
+  String get score1 => 'Terrible';
 
   @override
-  String get score2 => 'Malo';
+  String get score2 => 'Muy malo';
 
   @override
-  String get score3 => 'Flojo';
+  String get score3 => 'Malo';
 
   @override
-  String get score4 => 'Meh';
+  String get score4 => 'Flojo';
 
   @override
   String get score5 => 'Regular';
 
   @override
-  String get score6 => 'Está bien';
+  String get score6 => 'Aceptable';
 
   @override
   String get score7 => 'Bueno';
@@ -323,23 +323,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notificationsTitle => 'Notificaciones';
 
   @override
-  String authPasswordNewHint(int n) {
-    return 'Contraseña (mínimo $n caracteres)';
-  }
-
-  @override
-  String get authPasswordHint => 'Contraseña';
-
-  @override
-  String get authEmailHint => 'Correo';
-
-  @override
-  String get authShowPassword => 'Mostrar contraseña';
-
-  @override
-  String get authHidePassword => 'Ocultar contraseña';
-
-  @override
   String get authForgotPassword => '¿Olvidaste tu contraseña?';
 
   @override
@@ -412,30 +395,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rateSheetDelete => 'Borrar nota';
 
   @override
-  String get usernameCurrent => 'Ese es tu @usuario actual.';
-
-  @override
-  String get usernameChecking => 'Comprobando…';
-
-  @override
-  String usernameAvailable(String username) {
-    return '@$username está libre.';
-  }
-
-  @override
   String get usernameOffline => 'No se pudo comprobar. Revisa tu conexión.';
 
   @override
   String get usernameHint => 'tu_usuario';
-
-  @override
-  String get welcomeTitleStart => 'Tu diario de ';
-
-  @override
-  String get welcomeTitleAccent => 'discos';
-
-  @override
-  String get welcomeTitleEnd => ' empieza aquí.';
 
   @override
   String get welcomeBody =>
@@ -453,22 +416,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get signInTitleStart => 'Hola de ';
+  String get signInNoAccount => '¿No tienes cuenta? ';
 
   @override
-  String get signInTitleAccent => 'nuevo';
-
-  @override
-  String get signInTitleEnd => '.';
-
-  @override
-  String get signInSubtitle => 'Entra con tu correo y tu contraseña.';
-
-  @override
-  String get signInNoAccount => '¿Aún no tienes cuenta? ';
-
-  @override
-  String get signInCreateOne => 'Créala';
+  String get signInCreateOne => 'Crear cuenta';
 
   @override
   String get signIn => 'Iniciar sesión';
@@ -484,35 +435,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get send => 'Enviar';
 
   @override
-  String get signUpTitleStart => 'Crea tu ';
-
-  @override
-  String get signUpTitleAccent => 'cuenta';
-
-  @override
-  String get signUpTitleEnd => '.';
-
-  @override
-  String get signUpSubtitle =>
-      'Con tu correo y una contraseña. Después eliges tu nombre, tu color y tu @usuario.';
-
-  @override
   String get signUpHaveAccount => '¿Ya tienes cuenta? ';
 
   @override
-  String get signUpSignIn => 'Inicia sesión';
+  String get signUpSignIn => 'Iniciar sesión';
 
   @override
   String get continueLabel => 'Continuar';
-
-  @override
-  String get usernameTitleStart => 'Elige tu ';
-
-  @override
-  String get usernameTitleAccent => '@usuario';
-
-  @override
-  String get usernameTitleEnd => '.';
 
   @override
   String usernameSubtitle(int min, int max) {
@@ -540,17 +469,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get linkOtherConfirm => 'Entrar de todos modos';
 
   @override
-  String get linkTitleStart => 'Guarda tu ';
-
-  @override
-  String get linkTitleAccent => 'cuenta';
-
-  @override
-  String linkTitleEnd(String name) {
-    return ', $name.';
-  }
-
-  @override
   String linkSubtitle(int n) {
     String _temp0 = intl.Intl.pluralLogic(
       n,
@@ -566,19 +484,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get linkSubmit => 'Guardar mi cuenta';
-
-  @override
-  String get onboardingTitleStart => 'Así te ';
-
-  @override
-  String get onboardingTitleAccent => 'verán';
-
-  @override
-  String get onboardingTitleEnd => '.';
-
-  @override
-  String get onboardingSubtitle =>
-      'Tu nombre, tu color y un @usuario único para que te encuentren. Todo se puede cambiar después.';
 
   @override
   String onboardingSignedInAs(String email) {
@@ -731,15 +636,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bannerPlaceholder => 'Foto de fondo';
 
   @override
-  String get homePopular => 'Popular';
-
-  @override
-  String get homeActivity => 'Actividad';
-
-  @override
-  String get homeActivitySubtitle => 'De tus amigos';
-
-  @override
   String get homeFollowTitle => 'Sigue a tus amigos';
 
   @override
@@ -795,13 +691,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get searchEnd => 'Eso es todo lo que encontró Spotify';
 
   @override
-  String get loadMore => 'Cargar más';
+  String get searchRecent => 'Recientes';
 
   @override
-  String get searchRecent => 'RECIENTES';
-
-  @override
-  String get searchSuggestions => 'PARA EMPEZAR';
+  String get searchSuggestions => 'Para empezar';
 
   @override
   String get tabHome => 'Inicio';
@@ -817,17 +710,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notificationsAllCaughtUp => 'Todo al día';
-
-  @override
-  String notificationsNew(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: '$n nuevas',
-      one: '1 nueva',
-    );
-    return '$_temp0';
-  }
 
   @override
   String notificationsError(String error) {
@@ -1702,4 +1584,199 @@ class AppLocalizationsEs extends AppLocalizations {
   String shareProfileOf(String name) {
     return 'Mira el diario de discos de $name en Vinilo';
   }
+
+  @override
+  String get welcomeIssue => 'Nº 001';
+
+  @override
+  String get welcomeOverline => 'Diario de discos';
+
+  @override
+  String get welcomeHeadline => 'Tu diario de discos empieza aquí.';
+
+  @override
+  String get signInTitle => 'Iniciar\nsesión';
+
+  @override
+  String get signInIdentifierLabel => 'Correo o usuario';
+
+  @override
+  String get authPasswordLabel => 'Contraseña';
+
+  @override
+  String get authShow => 'Mostrar';
+
+  @override
+  String get authHide => 'Ocultar';
+
+  @override
+  String get signInSubmit => 'Entrar';
+
+  @override
+  String get authOr => 'o';
+
+  @override
+  String get authApple => 'Continuar con Apple';
+
+  @override
+  String get authGoogle => 'Continuar con Google';
+
+  @override
+  String get signInEmailOnly => 'Por ahora entra con tu correo';
+
+  @override
+  String get authEmailMissing => 'Escribe tu correo.';
+
+  @override
+  String get signUpTitle => 'Crear\ncuenta';
+
+  @override
+  String get authNameLabel => 'Nombre';
+
+  @override
+  String get authNameMissing => 'Escribe tu nombre.';
+
+  @override
+  String get authUsernameLabel => 'Usuario';
+
+  @override
+  String get usernameStatusAvailable => 'Disponible';
+
+  @override
+  String get usernameStatusChecking => 'Comprobando…';
+
+  @override
+  String get usernameStatusTaken => 'Ocupado';
+
+  @override
+  String get authEmailLabel => 'Correo';
+
+  @override
+  String get authEmailPlaceholder => 'tu@correo.com';
+
+  @override
+  String authPasswordNewPlaceholder(int n) {
+    return 'Mínimo $n caracteres';
+  }
+
+  @override
+  String authPasswordTooShort(int n) {
+    return 'La contraseña necesita al menos $n caracteres.';
+  }
+
+  @override
+  String get signUpTermsStart => 'Al crear tu cuenta aceptas los ';
+
+  @override
+  String get signUpTerms => 'Términos';
+
+  @override
+  String get signUpTermsMiddle => ' y la ';
+
+  @override
+  String get signUpPrivacy => 'Política de privacidad';
+
+  @override
+  String get signUpTermsEnd => '.';
+
+  @override
+  String get signUpSubmit => 'Crear cuenta';
+
+  @override
+  String get onboardingTitle => 'Completa tu\nperfil';
+
+  @override
+  String get onboardingBody =>
+      'Tu cuenta ya existe. Falta tu nombre y un @usuario para que tus amigos te encuentren.';
+
+  @override
+  String get usernameTitle => 'Elige tu\n@usuario';
+
+  @override
+  String get linkTitle => 'Guarda tu\ncuenta';
+
+  @override
+  String get homePopularWeek => 'Popular esta semana';
+
+  @override
+  String get seeAll => 'Ver todo';
+
+  @override
+  String get seeAllPlural => 'Ver todos';
+
+  @override
+  String get homeFriendsActivity => 'Actividad de tus amigos';
+
+  @override
+  String homeActivityNew(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n nuevas',
+      one: '1 nueva',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get feedLiked => 'Te gusta';
+
+  @override
+  String get feedLike => 'Me gusta';
+
+  @override
+  String get feedComment => 'Comentar';
+
+  @override
+  String feedReplies(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n respuestas',
+      one: '1 respuesta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get popularTitle => 'Popular esta semana';
+
+  @override
+  String get popularSubtitle =>
+      'Los discos más calificados de los últimos 7 días';
+
+  @override
+  String get popularEmptyTitle => 'Semana tranquila';
+
+  @override
+  String get popularEmptyBody =>
+      'Nadie ha calificado un disco en los últimos 7 días.';
+
+  @override
+  String notificationsUnread(int n) {
+    return '$n sin leer';
+  }
+
+  @override
+  String get groupToday => 'Hoy';
+
+  @override
+  String get groupYesterday => 'Ayer';
+
+  @override
+  String get groupThisWeek => 'Esta semana';
+
+  @override
+  String get searchAllArtists => 'Artistas';
+
+  @override
+  String get searchAllAlbums => 'Álbumes';
+
+  @override
+  String searchAllFor(String query) {
+    return 'Resultados de «$query»';
+  }
+
+  @override
+  String get searchClear => 'Borrar búsqueda';
 }

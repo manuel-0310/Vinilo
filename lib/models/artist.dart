@@ -40,3 +40,27 @@ class Artist {
   String? get bestImage => image ?? imageSmall;
   String? get smallImage => imageSmall ?? image;
 }
+
+/// Una página de artistas de la búsqueda (`/artists/search`), como
+/// `AlbumPage` para los discos.
+class ArtistPage {
+  const ArtistPage({required this.items, required this.total, this.nextOffset});
+
+  final List<Artist> items;
+  final int total;
+  final int? nextOffset;
+
+  factory ArtistPage.fromJson(Map<String, dynamic> j) => ArtistPage(
+        items: ((j['items'] as List?) ?? const [])
+            .map((a) => Artist.fromJson(Map<String, dynamic>.from(a as Map)))
+            .toList(),
+        total: (j['total'] as num?)?.toInt() ?? 0,
+        nextOffset: (j['nextOffset'] as num?)?.toInt(),
+      );
+
+  ArtistPage merge(ArtistPage next) => ArtistPage(
+        items: [...items, ...next.items],
+        total: next.total,
+        nextOffset: next.nextOffset,
+      );
+}

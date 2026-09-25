@@ -8,6 +8,8 @@
  *                   sus respuestas
  *   /a/{artistId}   artista con sus discos calificados en Vinilo
  *   /u/{usuario}    perfil (también acepta el uid)
+ *   /portadas       JSON con las portadas de la bienvenida de la app (las 8
+ *                   más calificadas), que la app pide antes de tener cuenta
  *
  * El HTML se arma en el servidor con el Admin SDK y solo lleva lo que se
  * comparte (nunca correos ni uids), con etiquetas Open Graph para que
@@ -776,6 +778,31 @@ const GLOW_SCRIPT = `(function(){var el=document.querySelector('[data-glow-src]'
 // Manejador
 // ---------------------------------------------------------------------------
 
+/**
+ * Las 8 portadas más calificadas, para la rejilla de la bienvenida de la
+ * app. Son datos públicos (la misma portada de Spotify); se salta los discos
+ * sin portada o sin notas.
+ */
+async function welcomeCovers(db) {
+  const snap = await db.collection("albums").orderBy("ratingsCount", "desc").limit(24).get();
+  const covers = [];
+  for (const doc of snap.docs) {
+    const d = doc.data() || {};
+    const url = safeUrl(d.coverSmall || d.cover);
+    if (url && (d.ratingsCount || 0) > 0 && !covers.includes(url)) covers.push(url);
+    if (covers.length === 8) break;
+  }
+  return covers;
+}
+
+function sendCovers(res, status, covers) {
+  // Igual para todo el mundo y cambia poco: una hora de caché.
+  res.set("Cache-Control", "public, max-age=3600");
+  res.set("Content-Type", "application/json; charset=utf-8");
+  res.set("Access-Control-Allow-Origin", "*");
+  res.status(status).send(JSON.stringify({ covers }));
+}
+
 function send(res, status, body) {
   // Solo caché del navegador: la página cambia con el idioma de quien la abre.
   res.set("Cache-Control", "private, max-age=300");
@@ -801,6 +828,15 @@ function createWebHandler(deps) {
     const path = req.path.replace(/\/+$/, "");
     if (req.method !== "GET" && req.method !== "HEAD") {
       res.status(405).send("");
+      return;
+    }
+    if (path === "/portadas") {
+      try {
+        sendCovers(res, 200, await welcomeCovers(getFirestore()));
+      } catch (err) {
+        logger.error("No se pudieron leer las portadas", { message: err.message });
+        sendCovers(res, 500, []);
+      }
       return;
     }
     const match = path.match(/^\/([ldnau])\/([^/]+)$/);

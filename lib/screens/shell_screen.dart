@@ -3,9 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
 import '../services/services.dart';
-import '../theme/vinilo_theme.dart';
-import '../widgets/glass_bar.dart';
-import '../widgets/native_tab_bar.dart';
+import '../widgets/v_bottom_bar.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'search_screen.dart';
@@ -13,8 +11,8 @@ import 'search_screen.dart';
 class ShellScreen extends StatefulWidget {
   const ShellScreen({super.key});
 
-  /// Permite cambiar de pestaña desde fuera (lo usa el driver de pruebas,
-  /// que no puede tocar la barra nativa).
+  /// Permite cambiar de pestaña desde fuera (lo usa el driver de pruebas;
+  /// la barra también tiene las llaves `tab-0` a `tab-2`).
   static final ValueNotifier<int?> tabRequests = ValueNotifier<int?>(null);
 
   /// Pide al shell ejecutar una acción con su BuildContext (el driver de
@@ -83,8 +81,8 @@ class _ShellScreenState extends State<ShellScreen> {
   @override
   Widget build(BuildContext context) {
     final me = CurrentUser.of(context);
+    final l10n = context.l10n;
     return Scaffold(
-      extendBody: true,
       body: IndexedStack(
         index: _index,
         children: [
@@ -93,138 +91,16 @@ class _ShellScreenState extends State<ShellScreen> {
           ProfileScreen(uid: me.uid, isMe: true),
         ],
       ),
+      // La barra del rediseño: texto con una raya de énfasis sobre la
+      // pestaña activa, igual en todas las plataformas (la nativa de iOS 26
+      // quedó registrada en Swift pero ya no se usa).
       bottomNavigationBar: KeyedSubtree(
         key: const ValueKey('tab-bar'),
-        child: NativeTabBar.isSupported
-            ? _nativeBar(context)
-            : _glassBar(context),
-      ),
-    );
-  }
-
-  /// iOS 26+: la barra nativa con Liquid Glass.
-  Widget _nativeBar(BuildContext context) {
-    final c = VColors.of(context);
-    final l10n = context.l10n;
-    return NativeTabBar(
-      // Las etiquetas llegan a iOS al crear la barra: con otro idioma se
-      // vuelve a crear.
-      key: ValueKey('tabbar-${l10n.localeName}'),
-      items: [
-        NativeTab(label: l10n.tabHome, icon: 'house', selectedIcon: 'house.fill'),
-        NativeTab(label: l10n.tabSearch, icon: 'magnifyingglass'),
-        NativeTab(label: l10n.tabProfile, icon: 'person', selectedIcon: 'person.fill'),
-      ],
-      selected: _index,
-      onSelected: _select,
-      tint: c.accent,
-      unselectedTint: c.text2,
-      dark: c.isDark,
-    );
-  }
-
-  /// Respaldo en Dart para iOS 15 a 18, Android y web.
-  Widget _glassBar(BuildContext context) {
-    // Row y no Center: el Scaffold da a esta ranura toda la altura de la
-    // pantalla y un Center la ocuparía entera, dejando la píldora a mitad.
-    return SafeArea(
-      top: false,
-      minimum: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          GlassBar(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _TabItem(
-                    key: const ValueKey('tab-0'),
-                    selected: _index == 0,
-                    label: context.l10n.tabHome,
-                    icon: const Icon(Icons.home_rounded, size: 22),
-                    onTap: () => _select(0),
-                  ),
-                  _TabItem(
-                    key: const ValueKey('tab-1'),
-                    selected: _index == 1,
-                    label: context.l10n.tabSearch,
-                    icon: const Icon(Icons.search_rounded, size: 23),
-                    onTap: () => _select(1),
-                  ),
-                  _TabItem(
-                    key: const ValueKey('tab-2'),
-                    selected: _index == 2,
-                    label: context.l10n.tabProfile,
-                    icon: const Icon(Icons.person_rounded, size: 23),
-                    onTap: () => _select(2),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabItem extends StatelessWidget {
-  const _TabItem({
-    super.key,
-    required this.selected,
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final bool selected;
-  final String label;
-  final Widget icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: EdgeInsets.symmetric(horizontal: selected ? 18 : 16),
-        decoration: BoxDecoration(
-          color: selected
-              ? c.accent.withValues(alpha: 0.16)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(26),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconTheme(
-              data: IconThemeData(
-                color: selected ? c.accent : c.text2,
-              ),
-              child: icon,
-            ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.centerLeft,
-              child: selected
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: Text(
-                        label,
-                        style: VText.ui(13, weight: 700, color: c.accent),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
+        child: VBottomBar(
+          labels: [l10n.tabHome, l10n.tabSearch, l10n.tabProfile],
+          keys: const ['tab-0', 'tab-1', 'tab-2'],
+          selected: _index,
+          onSelected: _select,
         ),
       ),
     );

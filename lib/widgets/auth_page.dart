@@ -1,116 +1,180 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/l10n.dart';
 import '../theme/vinilo_theme.dart';
-import 'misc.dart';
-import 'vinyl_disc.dart';
+import 'v_buttons.dart';
+import 'v_icons.dart';
+import 'v_sections.dart';
 
-/// Andamio de las pantallas de cuenta (bienvenida, crear cuenta, iniciar
-/// sesión, guardar la sesión, elegir @usuario): vinilo girando, un titular
-/// editorial, una explicación breve y el contenido. Con `showBack` pone el
-/// botón de volver en el mismo sitio que el resto de la app.
-class AuthPage extends StatelessWidget {
-  const AuthPage({
+/// Andamio de las pantallas de acceso: Iniciar sesión y Crear cuenta, y las
+/// que no tienen diseño propio con el mismo carácter (completar el perfil,
+/// elegir el @usuario, guardar una sesión anónima). Arriba, volver con
+/// borde; luego "VINILO" en mono, el título condensado de 64 y los campos;
+/// abajo, a 38 del borde, los botones. Si el teclado no deja sitio, todo se
+/// desplaza.
+class AuthScaffold extends StatelessWidget {
+  const AuthScaffold({
     super.key,
     required this.title,
-    required this.child,
-    this.subtitle,
-    this.showBack = false,
-    this.footer,
-    this.leading,
+    required this.body,
+    this.bottom,
+    this.showBack = true,
+    this.bodyTop = 36,
   });
 
-  final Widget title;
-  final String? subtitle;
-  final Widget child;
+  /// Título en dos líneas ("Iniciar\nsesión").
+  final String title;
+
+  /// Los campos, debajo del título.
+  final Widget body;
+
+  /// Los botones de abajo.
+  final Widget? bottom;
+
+  /// Sin volver (las pantallas que son la raíz), el título queda donde
+  /// mismo.
   final bool showBack;
 
-  /// Algo debajo del contenido (enlaces secundarios).
-  final Widget? footer;
+  /// Aire entre el título y los campos (36 al entrar, 32 al crear la
+  /// cuenta).
+  final double bodyTop;
 
-  /// Reemplaza al vinilo (por ejemplo, el avatar de la persona).
-  final Widget? leading;
+  /// Volver (40) más su relleno de arriba (4).
+  static const double _backHeight = 44;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPad = math.max(38.0, MediaQuery.paddingOf(context).bottom + 4);
+    return Scaffold(
+      body: SafeArea(
+        bottom: false,
+        child: CustomScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (showBack)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: VIconButton(
+                          key: const ValueKey('back'),
+                          icon: VIcon.back,
+                          onTap: () => Navigator.of(context).maybePop(),
+                        ),
+                      ),
+                    ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(24, showBack ? 28 : 28 + _backHeight, 24, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        VMono(context.l10n.appName),
+                        const SizedBox(height: 8),
+                        Text(
+                          title,
+                          key: const ValueKey('auth-title'),
+                          style: VText.display(64, weight: 800, height: 0.86, tracking: 0),
+                        ),
+                        SizedBox(height: bodyTop),
+                        body,
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Spacer(),
+                  if (bottom != null)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(24, 0, 24, bottomPad),
+                      child: bottom,
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// La raya con "o" en medio entre "Entrar" y los botones de Apple y Google.
+class AuthDivider extends StatelessWidget {
+  const AuthDivider({super.key});
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    final topPad = MediaQuery.paddingOf(context).top;
-    return Scaffold(
-      body: Stack(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
         children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(24, showBack ? 66 : 32, 24, 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: leading ?? const SpinningVinyl(size: 44),
-                  ),
-                  const SizedBox(height: 30),
-                  DefaultTextStyle.merge(
-                    style: VText.display(42, height: 0.98),
-                    child: title,
-                  ).animate().fadeIn(duration: 450.ms).slideY(begin: 0.06),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 14),
-                    Text(
-                      subtitle!,
-                      style: VText.ui(15, color: c.text2, height: 1.45),
-                    ).animate().fadeIn(delay: 120.ms, duration: 450.ms),
-                  ],
-                  const SizedBox(height: 34),
-                  child.animate().fadeIn(delay: 220.ms, duration: 450.ms),
-                  if (footer != null) ...[
-                    const SizedBox(height: 22),
-                    footer!.animate().fadeIn(delay: 320.ms, duration: 450.ms),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          if (showBack)
-            Positioned(
-              top: topPad + 8,
-              left: 16,
-              child: GlassIconButton(
-                key: const ValueKey('back'),
-                icon: Icons.arrow_back_ios_new_rounded,
-                onTap: () => Navigator.of(context).maybePop(),
-              ),
-            ),
+          Expanded(child: Container(height: 1, color: c.line)),
+          const SizedBox(width: 12),
+          VMono(context.l10n.authOr, size: 10, color: c.ink4),
+          const SizedBox(width: 12),
+          Expanded(child: Container(height: 1, color: c.line)),
         ],
       ),
     );
   }
 }
 
-/// Botón secundario de las pantallas de cuenta: mismo tamaño que el
-/// principal, sobre la segunda superficie.
-class SecondaryButton extends StatelessWidget {
-  const SecondaryButton({super.key, required this.label, required this.onPressed});
+/// "¿No tienes cuenta? Crear cuenta": la pregunta apagada y el enlace
+/// subrayado en tinta, centrados. Toda la línea responde al toque.
+class AuthSwitchLine extends StatelessWidget {
+  const AuthSwitchLine({
+    super.key,
+    required this.question,
+    required this.action,
+    required this.onTap,
+  });
 
-  final String label;
-  final VoidCallback onPressed;
+  final String question;
+  final String action;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    return Material(
-      color: c.surface2,
-      borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onPressed,
-        child: SizedBox(
-          height: 56,
-          child: Center(
-            child: Text(label, style: VText.ui(16, weight: 700, color: c.text)),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Flexible(
+            child: Text(
+              question,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: VText.ui(14, color: c.ink2),
+            ),
           ),
-        ),
+          VTextLink(action, onTap: onTap),
+        ],
       ),
     );
+  }
+}
+
+/// Párrafo de las pantallas de acceso sin diseño propio (15, apagado).
+class AuthParagraph extends StatelessWidget {
+  const AuthParagraph(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Text(text, style: VText.ui(15, color: c.ink2, height: 1.45));
   }
 }

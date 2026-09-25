@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import '../models/album.dart';
 import '../models/feed.dart';
 import '../models/notification.dart';
+import '../models/popular.dart' as popular;
 import '../models/rating.dart';
 import '../models/user_profile.dart';
 import '../util/chunks.dart';
@@ -126,19 +127,18 @@ class RatingsRepo {
     return combineLatestAll(pages).map(friendsByScore);
   }
 
-  Stream<List<AlbumStats>> recentlyRated({int limit = 12}) => _albums
-      .orderBy('lastRatedAt', descending: true)
-      .limit(limit)
-      .snapshots()
-      .map((s) =>
-          s.docs.map(AlbumStats.fromDoc).where((a) => a.count > 0).toList());
-
-  Stream<List<AlbumStats>> mostRated({int limit = 12}) => _albums
-      .orderBy('ratingsCount', descending: true)
-      .limit(limit)
-      .snapshots()
-      .map((s) =>
-          s.docs.map(AlbumStats.fromDoc).where((a) => a.count > 0).toList());
+  /// "Popular esta semana": los discos calificados en los últimos 7 días,
+  /// de más notas a menos. La consulta filtra por `lastRatedAt` (índice de
+  /// un solo campo) y el orden por número de notas se hace en el cliente.
+  Stream<List<AlbumStats>> popularThisWeek({int limit = 12}) {
+    final now = DateTime.now();
+    return _albums
+        .where('lastRatedAt', isGreaterThan: Timestamp.fromDate(now.subtract(popular.popularWindow)))
+        .orderBy('lastRatedAt', descending: true)
+        .limit(200)
+        .snapshots()
+        .map((s) => popular.popularThisWeek(s.docs.map(AlbumStats.fromDoc), now, limit: limit));
+  }
 
   /// Agregados de todos los discos de un artista que alguien haya
   /// calificado (índice de un solo campo: array-contains sobre artistIds).

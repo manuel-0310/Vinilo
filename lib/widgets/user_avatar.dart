@@ -2,8 +2,14 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../theme/oklch.dart';
 import '../theme/vinilo_theme.dart';
 
+/// Avatar de una persona: siempre un círculo. Con foto, la foto; sin foto,
+/// la inicial en tinta sobre su color apagado (`personTone`), o sobre su
+/// color tal cual con la inicial oscura si `filled` (Configuración). Con
+/// `ring`, un aro de 4 px del color del fondo lo separa del banner, por
+/// fuera del círculo (el tamaño total es `size + 8`).
 class UserAvatar extends StatelessWidget {
   const UserAvatar({
     super.key,
@@ -13,6 +19,8 @@ class UserAvatar extends StatelessWidget {
     this.bytes,
     this.size = 40,
     this.ring = false,
+    this.filled = false,
+    this.initialSize,
   });
 
   final String name;
@@ -21,14 +29,27 @@ class UserAvatar extends StatelessWidget {
   final Uint8List? bytes;
   final double size;
   final bool ring;
+  final bool filled;
+
+  /// Tamaño de la inicial cuando no hay foto (por defecto, 39 % del
+  /// avatar; el de 22 del inicio la lleva en 11).
+  final double? initialSize;
+
+  static const double ringWidth = 4;
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     final initial = name.isEmpty ? '?' : name.characters.first.toUpperCase();
     final fallback = Center(
       child: Text(
         initial,
-        style: VText.display(size * 0.52, color: color, height: 1),
+        style: VText.ui(
+          initialSize ?? size * 0.39,
+          weight: filled ? 700 : 600,
+          color: filled ? c.onAccent : c.ink,
+          height: 1,
+        ),
       ),
     );
 
@@ -44,25 +65,22 @@ class UserAvatar extends StatelessWidget {
       );
     }
 
-    Widget avatar = ClipOval(
-      child: ColoredBox(
-        color: color.withValues(alpha: 0.2),
-        child: SizedBox.expand(child: child),
+    Widget avatar = SizedBox.square(
+      dimension: size,
+      child: ClipOval(
+        child: ColoredBox(
+          color: filled ? color : personTone(color),
+          child: SizedBox.expand(child: child),
+        ),
       ),
     );
     if (ring) {
-      // El anillo se pinta encima de la foto. Como borde de la decoración
-      // normal encogía la imagen hacia dentro y dejaba ver el fondo claro
-      // alrededor (los "espacios en blanco" del encabezado del perfil).
-      avatar = DecoratedBox(
-        position: DecorationPosition.foreground,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: color.withValues(alpha: 0.9), width: 2),
-        ),
+      avatar = Container(
+        padding: const EdgeInsets.all(ringWidth),
+        decoration: BoxDecoration(color: c.bg, shape: BoxShape.circle),
         child: avatar,
       );
     }
-    return SizedBox(width: size, height: size, child: avatar);
+    return avatar;
   }
 }
