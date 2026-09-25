@@ -359,25 +359,25 @@ abstract class AppLocalizations {
   /// No description provided for @score1.
   ///
   /// In es, this message translates to:
-  /// **'Insufrible'**
+  /// **'Terrible'**
   String get score1;
 
   /// No description provided for @score2.
   ///
   /// In es, this message translates to:
-  /// **'Malo'**
+  /// **'Muy malo'**
   String get score2;
 
   /// No description provided for @score3.
   ///
   /// In es, this message translates to:
-  /// **'Flojo'**
+  /// **'Malo'**
   String get score3;
 
   /// No description provided for @score4.
   ///
   /// In es, this message translates to:
-  /// **'Meh'**
+  /// **'Flojo'**
   String get score4;
 
   /// No description provided for @score5.
@@ -389,7 +389,7 @@ abstract class AppLocalizations {
   /// No description provided for @score6.
   ///
   /// In es, this message translates to:
-  /// **'Está bien'**
+  /// **'Aceptable'**
   String get score6;
 
   /// No description provided for @score7.
@@ -542,36 +542,6 @@ abstract class AppLocalizations {
   /// **'Notificaciones'**
   String get notificationsTitle;
 
-  /// No description provided for @authPasswordNewHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Contraseña (mínimo {n} caracteres)'**
-  String authPasswordNewHint(int n);
-
-  /// No description provided for @authPasswordHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Contraseña'**
-  String get authPasswordHint;
-
-  /// No description provided for @authEmailHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Correo'**
-  String get authEmailHint;
-
-  /// No description provided for @authShowPassword.
-  ///
-  /// In es, this message translates to:
-  /// **'Mostrar contraseña'**
-  String get authShowPassword;
-
-  /// No description provided for @authHidePassword.
-  ///
-  /// In es, this message translates to:
-  /// **'Ocultar contraseña'**
-  String get authHidePassword;
-
   /// No description provided for @authForgotPassword.
   ///
   /// In es, this message translates to:
@@ -698,24 +668,6 @@ abstract class AppLocalizations {
   /// **'Borrar nota'**
   String get rateSheetDelete;
 
-  /// No description provided for @usernameCurrent.
-  ///
-  /// In es, this message translates to:
-  /// **'Ese es tu @usuario actual.'**
-  String get usernameCurrent;
-
-  /// No description provided for @usernameChecking.
-  ///
-  /// In es, this message translates to:
-  /// **'Comprobando…'**
-  String get usernameChecking;
-
-  /// No description provided for @usernameAvailable.
-  ///
-  /// In es, this message translates to:
-  /// **'@{username} está libre.'**
-  String usernameAvailable(String username);
-
   /// No description provided for @usernameOffline.
   ///
   /// In es, this message translates to:
@@ -727,24 +679,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'tu_usuario'**
   String get usernameHint;
-
-  /// No description provided for @welcomeTitleStart.
-  ///
-  /// In es, this message translates to:
-  /// **'Tu diario de '**
-  String get welcomeTitleStart;
-
-  /// No description provided for @welcomeTitleAccent.
-  ///
-  /// In es, this message translates to:
-  /// **'discos'**
-  String get welcomeTitleAccent;
-
-  /// No description provided for @welcomeTitleEnd.
-  ///
-  /// In es, this message translates to:
-  /// **' empieza aquí.'**
-  String get welcomeTitleEnd;
 
   /// No description provided for @welcomeBody.
   ///
@@ -770,40 +704,16 @@ abstract class AppLocalizations {
   /// **'Te mandamos un correo a {email} con un enlace para cambiar tu contraseña.'**
   String resetSent(String email);
 
-  /// No description provided for @signInTitleStart.
-  ///
-  /// In es, this message translates to:
-  /// **'Hola de '**
-  String get signInTitleStart;
-
-  /// No description provided for @signInTitleAccent.
-  ///
-  /// In es, this message translates to:
-  /// **'nuevo'**
-  String get signInTitleAccent;
-
-  /// No description provided for @signInTitleEnd.
-  ///
-  /// In es, this message translates to:
-  /// **'.'**
-  String get signInTitleEnd;
-
-  /// No description provided for @signInSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Entra con tu correo y tu contraseña.'**
-  String get signInSubtitle;
-
   /// No description provided for @signInNoAccount.
   ///
   /// In es, this message translates to:
-  /// **'¿Aún no tienes cuenta? '**
+  /// **'¿No tienes cuenta? '**
   String get signInNoAccount;
 
   /// No description provided for @signInCreateOne.
   ///
   /// In es, this message translates to:
-  /// **'Créala'**
+  /// **'Crear cuenta'**
   String get signInCreateOne;
 
   /// No description provided for @signIn.
@@ -830,30 +740,6 @@ abstract class AppLocalizations {
   /// **'Enviar'**
   String get send;
 
-  /// No description provided for @signUpTitleStart.
-  ///
-  /// In es, this message translates to:
-  /// **'Crea tu '**
-  String get signUpTitleStart;
-
-  /// No description provided for @signUpTitleAccent.
-  ///
-  /// In es, this message translates to:
-  /// **'cuenta'**
-  String get signUpTitleAccent;
-
-  /// No description provided for @signUpTitleEnd.
-  ///
-  /// In es, this message translates to:
-  /// **'.'**
-  String get signUpTitleEnd;
-
-  /// No description provided for @signUpSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Con tu correo y una contraseña. Después eliges tu nombre, tu color y tu @usuario.'**
-  String get signUpSubtitle;
-
   /// No description provided for @signUpHaveAccount.
   ///
   /// In es, this message translates to:
@@ -863,7 +749,7 @@ abstract class AppLocalizations {
   /// No description provided for @signUpSignIn.
   ///
   /// In es, this message translates to:
-  /// **'Inicia sesión'**
+  /// **'Iniciar sesión'**
   String get signUpSignIn;
 
   /// No description provided for @continueLabel.
@@ -871,24 +757,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Continuar'**
   String get continueLabel;
-
-  /// No description provided for @usernameTitleStart.
-  ///
-  /// In es, this message translates to:
-  /// **'Elige tu '**
-  String get usernameTitleStart;
-
-  /// No description provided for @usernameTitleAccent.
-  ///
-  /// In es, this message translates to:
-  /// **'@usuario'**
-  String get usernameTitleAccent;
-
-  /// No description provided for @usernameTitleEnd.
-  ///
-  /// In es, this message translates to:
-  /// **'.'**
-  String get usernameTitleEnd;
 
   /// No description provided for @usernameSubtitle.
   ///
@@ -920,24 +788,6 @@ abstract class AppLocalizations {
   /// **'Entrar de todos modos'**
   String get linkOtherConfirm;
 
-  /// No description provided for @linkTitleStart.
-  ///
-  /// In es, this message translates to:
-  /// **'Guarda tu '**
-  String get linkTitleStart;
-
-  /// No description provided for @linkTitleAccent.
-  ///
-  /// In es, this message translates to:
-  /// **'cuenta'**
-  String get linkTitleAccent;
-
-  /// No description provided for @linkTitleEnd.
-  ///
-  /// In es, this message translates to:
-  /// **', {name}.'**
-  String linkTitleEnd(String name);
-
   /// No description provided for @linkSubtitle.
   ///
   /// In es, this message translates to:
@@ -955,30 +805,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Guardar mi cuenta'**
   String get linkSubmit;
-
-  /// No description provided for @onboardingTitleStart.
-  ///
-  /// In es, this message translates to:
-  /// **'Así te '**
-  String get onboardingTitleStart;
-
-  /// No description provided for @onboardingTitleAccent.
-  ///
-  /// In es, this message translates to:
-  /// **'verán'**
-  String get onboardingTitleAccent;
-
-  /// No description provided for @onboardingTitleEnd.
-  ///
-  /// In es, this message translates to:
-  /// **'.'**
-  String get onboardingTitleEnd;
-
-  /// No description provided for @onboardingSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Tu nombre, tu color y un @usuario único para que te encuentren. Todo se puede cambiar después.'**
-  String get onboardingSubtitle;
 
   /// No description provided for @onboardingSignedInAs.
   ///
@@ -1262,24 +1088,6 @@ abstract class AppLocalizations {
   /// **'Foto de fondo'**
   String get bannerPlaceholder;
 
-  /// No description provided for @homePopular.
-  ///
-  /// In es, this message translates to:
-  /// **'Popular'**
-  String get homePopular;
-
-  /// No description provided for @homeActivity.
-  ///
-  /// In es, this message translates to:
-  /// **'Actividad'**
-  String get homeActivity;
-
-  /// No description provided for @homeActivitySubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'De tus amigos'**
-  String get homeActivitySubtitle;
-
   /// No description provided for @homeFollowTitle.
   ///
   /// In es, this message translates to:
@@ -1376,22 +1184,16 @@ abstract class AppLocalizations {
   /// **'Eso es todo lo que encontró Spotify'**
   String get searchEnd;
 
-  /// No description provided for @loadMore.
-  ///
-  /// In es, this message translates to:
-  /// **'Cargar más'**
-  String get loadMore;
-
   /// No description provided for @searchRecent.
   ///
   /// In es, this message translates to:
-  /// **'RECIENTES'**
+  /// **'Recientes'**
   String get searchRecent;
 
   /// No description provided for @searchSuggestions.
   ///
   /// In es, this message translates to:
-  /// **'PARA EMPEZAR'**
+  /// **'Para empezar'**
   String get searchSuggestions;
 
   /// No description provided for @tabHome.
@@ -1423,12 +1225,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Todo al día'**
   String get notificationsAllCaughtUp;
-
-  /// No description provided for @notificationsNew.
-  ///
-  /// In es, this message translates to:
-  /// **'{n, plural, =1{1 nueva} other{{n} nuevas}}'**
-  String notificationsNew(int n);
 
   /// No description provided for @notificationsError.
   ///
@@ -1625,7 +1421,7 @@ abstract class AppLocalizations {
   /// No description provided for @listFormKind.
   ///
   /// In es, this message translates to:
-  /// **'TIPO'**
+  /// **'Tipo'**
   String get listFormKind;
 
   /// No description provided for @listKindListHint.
@@ -1643,7 +1439,7 @@ abstract class AppLocalizations {
   /// No description provided for @listFormContent.
   ///
   /// In es, this message translates to:
-  /// **'¿DE QUÉ?'**
+  /// **'Contenido'**
   String get listFormContent;
 
   /// No description provided for @listTypeTracksHint.
@@ -2725,6 +2521,462 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Mira el diario de discos de {name} en Vinilo'**
   String shareProfileOf(String name);
+
+  /// No description provided for @welcomeIssue.
+  ///
+  /// In es, this message translates to:
+  /// **'Nº 001'**
+  String get welcomeIssue;
+
+  /// No description provided for @welcomeOverline.
+  ///
+  /// In es, this message translates to:
+  /// **'Diario de discos'**
+  String get welcomeOverline;
+
+  /// No description provided for @welcomeHeadline.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu diario de discos empieza aquí.'**
+  String get welcomeHeadline;
+
+  /// No description provided for @signInTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar\nsesión'**
+  String get signInTitle;
+
+  /// No description provided for @signInIdentifierLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo o usuario'**
+  String get signInIdentifierLabel;
+
+  /// No description provided for @authPasswordLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña'**
+  String get authPasswordLabel;
+
+  /// No description provided for @authShow.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar'**
+  String get authShow;
+
+  /// No description provided for @authHide.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocultar'**
+  String get authHide;
+
+  /// No description provided for @signInSubmit.
+  ///
+  /// In es, this message translates to:
+  /// **'Entrar'**
+  String get signInSubmit;
+
+  /// No description provided for @authOr.
+  ///
+  /// In es, this message translates to:
+  /// **'o'**
+  String get authOr;
+
+  /// No description provided for @authApple.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar con Apple'**
+  String get authApple;
+
+  /// No description provided for @authGoogle.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar con Google'**
+  String get authGoogle;
+
+  /// No description provided for @signInEmailOnly.
+  ///
+  /// In es, this message translates to:
+  /// **'Por ahora entra con tu correo'**
+  String get signInEmailOnly;
+
+  /// No description provided for @authEmailMissing.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe tu correo.'**
+  String get authEmailMissing;
+
+  /// No description provided for @signUpTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear\ncuenta'**
+  String get signUpTitle;
+
+  /// No description provided for @authNameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get authNameLabel;
+
+  /// No description provided for @authNameMissing.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe tu nombre.'**
+  String get authNameMissing;
+
+  /// No description provided for @authUsernameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Usuario'**
+  String get authUsernameLabel;
+
+  /// No description provided for @usernameStatusAvailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Disponible'**
+  String get usernameStatusAvailable;
+
+  /// No description provided for @usernameStatusChecking.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprobando…'**
+  String get usernameStatusChecking;
+
+  /// No description provided for @usernameStatusTaken.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocupado'**
+  String get usernameStatusTaken;
+
+  /// No description provided for @authEmailLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo'**
+  String get authEmailLabel;
+
+  /// No description provided for @authEmailPlaceholder.
+  ///
+  /// In es, this message translates to:
+  /// **'tu@correo.com'**
+  String get authEmailPlaceholder;
+
+  /// No description provided for @authPasswordNewPlaceholder.
+  ///
+  /// In es, this message translates to:
+  /// **'Mínimo {n} caracteres'**
+  String authPasswordNewPlaceholder(int n);
+
+  /// No description provided for @authPasswordTooShort.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña necesita al menos {n} caracteres.'**
+  String authPasswordTooShort(int n);
+
+  /// No description provided for @signUpTermsStart.
+  ///
+  /// In es, this message translates to:
+  /// **'Al crear tu cuenta aceptas los '**
+  String get signUpTermsStart;
+
+  /// No description provided for @signUpTerms.
+  ///
+  /// In es, this message translates to:
+  /// **'Términos'**
+  String get signUpTerms;
+
+  /// No description provided for @signUpTermsMiddle.
+  ///
+  /// In es, this message translates to:
+  /// **' y la '**
+  String get signUpTermsMiddle;
+
+  /// No description provided for @signUpPrivacy.
+  ///
+  /// In es, this message translates to:
+  /// **'Política de privacidad'**
+  String get signUpPrivacy;
+
+  /// No description provided for @signUpTermsEnd.
+  ///
+  /// In es, this message translates to:
+  /// **'.'**
+  String get signUpTermsEnd;
+
+  /// No description provided for @signUpSubmit.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear cuenta'**
+  String get signUpSubmit;
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Completa tu\nperfil'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu cuenta ya existe. Falta tu nombre y un @usuario para que tus amigos te encuentren.'**
+  String get onboardingBody;
+
+  /// No description provided for @usernameTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige tu\n@usuario'**
+  String get usernameTitle;
+
+  /// No description provided for @linkTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Guarda tu\ncuenta'**
+  String get linkTitle;
+
+  /// No description provided for @homePopularWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'Popular esta semana'**
+  String get homePopularWeek;
+
+  /// No description provided for @seeAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver todo'**
+  String get seeAll;
+
+  /// No description provided for @seeAllPlural.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver todos'**
+  String get seeAllPlural;
+
+  /// No description provided for @homeFriendsActivity.
+  ///
+  /// In es, this message translates to:
+  /// **'Actividad de tus amigos'**
+  String get homeFriendsActivity;
+
+  /// No description provided for @homeActivityNew.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 nueva} other{{n} nuevas}}'**
+  String homeActivityNew(int n);
+
+  /// No description provided for @feedLiked.
+  ///
+  /// In es, this message translates to:
+  /// **'Te gusta'**
+  String get feedLiked;
+
+  /// No description provided for @feedLike.
+  ///
+  /// In es, this message translates to:
+  /// **'Me gusta'**
+  String get feedLike;
+
+  /// No description provided for @feedComment.
+  ///
+  /// In es, this message translates to:
+  /// **'Comentar'**
+  String get feedComment;
+
+  /// No description provided for @feedReplies.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 respuesta} other{{n} respuestas}}'**
+  String feedReplies(int n);
+
+  /// No description provided for @popularTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Popular esta semana'**
+  String get popularTitle;
+
+  /// No description provided for @popularSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Los discos más calificados de los últimos 7 días'**
+  String get popularSubtitle;
+
+  /// No description provided for @popularEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Semana tranquila'**
+  String get popularEmptyTitle;
+
+  /// No description provided for @popularEmptyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Nadie ha calificado un disco en los últimos 7 días.'**
+  String get popularEmptyBody;
+
+  /// No description provided for @notificationsUnread.
+  ///
+  /// In es, this message translates to:
+  /// **'{n} sin leer'**
+  String notificationsUnread(int n);
+
+  /// No description provided for @groupToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get groupToday;
+
+  /// No description provided for @groupYesterday.
+  ///
+  /// In es, this message translates to:
+  /// **'Ayer'**
+  String get groupYesterday;
+
+  /// No description provided for @groupThisWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta semana'**
+  String get groupThisWeek;
+
+  /// No description provided for @searchAllArtists.
+  ///
+  /// In es, this message translates to:
+  /// **'Artistas'**
+  String get searchAllArtists;
+
+  /// No description provided for @searchAllAlbums.
+  ///
+  /// In es, this message translates to:
+  /// **'Álbumes'**
+  String get searchAllAlbums;
+
+  /// No description provided for @searchAllFor.
+  ///
+  /// In es, this message translates to:
+  /// **'Resultados de «{query}»'**
+  String searchAllFor(String query);
+
+  /// No description provided for @searchClear.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar búsqueda'**
+  String get searchClear;
+
+  /// No description provided for @albumYourRatingEdit.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu nota · editar'**
+  String get albumYourRatingEdit;
+
+  /// No description provided for @albumCommunity.
+  ///
+  /// In es, this message translates to:
+  /// **'Comunidad · {n, plural, =1{1 nota} other{{n} notas}}'**
+  String albumCommunity(int n);
+
+  /// No description provided for @albumTapToChange.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca para cambiar'**
+  String get albumTapToChange;
+
+  /// No description provided for @albumBarsCommunity.
+  ///
+  /// In es, this message translates to:
+  /// **'Barras: comunidad'**
+  String get albumBarsCommunity;
+
+  /// No description provided for @albumHoldToAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Mantén pulsada para agregar'**
+  String get albumHoldToAdd;
+
+  /// No description provided for @albumFriendsAverage.
+  ///
+  /// In es, this message translates to:
+  /// **'Promedio amigos'**
+  String get albumFriendsAverage;
+
+  /// No description provided for @albumTapPhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca una foto para ver su calificación'**
+  String get albumTapPhoto;
+
+  /// No description provided for @albumFeaturedComments.
+  ///
+  /// In es, this message translates to:
+  /// **'Comentarios destacados'**
+  String get albumFeaturedComments;
+
+  /// No description provided for @albumCommentsShown.
+  ///
+  /// In es, this message translates to:
+  /// **'{shown} de {total, plural, =1{1 comentario} other{{total} comentarios}}'**
+  String albumCommentsShown(int shown, int total);
+
+  /// No description provided for @albumSeeArtist.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver artista'**
+  String get albumSeeArtist;
+
+  /// No description provided for @ratingSavedShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Nota guardada'**
+  String get ratingSavedShort;
+
+  /// No description provided for @rateSheetHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca o desliza'**
+  String get rateSheetHint;
+
+  /// No description provided for @rateSheetSaveMine.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar mi nota'**
+  String get rateSheetSaveMine;
+
+  /// No description provided for @pickerOverlineTrack.
+  ///
+  /// In es, this message translates to:
+  /// **'Canción · {name}'**
+  String pickerOverlineTrack(String name);
+
+  /// No description provided for @pickerOverlineAlbum.
+  ///
+  /// In es, this message translates to:
+  /// **'Disco · {name}'**
+  String pickerOverlineAlbum(String name);
+
+  /// No description provided for @listFormName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get listFormName;
+
+  /// No description provided for @listFormDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Descripción'**
+  String get listFormDescription;
+
+  /// No description provided for @listFormOptional.
+  ///
+  /// In es, this message translates to:
+  /// **'Opcional'**
+  String get listFormOptional;
+
+  /// No description provided for @artistSortBest.
+  ///
+  /// In es, this message translates to:
+  /// **'Mejor calificados'**
+  String get artistSortBest;
+
+  /// No description provided for @artistNoRatings.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin notas'**
+  String get artistNoRatings;
 }
 
 class _AppLocalizationsDelegate

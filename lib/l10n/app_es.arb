@@ -133,12 +133,12 @@
       }
     }
   },
-  "score1": "Insufrible",
-  "score2": "Malo",
-  "score3": "Flojo",
-  "score4": "Meh",
+  "score1": "Terrible",
+  "score2": "Muy malo",
+  "score3": "Malo",
+  "score4": "Flojo",
   "score5": "Regular",
-  "score6": "Está bien",
+  "score6": "Aceptable",
   "score7": "Bueno",
   "score8": "Muy bueno",
   "score9": "Excelente",
@@ -222,18 +222,6 @@
   "spotifyUnexpected": "Respuesta inesperada de Spotify.",
   "listGone": "La lista ya no existe.",
   "notificationsTitle": "Notificaciones",
-  "authPasswordNewHint": "Contraseña (mínimo {n} caracteres)",
-  "@authPasswordNewHint": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "authPasswordHint": "Contraseña",
-  "authEmailHint": "Correo",
-  "authShowPassword": "Mostrar contraseña",
-  "authHidePassword": "Ocultar contraseña",
   "authForgotPassword": "¿Olvidaste tu contraseña?",
   "feedRatedSuffix": " calificó",
   "@feedRatedSuffix": {
@@ -286,21 +274,8 @@
   "rateSheetSave": "Guardar en mi diario",
   "rateSheetUpdate": "Actualizar mi nota",
   "rateSheetDelete": "Borrar nota",
-  "usernameCurrent": "Ese es tu @usuario actual.",
-  "usernameChecking": "Comprobando…",
-  "usernameAvailable": "@{username} está libre.",
-  "@usernameAvailable": {
-    "placeholders": {
-      "username": {
-        "type": "String"
-      }
-    }
-  },
   "usernameOffline": "No se pudo comprobar. Revisa tu conexión.",
   "usernameHint": "tu_usuario",
-  "welcomeTitleStart": "Tu diario de ",
-  "welcomeTitleAccent": "discos",
-  "welcomeTitleEnd": " empieza aquí.",
   "welcomeBody": "Busca un álbum, ponle nota del 1 al 10 y mira lo que opina la comunidad. Sin estrellas: aquí se habla en números.",
   "welcomeSignUp": "Crear cuenta",
   "welcomeSignIn": "Ya tengo cuenta",
@@ -312,26 +287,15 @@
       }
     }
   },
-  "signInTitleStart": "Hola de ",
-  "signInTitleAccent": "nuevo",
-  "signInTitleEnd": ".",
-  "signInSubtitle": "Entra con tu correo y tu contraseña.",
-  "signInNoAccount": "¿Aún no tienes cuenta? ",
-  "signInCreateOne": "Créala",
+  "signInNoAccount": "¿No tienes cuenta? ",
+  "signInCreateOne": "Crear cuenta",
   "signIn": "Iniciar sesión",
   "resetTitle": "Recuperar contraseña",
   "resetBody": "Te mandamos un enlace para elegir una contraseña nueva.",
   "send": "Enviar",
-  "signUpTitleStart": "Crea tu ",
-  "signUpTitleAccent": "cuenta",
-  "signUpTitleEnd": ".",
-  "signUpSubtitle": "Con tu correo y una contraseña. Después eliges tu nombre, tu color y tu @usuario.",
   "signUpHaveAccount": "¿Ya tienes cuenta? ",
-  "signUpSignIn": "Inicia sesión",
+  "signUpSignIn": "Iniciar sesión",
   "continueLabel": "Continuar",
-  "usernameTitleStart": "Elige tu ",
-  "usernameTitleAccent": "@usuario",
-  "usernameTitleEnd": ".",
   "usernameSubtitle": "Así te encuentran tus amigos. Minúsculas, números, punto y guion bajo; de {min} a {max} caracteres. Puedes cambiarlo después desde tu perfil.",
   "@usernameSubtitle": {
     "placeholders": {
@@ -354,16 +318,6 @@
   },
   "back": "Volver",
   "linkOtherConfirm": "Entrar de todos modos",
-  "linkTitleStart": "Guarda tu ",
-  "linkTitleAccent": "cuenta",
-  "linkTitleEnd": ", {name}.",
-  "@linkTitleEnd": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "linkSubtitle": "Vinilo ahora entra con correo y contraseña. Vincúlalos a esta sesión y conservas {n, plural, =1{1 nota} other{{n} notas}}, tus favoritos y tu perfil en cualquier dispositivo.",
   "@linkSubtitle": {
     "placeholders": {
@@ -374,10 +328,6 @@
   },
   "linkHaveAccount": "Ya tengo una cuenta",
   "linkSubmit": "Guardar mi cuenta",
-  "onboardingTitleStart": "Así te ",
-  "onboardingTitleAccent": "verán",
-  "onboardingTitleEnd": ".",
-  "onboardingSubtitle": "Tu nombre, tu color y un @usuario único para que te encuentren. Todo se puede cambiar después.",
   "onboardingSignedInAs": "Entraste como {email} · ",
   "@onboardingSignedInAs": {
     "placeholders": {
@@ -439,9 +389,6 @@
   "yourUsernameLabel": "TU @USUARIO",
   "yourColorLabel": "TU COLOR",
   "bannerPlaceholder": "Foto de fondo",
-  "homePopular": "Popular",
-  "homeActivity": "Actividad",
-  "homeActivitySubtitle": "De tus amigos",
   "homeFollowTitle": "Sigue a tus amigos",
   "homeFollowBody": "Aquí verás lo que califican las personas que sigues. Búscalas en la pestaña Buscar por su nombre o su @usuario.",
   "homeQuietTitle": "Todo tranquilo por aquí",
@@ -472,22 +419,13 @@
   "searchArtists": "Artistas",
   "searchAlbums": "Álbumes",
   "searchEnd": "Eso es todo lo que encontró Spotify",
-  "loadMore": "Cargar más",
-  "searchRecent": "RECIENTES",
-  "searchSuggestions": "PARA EMPEZAR",
+  "searchRecent": "Recientes",
+  "searchSuggestions": "Para empezar",
   "tabHome": "Inicio",
   "tabSearch": "Buscar",
   "tabProfile": "Perfil",
   "loading": "Cargando…",
   "notificationsAllCaughtUp": "Todo al día",
-  "notificationsNew": "{n, plural, =1{1 nueva} other{{n} nuevas}}",
-  "@notificationsNew": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "notificationsError": "No se pudieron cargar: {error}",
   "@notificationsError": {
     "placeholders": {
@@ -596,10 +534,10 @@
   "listFormSubtitle": "Un ranking va numerado y se ordena arrastrando.",
   "listNameHint": "Nombre de la lista",
   "listDescriptionHint": "Descripción (opcional)",
-  "listFormKind": "TIPO",
+  "listFormKind": "Tipo",
   "listKindListHint": "Sin orden fijo",
   "listKindRankingHint": "Numerado, del 1 en adelante",
-  "listFormContent": "¿DE QUÉ?",
+  "listFormContent": "Contenido",
   "listTypeTracksHint": "De cualquier disco",
   "listTypeAlbumsHint": "Álbumes completos",
   "listCreate": "Crear lista",
@@ -1151,5 +1089,154 @@
         "type": "String"
       }
     }
-  }
+  },
+  "welcomeIssue": "Nº 001",
+  "welcomeOverline": "Diario de discos",
+  "welcomeHeadline": "Tu diario de discos empieza aquí.",
+  "signInTitle": "Iniciar\nsesión",
+  "signInIdentifierLabel": "Correo o usuario",
+  "authPasswordLabel": "Contraseña",
+  "authShow": "Mostrar",
+  "authHide": "Ocultar",
+  "signInSubmit": "Entrar",
+  "authOr": "o",
+  "authApple": "Continuar con Apple",
+  "authGoogle": "Continuar con Google",
+  "signInEmailOnly": "Por ahora entra con tu correo",
+  "authEmailMissing": "Escribe tu correo.",
+  "signUpTitle": "Crear\ncuenta",
+  "authNameLabel": "Nombre",
+  "authNameMissing": "Escribe tu nombre.",
+  "authUsernameLabel": "Usuario",
+  "usernameStatusAvailable": "Disponible",
+  "usernameStatusChecking": "Comprobando…",
+  "usernameStatusTaken": "Ocupado",
+  "authEmailLabel": "Correo",
+  "authEmailPlaceholder": "tu@correo.com",
+  "authPasswordNewPlaceholder": "Mínimo {n} caracteres",
+  "@authPasswordNewPlaceholder": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "authPasswordTooShort": "La contraseña necesita al menos {n} caracteres.",
+  "@authPasswordTooShort": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "signUpTermsStart": "Al crear tu cuenta aceptas los ",
+  "signUpTerms": "Términos",
+  "signUpTermsMiddle": " y la ",
+  "signUpPrivacy": "Política de privacidad",
+  "signUpTermsEnd": ".",
+  "signUpSubmit": "Crear cuenta",
+  "onboardingTitle": "Completa tu\nperfil",
+  "onboardingBody": "Tu cuenta ya existe. Falta tu nombre y un @usuario para que tus amigos te encuentren.",
+  "usernameTitle": "Elige tu\n@usuario",
+  "linkTitle": "Guarda tu\ncuenta",
+  "homePopularWeek": "Popular esta semana",
+  "seeAll": "Ver todo",
+  "seeAllPlural": "Ver todos",
+  "homeFriendsActivity": "Actividad de tus amigos",
+  "homeActivityNew": "{n, plural, =1{1 nueva} other{{n} nuevas}}",
+  "@homeActivityNew": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "feedLiked": "Te gusta",
+  "feedLike": "Me gusta",
+  "feedComment": "Comentar",
+  "feedReplies": "{n, plural, =1{1 respuesta} other{{n} respuestas}}",
+  "@feedReplies": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "popularTitle": "Popular esta semana",
+  "popularSubtitle": "Los discos más calificados de los últimos 7 días",
+  "popularEmptyTitle": "Semana tranquila",
+  "popularEmptyBody": "Nadie ha calificado un disco en los últimos 7 días.",
+  "notificationsUnread": "{n} sin leer",
+  "@notificationsUnread": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "groupToday": "Hoy",
+  "groupYesterday": "Ayer",
+  "groupThisWeek": "Esta semana",
+  "searchAllArtists": "Artistas",
+  "searchAllAlbums": "Álbumes",
+  "searchAllFor": "Resultados de «{query}»",
+  "@searchAllFor": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "searchClear": "Borrar búsqueda",
+  "albumYourRatingEdit": "Tu nota · editar",
+  "albumCommunity": "Comunidad · {n, plural, =1{1 nota} other{{n} notas}}",
+  "@albumCommunity": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "albumTapToChange": "Toca para cambiar",
+  "albumBarsCommunity": "Barras: comunidad",
+  "albumHoldToAdd": "Mantén pulsada para agregar",
+  "albumFriendsAverage": "Promedio amigos",
+  "albumTapPhoto": "Toca una foto para ver su calificación",
+  "albumFeaturedComments": "Comentarios destacados",
+  "albumCommentsShown": "{shown} de {total, plural, =1{1 comentario} other{{total} comentarios}}",
+  "@albumCommentsShown": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "albumSeeArtist": "Ver artista",
+  "ratingSavedShort": "Nota guardada",
+  "rateSheetHint": "Toca o desliza",
+  "rateSheetSaveMine": "Guardar mi nota",
+  "pickerOverlineTrack": "Canción · {name}",
+  "@pickerOverlineTrack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerOverlineAlbum": "Disco · {name}",
+  "@pickerOverlineAlbum": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "listFormName": "Nombre",
+  "listFormDescription": "Descripción",
+  "listFormOptional": "Opcional",
+  "artistSortBest": "Mejor calificados",
+  "artistNoRatings": "Sin notas"
 }

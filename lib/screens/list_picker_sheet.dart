@@ -5,29 +5,44 @@ import '../models/music_list.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
-import '../widgets/list_row_tile.dart';
-import '../widgets/misc.dart';
+import '../widgets/cover_stack.dart';
 import '../widgets/sheet.dart';
+import '../widgets/v_buttons.dart';
+import '../widgets/v_choices.dart';
+import '../widgets/v_icons.dart';
+import '../widgets/v_sections.dart';
 import 'list_form_sheet.dart';
 
 /// Elegir una de mis listas del tipo pedido, o crear una nueva ahí mismo.
-/// Devuelve la lista elegida (o recién creada), o null si se cierra.
+/// `overline` dice qué se va a agregar ("Canción · Tabú", "Disco ·
+/// Bocanada"). Devuelve la lista elegida (o recién creada), o null si se
+/// cierra.
 Future<MusicList?> showListPicker(
   BuildContext context, {
   required ListItemType itemType,
   String? excludeListId,
+  String? overline,
 }) {
   return showVSheet<MusicList>(
     context,
-    (_) => _ListPicker(itemType: itemType, excludeListId: excludeListId),
+    (_) => _ListPicker(
+      itemType: itemType,
+      excludeListId: excludeListId,
+      overline: overline,
+    ),
   );
 }
 
 class _ListPicker extends StatefulWidget {
-  const _ListPicker({required this.itemType, required this.excludeListId});
+  const _ListPicker({
+    required this.itemType,
+    required this.excludeListId,
+    required this.overline,
+  });
 
   final ListItemType itemType;
   final String? excludeListId;
+  final String? overline;
 
   @override
   State<_ListPicker> createState() => _ListPickerState();
@@ -72,92 +87,168 @@ class _ListPickerState extends State<_ListPicker> {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
+    final l10n = context.l10n;
+    final tracks = widget.itemType == ListItemType.tracks;
     return SheetScaffold(
-      title: context.l10n.pickerTitle,
-      subtitle: widget.itemType == ListItemType.tracks
-          ? context.l10n.pickerSubtitleTracks
-          : context.l10n.pickerSubtitleAlbums,
-      height: 0.8,
-      scrollable: false,
+      overline: widget.overline,
+      title: l10n.pickerTitle,
+      subtitle: tracks ? l10n.pickerSubtitleTracks : l10n.pickerSubtitleAlbums,
       child: StreamBuilder<List<MusicList>>(
         stream: _lists,
         builder: (context, snap) {
           final lists = (snap.data ?? const <MusicList>[])
               .where((l) => l.itemType == widget.itemType && l.id != widget.excludeListId)
               .toList();
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
-            physics: const BouncingScrollPhysics(),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Material(
-                color: c.accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(18),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  key: const ValueKey('picker-new-list'),
-                  onTap: _creating ? null : _create,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 46,
-                          height: 46,
-                          decoration: BoxDecoration(
-                            color: c.accent,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: _creating
-                              ? Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: c.onAccent,
-                                  ),
-                                )
-                              : Icon(Icons.add_rounded, color: c.onAccent),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          context.l10n.listNew,
-                          style: VText.ui(15, weight: 700, color: c.accent),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
+              _NewListRow(busy: _creating, onTap: _creating ? null : _create),
               if (!snap.hasData)
                 for (var i = 0; i < 3; i++)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 10),
-                    child: Skeleton(height: 70, radius: 18),
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: c.lineSoft))),
+                    child: const Row(
+                      children: [
+                        VSkeleton(width: 76, height: 56),
+                        SizedBox(width: 14),
+                        Expanded(child: VSkeleton(height: 30)),
+                      ],
+                    ),
                   )
               else if (lists.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 18, 4, 0),
+                  padding: const EdgeInsets.only(top: 18),
                   child: Text(
-                    widget.itemType == ListItemType.tracks
-                        ? context.l10n.pickerEmptyTracks
-                        : context.l10n.pickerEmptyAlbums,
-                    textAlign: TextAlign.center,
-                    style: VText.ui(14, color: c.text3, height: 1.4),
+                    tracks ? l10n.pickerEmptyTracks : l10n.pickerEmptyAlbums,
+                    style: VText.ui(14, color: c.ink2, height: 1.45),
                   ),
                 )
               else
                 for (final (i, list) in lists.indexed)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: ListRowTile(
-                      key: ValueKey('picker-list-$i'),
-                      list: list,
-                      onTap: () => Navigator.of(context).pop(list),
-                    ),
+                  _ListRow(
+                    key: ValueKey('picker-list-$i'),
+                    list: list,
+                    onTap: () => Navigator.of(context).pop(list),
                   ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// "Nueva lista": un cuadro punteado en énfasis con el +, el texto y "→",
+/// entre dos líneas.
+class _NewListRow extends StatelessWidget {
+  const _NewListRow({required this.busy, required this.onTap});
+
+  final bool busy;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Pressable(
+      key: const ValueKey('picker-new-list'),
+      onTap: onTap,
+      builder: (context, pressed) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: pressed ? c.inkA(0.04) : null,
+          border: Border.symmetric(horizontal: BorderSide(color: c.line)),
+        ),
+        child: Row(
+          children: [
+            DashedBox(
+              size: 56,
+              color: c.accent,
+              child: busy
+                  ? SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 1.6, color: c.accent),
+                    )
+                  : VIconView(VIcon.plus, size: 20, color: c.accent, strokeWidth: 1.4),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                context.l10n.listNew,
+                style: VText.ui(17, weight: 600, color: c.accent),
+              ),
+            ),
+            Text('→', style: VText.ui(16, color: c.accent)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Una de mis listas: sus portadas apiladas, el nombre, "Lista · 12
+/// canciones" y un + con borde.
+class _ListRow extends StatelessWidget {
+  const _ListRow({super.key, required this.list, required this.onTap});
+
+  final MusicList list;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final l10n = context.l10n;
+    return Pressable(
+      onTap: onTap,
+      builder: (context, pressed) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: pressed ? c.inkA(0.04) : null,
+          border: Border(bottom: BorderSide(color: c.lineSoft)),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 78,
+              child: CoverStack(
+                urls: list.covers,
+                single: list.coverUrl,
+                size: 56,
+                separator: c.sheet,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    list.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: VText.display(19, weight: 700, stretch: 75, height: 1.05, tracking: 0),
+                  ),
+                  const SizedBox(height: 6),
+                  VMono(
+                    '${list.kind.label(l10n)} · ${list.itemType.count(list.count, l10n)}',
+                    size: 10,
+                    maxLines: 1,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 14),
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                border: Border.all(color: pressed ? c.ink : c.lineStrong),
+              ),
+              child: VIconView(VIcon.plus, size: 14, color: c.ink),
+            ),
+          ],
+        ),
       ),
     );
   }

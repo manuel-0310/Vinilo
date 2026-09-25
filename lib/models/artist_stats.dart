@@ -1,3 +1,4 @@
+import 'album.dart';
 import 'rating.dart';
 
 /// Calificación de un artista en Vinilo: el promedio de todas las notas que
@@ -39,4 +40,32 @@ class ArtistSummary {
     }
     return ArtistSummary(count: count, sum: sum, hist: hist, ratedAlbums: rated);
   }
+}
+
+/// La discografía en el orden elegido: tal como llega de Spotify (los más
+/// recientes primero) o, con `bestFirst`, de mejor a peor promedio en
+/// Vinilo (a igual promedio, el que tiene más notas) y los discos sin
+/// notas al final, en su orden de siempre.
+List<Album> sortDiscography(
+  List<Album> albums,
+  Map<String, AlbumStats> stats, {
+  required bool bestFirst,
+}) {
+  if (!bestFirst) return albums;
+  final rated = <Album>[];
+  final unrated = <Album>[];
+  for (final a in albums) {
+    ((stats[a.id]?.count ?? 0) > 0 ? rated : unrated).add(a);
+  }
+  final position = {for (final (i, a) in albums.indexed) a.id: i};
+  rated.sort((a, b) {
+    final sa = stats[a.id]!;
+    final sb = stats[b.id]!;
+    final byAverage = sb.average.compareTo(sa.average);
+    if (byAverage != 0) return byAverage;
+    final byCount = sb.count.compareTo(sa.count);
+    if (byCount != 0) return byCount;
+    return position[a.id]!.compareTo(position[b.id]!);
+  });
+  return [...rated, ...unrated];
 }

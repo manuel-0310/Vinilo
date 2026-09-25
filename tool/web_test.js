@@ -18,6 +18,8 @@ const data = {
   "ratings/u2_a1": { uid: "u2", albumId: "a1", score: 9, note: "", album: { id: "a1", name: "OK Computer" }, user: { name: "Santi", color: 4291058646 }, likedBy: [], updatedAt: ts(1) },
   "users/u1": { name: "Vale Ríos", username: "vale.rios", bio: "Rock y lluvia", color: 4284186600, ratingsCount: 1, ratingsSum: 10, followersCount: 3, followingCount: 1,
     bannerUrl: "https://x.test/b.jpg');background:red;('", favorites: [{ id: "a1", name: "OK Computer", coverSmall: "https://i.scdn.co/image/x" }], favoriteArtists: [{ id: "r1", name: "Radiohead", image: "https://i.scdn.co/image/r" }] },
+  "albums/a3": { id: "a3", name: "Sin portada", ratingsCount: 5 },
+  "albums/a4": { id: "a4", name: "Sin notas", cover: "https://i.scdn.co/image/z", ratingsCount: 0 },
   "usernames/vale.rios": { uid: "u1" },
   "ratings/u1_a1/replies/r1": { uid: "u2", user: { name: "Santi", username: "santimejia", color: 4291058646 }, text: "¡De acuerdo, @vale.rios!", createdAt: ts(3) },
 };
@@ -98,6 +100,11 @@ async function run(p, lang = "es-CO,es;q=0.9") {
   ok("sin correos ni uids en la página", !profile.body.includes("u1\"") && !profile.body.includes("@vinilo"));
   ok("caché privada", list.headers["Cache-Control"] === "private, max-age=300");
   ok("pickLang", pickLang({ query: {}, get: () => "fr-FR,en;q=0.8,es;q=0.5" }) === "en" && pickLang({ query: { lang: "es" }, get: () => "en" }) === "es");
+  const covers = await run("/portadas");
+  const coverList = JSON.parse(covers.body).covers;
+  ok("portadas 200 en JSON", covers.status === 200 && covers.headers["Content-Type"].startsWith("application/json"));
+  ok("portadas solo con portada y notas", coverList.length === 1 && coverList[0] === "https://i.scdn.co/image/x");
+  ok("portadas con caché pública", covers.headers["Cache-Control"] === "public, max-age=3600");
   for (const [name, pass] of checks) console.log(pass ? "ok  " : "FALLA", name);
   const passed = checks.every(([, p]) => p);
   console.log(passed ? "TODO BIEN" : "HAY FALLAS");

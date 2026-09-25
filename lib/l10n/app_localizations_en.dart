@@ -213,16 +213,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get score1 => 'Unbearable';
+  String get score1 => 'Terrible';
 
   @override
-  String get score2 => 'Bad';
+  String get score2 => 'Very bad';
 
   @override
-  String get score3 => 'Weak';
+  String get score3 => 'Bad';
 
   @override
-  String get score4 => 'Meh';
+  String get score4 => 'Weak';
 
   @override
   String get score5 => 'So-so';
@@ -324,23 +324,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsTitle => 'Notifications';
 
   @override
-  String authPasswordNewHint(int n) {
-    return 'Password (at least $n characters)';
-  }
-
-  @override
-  String get authPasswordHint => 'Password';
-
-  @override
-  String get authEmailHint => 'Email';
-
-  @override
-  String get authShowPassword => 'Show password';
-
-  @override
-  String get authHidePassword => 'Hide password';
-
-  @override
   String get authForgotPassword => 'Forgot your password?';
 
   @override
@@ -412,30 +395,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rateSheetDelete => 'Delete rating';
 
   @override
-  String get usernameCurrent => 'That\'s your current @username.';
-
-  @override
-  String get usernameChecking => 'Checking…';
-
-  @override
-  String usernameAvailable(String username) {
-    return '@$username is available.';
-  }
-
-  @override
   String get usernameOffline => 'Couldn\'t check. Check your connection.';
 
   @override
   String get usernameHint => 'your_username';
-
-  @override
-  String get welcomeTitleStart => 'Your ';
-
-  @override
-  String get welcomeTitleAccent => 'album';
-
-  @override
-  String get welcomeTitleEnd => ' diary starts here.';
 
   @override
   String get welcomeBody =>
@@ -453,22 +416,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get signInTitleStart => 'Welcome ';
+  String get signInNoAccount => 'Don\'t have an account? ';
 
   @override
-  String get signInTitleAccent => 'back';
-
-  @override
-  String get signInTitleEnd => '.';
-
-  @override
-  String get signInSubtitle => 'Sign in with your email and password.';
-
-  @override
-  String get signInNoAccount => 'Don\'t have an account yet? ';
-
-  @override
-  String get signInCreateOne => 'Create one';
+  String get signInCreateOne => 'Create account';
 
   @override
   String get signIn => 'Sign in';
@@ -483,19 +434,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get send => 'Send';
 
   @override
-  String get signUpTitleStart => 'Create your ';
-
-  @override
-  String get signUpTitleAccent => 'account';
-
-  @override
-  String get signUpTitleEnd => '.';
-
-  @override
-  String get signUpSubtitle =>
-      'With your email and a password. Then you\'ll pick your name, your color and your @username.';
-
-  @override
   String get signUpHaveAccount => 'Already have an account? ';
 
   @override
@@ -503,15 +441,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get continueLabel => 'Continue';
-
-  @override
-  String get usernameTitleStart => 'Choose your ';
-
-  @override
-  String get usernameTitleAccent => '@username';
-
-  @override
-  String get usernameTitleEnd => '.';
 
   @override
   String usernameSubtitle(int min, int max) {
@@ -539,17 +468,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkOtherConfirm => 'Sign in anyway';
 
   @override
-  String get linkTitleStart => 'Save your ';
-
-  @override
-  String get linkTitleAccent => 'account';
-
-  @override
-  String linkTitleEnd(String name) {
-    return ', $name.';
-  }
-
-  @override
   String linkSubtitle(int n) {
     String _temp0 = intl.Intl.pluralLogic(
       n,
@@ -565,19 +483,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkSubmit => 'Save my account';
-
-  @override
-  String get onboardingTitleStart => 'How people ';
-
-  @override
-  String get onboardingTitleAccent => 'see you';
-
-  @override
-  String get onboardingTitleEnd => '.';
-
-  @override
-  String get onboardingSubtitle =>
-      'Your name, your color and a unique @username so people can find you. You can change everything later.';
 
   @override
   String onboardingSignedInAs(String email) {
@@ -731,15 +636,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bannerPlaceholder => 'Banner photo';
 
   @override
-  String get homePopular => 'Popular';
-
-  @override
-  String get homeActivity => 'Activity';
-
-  @override
-  String get homeActivitySubtitle => 'From your friends';
-
-  @override
   String get homeFollowTitle => 'Follow your friends';
 
   @override
@@ -795,13 +691,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchEnd => 'That\'s everything Spotify found';
 
   @override
-  String get loadMore => 'Load more';
+  String get searchRecent => 'Recent';
 
   @override
-  String get searchRecent => 'RECENT';
-
-  @override
-  String get searchSuggestions => 'TO GET STARTED';
+  String get searchSuggestions => 'To get started';
 
   @override
   String get tabHome => 'Home';
@@ -817,17 +710,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsAllCaughtUp => 'All caught up';
-
-  @override
-  String notificationsNew(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: '$n new',
-      one: '1 new',
-    );
-    return '$_temp0';
-  }
 
   @override
   String notificationsError(String error) {
@@ -988,7 +870,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listDescriptionHint => 'Description (optional)';
 
   @override
-  String get listFormKind => 'TYPE';
+  String get listFormKind => 'Type';
 
   @override
   String get listKindListHint => 'No fixed order';
@@ -997,7 +879,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listKindRankingHint => 'Numbered, from 1 down';
 
   @override
-  String get listFormContent => 'OF WHAT?';
+  String get listFormContent => 'Content';
 
   @override
   String get listTypeTracksHint => 'From any album';
@@ -1697,4 +1579,278 @@ class AppLocalizationsEn extends AppLocalizations {
   String shareProfileOf(String name) {
     return 'Check out $name\'s album diary on Vinilo';
   }
+
+  @override
+  String get welcomeIssue => 'No. 001';
+
+  @override
+  String get welcomeOverline => 'Record diary';
+
+  @override
+  String get welcomeHeadline => 'Your record diary starts here.';
+
+  @override
+  String get signInTitle => 'Sign\nin';
+
+  @override
+  String get signInIdentifierLabel => 'Email or username';
+
+  @override
+  String get authPasswordLabel => 'Password';
+
+  @override
+  String get authShow => 'Show';
+
+  @override
+  String get authHide => 'Hide';
+
+  @override
+  String get signInSubmit => 'Sign in';
+
+  @override
+  String get authOr => 'or';
+
+  @override
+  String get authApple => 'Continue with Apple';
+
+  @override
+  String get authGoogle => 'Continue with Google';
+
+  @override
+  String get signInEmailOnly => 'For now, sign in with your email';
+
+  @override
+  String get authEmailMissing => 'Enter your email.';
+
+  @override
+  String get signUpTitle => 'Create\naccount';
+
+  @override
+  String get authNameLabel => 'Name';
+
+  @override
+  String get authNameMissing => 'Enter your name.';
+
+  @override
+  String get authUsernameLabel => 'Username';
+
+  @override
+  String get usernameStatusAvailable => 'Available';
+
+  @override
+  String get usernameStatusChecking => 'Checking…';
+
+  @override
+  String get usernameStatusTaken => 'Taken';
+
+  @override
+  String get authEmailLabel => 'Email';
+
+  @override
+  String get authEmailPlaceholder => 'you@email.com';
+
+  @override
+  String authPasswordNewPlaceholder(int n) {
+    return 'At least $n characters';
+  }
+
+  @override
+  String authPasswordTooShort(int n) {
+    return 'Your password needs at least $n characters.';
+  }
+
+  @override
+  String get signUpTermsStart => 'By creating your account you accept the ';
+
+  @override
+  String get signUpTerms => 'Terms';
+
+  @override
+  String get signUpTermsMiddle => ' and the ';
+
+  @override
+  String get signUpPrivacy => 'Privacy Policy';
+
+  @override
+  String get signUpTermsEnd => '.';
+
+  @override
+  String get signUpSubmit => 'Create account';
+
+  @override
+  String get onboardingTitle => 'Finish your\nprofile';
+
+  @override
+  String get onboardingBody =>
+      'Your account is ready. Add your name and a @username so your friends can find you.';
+
+  @override
+  String get usernameTitle => 'Pick your\n@username';
+
+  @override
+  String get linkTitle => 'Save your\naccount';
+
+  @override
+  String get homePopularWeek => 'Popular this week';
+
+  @override
+  String get seeAll => 'See all';
+
+  @override
+  String get seeAllPlural => 'See all';
+
+  @override
+  String get homeFriendsActivity => 'Your friends\' activity';
+
+  @override
+  String homeActivityNew(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n new',
+      one: '1 new',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get feedLiked => 'You like it';
+
+  @override
+  String get feedLike => 'Like';
+
+  @override
+  String get feedComment => 'Comment';
+
+  @override
+  String feedReplies(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n replies',
+      one: '1 reply',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get popularTitle => 'Popular this week';
+
+  @override
+  String get popularSubtitle => 'The most rated albums of the last 7 days';
+
+  @override
+  String get popularEmptyTitle => 'A quiet week';
+
+  @override
+  String get popularEmptyBody =>
+      'No one has rated an album in the last 7 days.';
+
+  @override
+  String notificationsUnread(int n) {
+    return '$n unread';
+  }
+
+  @override
+  String get groupToday => 'Today';
+
+  @override
+  String get groupYesterday => 'Yesterday';
+
+  @override
+  String get groupThisWeek => 'This week';
+
+  @override
+  String get searchAllArtists => 'Artists';
+
+  @override
+  String get searchAllAlbums => 'Albums';
+
+  @override
+  String searchAllFor(String query) {
+    return 'Results for “$query”';
+  }
+
+  @override
+  String get searchClear => 'Clear search';
+
+  @override
+  String get albumYourRatingEdit => 'Your rating · edit';
+
+  @override
+  String albumCommunity(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n ratings',
+      one: '1 rating',
+    );
+    return 'Community · $_temp0';
+  }
+
+  @override
+  String get albumTapToChange => 'Tap to change';
+
+  @override
+  String get albumBarsCommunity => 'Bars: community';
+
+  @override
+  String get albumHoldToAdd => 'Press and hold to add';
+
+  @override
+  String get albumFriendsAverage => 'Friends\' average';
+
+  @override
+  String get albumTapPhoto => 'Tap a photo to see their rating';
+
+  @override
+  String get albumFeaturedComments => 'Featured comments';
+
+  @override
+  String albumCommentsShown(int shown, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total comments',
+      one: '1 comment',
+    );
+    return '$shown of $_temp0';
+  }
+
+  @override
+  String get albumSeeArtist => 'See artist';
+
+  @override
+  String get ratingSavedShort => 'Rating saved';
+
+  @override
+  String get rateSheetHint => 'Tap or slide';
+
+  @override
+  String get rateSheetSaveMine => 'Save my rating';
+
+  @override
+  String pickerOverlineTrack(String name) {
+    return 'Song · $name';
+  }
+
+  @override
+  String pickerOverlineAlbum(String name) {
+    return 'Album · $name';
+  }
+
+  @override
+  String get listFormName => 'Name';
+
+  @override
+  String get listFormDescription => 'Description';
+
+  @override
+  String get listFormOptional => 'Optional';
+
+  @override
+  String get artistSortBest => 'Top rated';
+
+  @override
+  String get artistNoRatings => 'No ratings';
 }

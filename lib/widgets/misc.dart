@@ -1,12 +1,14 @@
-import 'dart:math' as math;
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../theme/vinilo_theme.dart';
-import 'vinyl_disc.dart';
+import 'v_buttons.dart';
+import 'v_sections.dart';
 
+// Widgets del diseño anterior que todavía usan las pantallas sin
+// rediseñar. Conservan su nombre y sus parámetros, pero ya se dibujan con
+// el sistema nuevo; se borran al terminar el rediseño.
+
+/// Título de sección: ahora es un `VBlockTitle` (30 px condensado).
 class SectionHeader extends StatelessWidget {
   const SectionHeader(
     this.title, {
@@ -23,62 +25,38 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = VColors.of(context);
     return Padding(
-      padding: EdgeInsets.fromLTRB(VSpace.page, top, VSpace.page, 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: VText.display(28, height: 1)),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 4),
-                  Text(subtitle!, style: VText.ui(13, color: c.text2)),
-                ],
-              ],
-            ),
-          ),
-          ?action,
-        ],
+      padding: const EdgeInsets.only(bottom: 14),
+      child: VBlockTitle(
+        title,
+        subtitle: subtitle,
+        trailing: action,
+        padding: EdgeInsets.fromLTRB(VSpace.page, top, VSpace.page, 0),
       ),
     );
   }
 }
 
+/// Bloque de carga: plano, sin esquinas ni brillo (`VSkeleton`).
 class Skeleton extends StatelessWidget {
   const Skeleton({
     super.key,
     this.width,
     this.height,
-    this.radius = 12,
+    this.radius = 0,
   });
 
   final double? width;
   final double? height;
+
+  /// Se ignora: el rediseño no tiene esquinas redondeadas.
   final double radius;
 
   @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: c.surface2,
-        borderRadius: BorderRadius.circular(radius),
-      ),
-    )
-        .animate(onPlay: (c) => c.repeat())
-        .shimmer(
-          duration: 1400.ms,
-          color: (c.isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
-        );
-  }
+  Widget build(BuildContext context) => VSkeleton(width: width, height: height);
 }
 
+/// Estado vacío: solo texto (`VEmptyState`), sin el vinilo de antes.
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
@@ -92,45 +70,23 @@ class EmptyState extends StatelessWidget {
   final String message;
   final Widget? action;
 
-  /// Color de la etiqueta del vinilo; por defecto el acento del tema.
+  /// Se ignora (era el color de la etiqueta del vinilo).
   final Color? labelColor;
 
   @override
   Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 28, 32, 20),
-      child: Column(
-        children: [
-          VinylDisc(size: 72, labelColor: labelColor ?? c.accent)
-              .animate()
-              .fadeIn(duration: 500.ms)
-              .scale(begin: const Offset(0.8, 0.8), curve: Curves.easeOutBack),
-          const SizedBox(height: 22),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: VText.display(28, height: 1.05),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: VText.ui(14, color: c.text2, height: 1.45),
-          ),
-          if (action != null) ...[const SizedBox(height: 22), action!],
-        ],
-      ),
-    );
+    return VEmptyState(title: title, message: message, action: action);
   }
 }
 
+/// Botón redondo de vidrio de antes: ahora es un botón cuadrado de 40 con
+/// el relleno translúcido que va sobre las fotos.
 class GlassIconButton extends StatelessWidget {
   const GlassIconButton({
     super.key,
     required this.icon,
     required this.onTap,
-    this.size = 42,
+    this.size = 40,
   });
 
   final IconData icon;
@@ -140,81 +96,38 @@ class GlassIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    return ClipOval(
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: Material(
-          color: c.scrim.withValues(alpha: c.isDark ? 0.32 : 0.55),
-          child: InkWell(
-            onTap: onTap,
-            child: SizedBox(
-              width: size,
-              height: size,
-              child: Icon(icon, size: 20, color: c.text),
-            ),
-          ),
+    return Pressable(
+      onTap: onTap,
+      builder: (context, pressed) => AnimatedOpacity(
+        duration: const Duration(milliseconds: 90),
+        opacity: pressed ? 0.55 : 1,
+        child: Container(
+          width: size,
+          height: size,
+          color: c.overButton,
+          alignment: Alignment.center,
+          child: Icon(icon, size: 18, color: c.ink),
         ),
       ),
     );
   }
 }
 
-/// Resplandor radial que tiñe la parte alta de una pantalla con el color
-/// dominante de una portada (o el color de un perfil). Va detrás del
-/// encabezado de un CustomScrollView como hijo Positioned de un Stack
-/// (`top: -AmbientGlow.bleed, bottom: 0`): así sube con el encabezado al
-/// hacer scroll y se desvanece antes de que este termine. `bleed` es lo que
-/// sobresale por arriba para cubrir el rebote del scroll.
+/// El resplandor de antes: el rediseño no tiene gradientes, así que ya no
+/// dibuja nada. `bleed` se conserva para las pantallas que lo posicionan.
 class AmbientGlow extends StatelessWidget {
   const AmbientGlow({super.key, required this.color, this.focus = 70});
 
   static const double bleed = 300;
 
   final Color color;
-
-  /// Distancia desde el borde superior de la pantalla al centro del resplandor.
   final double focus;
 
   @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final h = constraints.maxHeight;
-          final w = constraints.maxWidth;
-          if (!h.isFinite || h <= 0) return const SizedBox.shrink();
-          final centerPx = bleed + focus;
-          final reach = math.max(40.0, h - centerPx);
-          final shortest = math.min(w, h);
-          return TweenAnimationBuilder<Color?>(
-            tween: ColorTween(end: color),
-            duration: const Duration(milliseconds: 900),
-            curve: Curves.easeOut,
-            builder: (context, value, _) {
-              final c = value ?? color;
-              return DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment(0, 2 * centerPx / h - 1),
-                    radius: reach / shortest,
-                    colors: [
-                      c.withValues(alpha: 0.62),
-                      c.withValues(alpha: 0.22),
-                      c.withValues(alpha: 0),
-                    ],
-                    stops: const [0, 0.42, 1],
-                  ),
-                ),
-                child: const SizedBox.expand(),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
+/// Lo que antes era una píldora: una caja de borde recto de 1 px.
 class Pill extends StatelessWidget {
   const Pill({
     super.key,
@@ -226,7 +139,7 @@ class Pill extends StatelessWidget {
 
   final Widget child;
 
-  /// Fondo de la píldora; por defecto la segunda superficie del tema.
+  /// Fondo; por defecto, ninguno.
   final Color? color;
   final VoidCallback? onTap;
   final EdgeInsets padding;
@@ -234,21 +147,22 @@ class Pill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    return Material(
-      color: color ?? c.surface2,
-      borderRadius: BorderRadius.circular(999),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(padding: padding, child: child),
+    return Pressable(
+      onTap: onTap,
+      builder: (context, pressed) => Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: color,
+          border: Border.all(color: pressed ? c.ink : c.lineStrong),
+        ),
+        child: child,
       ),
     );
   }
 }
 
-/// Selector de secciones en píldoras (en el perfil: "Perfil" y "Listas").
-/// La elegida va rellena con el color de énfasis. `keys` da una llave a
-/// cada píldora para el driver de pruebas.
+/// Selector de secciones: ahora son pestañas de texto subrayadas
+/// (`VTabs`).
 class SectionSwitch extends StatelessWidget {
   const SectionSwitch({
     super.key,
@@ -265,51 +179,18 @@ class SectionSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: c.surface.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: c.line),
-      ),
-      child: Row(
-        children: [
-          for (var i = 0; i < labels.length; i++)
-            Expanded(
-              child: GestureDetector(
-                key: keys == null ? null : ValueKey(keys![i]),
-                behavior: HitTestBehavior.opaque,
-                onTap: i == selected ? null : () => onChanged(i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: i == selected ? c.accent : Colors.transparent,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Center(
-                    child: Text(
-                      labels[i],
-                      style: VText.ui(
-                        14,
-                        weight: 700,
-                        color: i == selected ? c.onAccent : c.text2,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+    return VTabs(
+      labels: labels,
+      selected: selected,
+      onChanged: onChanged,
+      keys: keys,
+      padding: EdgeInsets.zero,
     );
   }
 }
 
-/// Píldora que se elige o no (filtros del diario y de las listas). `color`
-/// cambia el tono de la elegida (por defecto el énfasis).
+/// Opción de un filtro: texto de 14; la elegida en tinta con una línea de
+/// 1 px debajo, las demás apagadas (los filtros de listas del prototipo).
 class ChoicePill extends StatelessWidget {
   const ChoicePill({
     super.key,
@@ -322,29 +203,29 @@ class ChoicePill extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+
+  /// Color de la elegida (por defecto, tinta).
   final Color? color;
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    final accent = color ?? c.accent;
-    return Material(
-      color: selected ? accent.withValues(alpha: 0.16) : c.surface2,
-      borderRadius: BorderRadius.circular(999),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
+    final active = color ?? c.ink;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.only(bottom: 3),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: selected ? accent.withValues(alpha: 0.7) : Colors.transparent,
+            border: Border(
+              bottom: BorderSide(color: selected ? active : Colors.transparent),
             ),
           ),
           child: Text(
             label,
-            style: VText.ui(13, weight: 700, color: selected ? accent : c.text2),
+            style: VText.ui(14, weight: 500, color: selected ? active : c.inactive),
           ),
         ),
       ),

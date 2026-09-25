@@ -36,7 +36,7 @@ class SpotifyApi {
   final http.Client _client = http.Client();
   final Map<String, AlbumDetail> _albums = {};
   final Map<String, AlbumPage> _pages = {};
-  final Map<String, List<Artist>> _artists = {};
+  final Map<String, ArtistPage> _artists = {};
   final Map<String, Artist> _artistDetails = {};
 
   bool get isConfigured => baseUrl.isNotEmpty;
@@ -47,16 +47,21 @@ class SpotifyApi {
   Future<AlbumPage> artistAlbums(String artistId, {int offset = 0}) =>
       _page('/artist/$artistId/albums', {'offset': '$offset'});
 
-  Future<List<Artist>> searchArtists(String query) async {
-    final key = query.trim().toLowerCase();
+  /// La primera página de artistas que coinciden (la fila "Artistas" del
+  /// buscador y el selector de favoritos).
+  Future<List<Artist>> searchArtists(String query) async =>
+      (await searchArtistsPage(query)).items;
+
+  /// Una página de artistas: "Ver todos" sigue pidiendo con `offset`.
+  Future<ArtistPage> searchArtistsPage(String query, {int offset = 0}) async {
+    final key = '${query.trim().toLowerCase()}@$offset';
     final cached = _artists[key];
     if (cached != null) return cached;
-    final body = await _get('/artists/search', {'q': query});
-    final items = ((body['items'] as List?) ?? const [])
-        .map((j) => Artist.fromJson(Map<String, dynamic>.from(j as Map)))
-        .toList();
-    _artists[key] = items;
-    return items;
+    final page = ArtistPage.fromJson(
+      await _get('/artists/search', {'q': query, 'offset': '$offset'}),
+    );
+    _artists[key] = page;
+    return page;
   }
 
   /// Ficha del artista (nombre, foto, géneros).

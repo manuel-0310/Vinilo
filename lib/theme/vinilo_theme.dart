@@ -1,235 +1,392 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'score.dart';
+import 'oklch.dart';
 
-/// Paleta de Vinilo, en dos versiones: carbón cálido (oscura) y papel cálido
-/// (clara). Se obtiene con `VColors.of(context)`; nunca hay negro ni blanco
-/// puros. El énfasis (`accent`) sale del color que eligió la persona
-/// (`seed`), ajustado al tema con `withSeed`; por defecto es el ámbar.
+/// Paleta de Vinilo ("estuche de vinilo, editorial"): los tokens de la
+/// especificación del rediseño. Se obtiene con `VColors.of(context)`. El
+/// énfasis (`accent`) es el color que eligió la persona, uno de
+/// `VColors.accentPalette`; el texto encima de él es siempre `onAccent`.
+///
+/// Todo color de la interfaz sale de aquí: el tema claro todavía no está
+/// diseñado y, cuando llegue, solo cambian los valores de `light`.
 class ViniloPalette extends ThemeExtension<ViniloPalette> {
   const ViniloPalette({
     required this.brightness,
-    this.seed = defaultSeed,
+    this.accent = defaultAccent,
     required this.bg,
+    required this.sheet,
     required this.surface,
-    required this.surface2,
-    required this.surface3,
+    required this.ink,
+    required this.ink2,
+    required this.ink3,
+    required this.ink4,
     required this.line,
-    required this.text,
-    required this.text2,
-    required this.text3,
-    required this.accent,
+    required this.lineSoft,
+    required this.lineStrong,
+    required this.buttonLine,
+    required this.inactive,
+    required this.placeholder,
+    required this.scrim,
+    required this.overButton,
     required this.onAccent,
-    required this.danger,
     required this.success,
+    required this.danger,
   });
 
-  /// Color de énfasis por defecto (el primero de `VColors.accentPalette`).
-  static const Color defaultSeed = Color(0xFFE8A04B);
+  /// Bermellón, `oklch(0.7 0.19 38)`: el primero de la paleta.
+  static const Color defaultAccent = Color(0xFFFD6A3A);
 
   final Brightness brightness;
 
-  /// Color elegido por la persona, sin ajustar. `accent` es su versión
-  /// adaptada a este tema.
-  final Color seed;
-  final Color bg;
-  final Color surface;
-  final Color surface2;
-  final Color surface3;
-  final Color line;
-  final Color text;
-  final Color text2;
-  final Color text3;
+  /// Color de énfasis: botones primarios, enlaces, pestaña activa, punto de
+  /// avisos, "Siguiendo", notas, barras, foco de los campos.
   final Color accent;
+
+  /// Fondo de la app.
+  final Color bg;
+
+  /// Fondo de las hojas inferiores.
+  final Color sheet;
+
+  /// Relleno de fotos y portadas que todavía no cargan.
+  final Color surface;
+
+  /// Texto principal y botón primario neutro.
+  final Color ink;
+
+  /// Texto secundario y descripciones (tinta al 62 %).
+  final Color ink2;
+
+  /// Etiquetas mono (58 %).
+  final Color ink3;
+
+  /// Texto terciario y contadores (50 %).
+  final Color ink4;
+
+  /// Separadores principales (14 %).
+  final Color line;
+
+  /// Separadores entre filas (8 %).
+  final Color lineSoft;
+
+  /// Bordes de botones secundarios y línea de los campos (28 %).
+  final Color lineStrong;
+
+  /// Borde de los botones cuadrados de ícono (18 %).
+  final Color buttonLine;
+
+  /// Pestañas y opciones no elegidas (55 %).
+  final Color inactive;
+
+  /// Texto de ejemplo en los campos vacíos (45 %).
+  final Color placeholder;
+
+  /// Velo detrás de una hoja inferior.
+  final Color scrim;
+
+  /// Fondo de los botones que van sobre una foto (portada, banner).
+  final Color overButton;
+
+  /// Texto sobre el énfasis.
   final Color onAccent;
-  final Color danger;
+
+  /// Confirmaciones ("✓ Disponible").
   final Color success;
+
+  /// Errores y acciones que borran (no está en el prototipo).
+  final Color danger;
 
   bool get isDark => brightness == Brightness.dark;
 
-  /// Negro en oscuro, blanco en claro: para velos, sombras y vidrio.
-  Color get scrim => isDark ? Colors.black : Colors.white;
+  /// Tinta con otra opacidad (los valores sueltos del prototipo: .78, .7…).
+  Color inkA(double alpha) => ink.withValues(alpha: alpha);
 
-  /// Color de una nota, legible sobre este fondo.
-  Color score(num value) => Score.color(value, accent: accent, light: !isDark);
+  /// La misma paleta con otro color de énfasis.
+  ViniloPalette withAccent(Color accent) => copyWith(accent: accent);
 
-  /// Color de una nota sobre un fondo siempre oscuro (la insignia sobre las
-  /// portadas), sea cual sea el tema.
-  Color scoreOnDark(num value) =>
-      Score.color(value, accent: accentFor(seed, Brightness.dark));
-
-  /// La misma paleta con el énfasis derivado de `seed`: ajusta luminosidad y
-  /// saturación al tema y calcula el color del texto encima.
-  ViniloPalette withSeed(Color seed) {
-    final accent = accentFor(seed, brightness);
-    return copyWith(seed: seed, accent: accent, onAccent: onAccentFor(accent));
-  }
+  // Compatibilidad con los nombres del diseño anterior, mientras se
+  // reescriben las pantallas. Se borran al terminar el rediseño.
+  Color get seed => accent;
+  Color get text => ink;
+  Color get text2 => ink2;
+  Color get text3 => ink4;
+  Color get surface2 => const Color(0xFF1B1A18);
+  Color get surface3 => surface;
+  Color score(num value) => accent;
+  Color scoreOnDark(num value) => accent;
+  ViniloPalette withSeed(Color seed) => withAccent(seed);
+  static const Color defaultSeed = defaultAccent;
 
   static const ViniloPalette dark = ViniloPalette(
     brightness: Brightness.dark,
-    bg: Color(0xFF0F0E0C),
-    surface: Color(0xFF181613),
-    surface2: Color(0xFF211E1A),
-    surface3: Color(0xFF2B2722),
-    line: Color(0x16FFFFFF),
-    text: Color(0xFFF4EFE6),
-    text2: Color(0xFFA9A296),
-    text3: Color(0xFF6F695F),
-    accent: Color(0xFFE8A04B),
-    onAccent: Color(0xFF1B1408),
-    danger: Color(0xFFD26A5C),
-    success: Color(0xFF8DBB7A),
+    bg: Color(0xFF0F0E0D),
+    sheet: Color(0xFF171615),
+    surface: Color(0xFF2A2826),
+    ink: Color(0xFFEFEBE4),
+    ink2: Color(0x9EEFEBE4),
+    ink3: Color(0x94EFEBE4),
+    ink4: Color(0x80EFEBE4),
+    line: Color(0x24EFEBE4),
+    lineSoft: Color(0x14EFEBE4),
+    lineStrong: Color(0x47EFEBE4),
+    buttonLine: Color(0x2EEFEBE4),
+    inactive: Color(0x8CEFEBE4),
+    placeholder: Color(0x73EFEBE4),
+    scrim: Color(0xB8080807),
+    overButton: Color(0x8C0F0E0D),
+    onAccent: Color(0xFF0F0E0D),
+    success: Color(0xFF76CF8A),
+    danger: Color(0xFFED756E),
   );
 
-  static const ViniloPalette light = ViniloPalette(
-    brightness: Brightness.light,
-    bg: Color(0xFFF4EFE6),
-    surface: Color(0xFFFBF8F2),
-    surface2: Color(0xFFEDE6DA),
-    surface3: Color(0xFFE1D9CB),
-    line: Color(0x1F1B1712),
-    text: Color(0xFF1D1913),
-    text2: Color(0xFF6B6559),
-    text3: Color(0xFF988F80),
-    accent: Color(0xFFB8731A),
-    onAccent: Color(0xFF1B1408),
-    danger: Color(0xFFB94A3C),
-    success: Color(0xFF4F8A3F),
-  );
+  /// Tema claro: pendiente del diseñador. Mientras tanto es el oscuro (con
+  /// su brillo, para que el teclado y la barra de estado sigan oscuros).
+  static const ViniloPalette light = dark;
 
   @override
   ViniloPalette copyWith({
     Brightness? brightness,
-    Color? seed,
-    Color? bg,
-    Color? surface,
-    Color? surface2,
-    Color? surface3,
-    Color? line,
-    Color? text,
-    Color? text2,
-    Color? text3,
     Color? accent,
+    Color? bg,
+    Color? sheet,
+    Color? surface,
+    Color? ink,
+    Color? ink2,
+    Color? ink3,
+    Color? ink4,
+    Color? line,
+    Color? lineSoft,
+    Color? lineStrong,
+    Color? buttonLine,
+    Color? inactive,
+    Color? placeholder,
+    Color? scrim,
+    Color? overButton,
     Color? onAccent,
-    Color? danger,
     Color? success,
+    Color? danger,
   }) {
     return ViniloPalette(
       brightness: brightness ?? this.brightness,
-      seed: seed ?? this.seed,
-      bg: bg ?? this.bg,
-      surface: surface ?? this.surface,
-      surface2: surface2 ?? this.surface2,
-      surface3: surface3 ?? this.surface3,
-      line: line ?? this.line,
-      text: text ?? this.text,
-      text2: text2 ?? this.text2,
-      text3: text3 ?? this.text3,
       accent: accent ?? this.accent,
+      bg: bg ?? this.bg,
+      sheet: sheet ?? this.sheet,
+      surface: surface ?? this.surface,
+      ink: ink ?? this.ink,
+      ink2: ink2 ?? this.ink2,
+      ink3: ink3 ?? this.ink3,
+      ink4: ink4 ?? this.ink4,
+      line: line ?? this.line,
+      lineSoft: lineSoft ?? this.lineSoft,
+      lineStrong: lineStrong ?? this.lineStrong,
+      buttonLine: buttonLine ?? this.buttonLine,
+      inactive: inactive ?? this.inactive,
+      placeholder: placeholder ?? this.placeholder,
+      scrim: scrim ?? this.scrim,
+      overButton: overButton ?? this.overButton,
       onAccent: onAccent ?? this.onAccent,
-      danger: danger ?? this.danger,
       success: success ?? this.success,
+      danger: danger ?? this.danger,
     );
   }
 
   @override
   ViniloPalette lerp(ThemeExtension<ViniloPalette>? other, double t) {
     if (other is! ViniloPalette) return this;
+    Color mix(Color a, Color b) => Color.lerp(a, b, t)!;
     return ViniloPalette(
       brightness: t < 0.5 ? brightness : other.brightness,
-      seed: Color.lerp(seed, other.seed, t)!,
-      bg: Color.lerp(bg, other.bg, t)!,
-      surface: Color.lerp(surface, other.surface, t)!,
-      surface2: Color.lerp(surface2, other.surface2, t)!,
-      surface3: Color.lerp(surface3, other.surface3, t)!,
-      line: Color.lerp(line, other.line, t)!,
-      text: Color.lerp(text, other.text, t)!,
-      text2: Color.lerp(text2, other.text2, t)!,
-      text3: Color.lerp(text3, other.text3, t)!,
-      accent: Color.lerp(accent, other.accent, t)!,
-      onAccent: Color.lerp(onAccent, other.onAccent, t)!,
-      danger: Color.lerp(danger, other.danger, t)!,
-      success: Color.lerp(success, other.success, t)!,
+      accent: mix(accent, other.accent),
+      bg: mix(bg, other.bg),
+      sheet: mix(sheet, other.sheet),
+      surface: mix(surface, other.surface),
+      ink: mix(ink, other.ink),
+      ink2: mix(ink2, other.ink2),
+      ink3: mix(ink3, other.ink3),
+      ink4: mix(ink4, other.ink4),
+      line: mix(line, other.line),
+      lineSoft: mix(lineSoft, other.lineSoft),
+      lineStrong: mix(lineStrong, other.lineStrong),
+      buttonLine: mix(buttonLine, other.buttonLine),
+      inactive: mix(inactive, other.inactive),
+      placeholder: mix(placeholder, other.placeholder),
+      scrim: mix(scrim, other.scrim),
+      overButton: mix(overButton, other.overButton),
+      onAccent: mix(onAccent, other.onAccent),
+      success: mix(success, other.success),
+      danger: mix(danger, other.danger),
     );
   }
 }
 
-/// Acceso a la paleta del tema activo y a los colores fijos.
+/// Acceso a la paleta del tema activo y a los colores que se pueden elegir.
 class VColors {
   VColors._();
 
   static ViniloPalette of(BuildContext context) =>
       Theme.of(context).extension<ViniloPalette>() ?? ViniloPalette.dark;
 
-  /// Colores que puede elegir cada persona: su avatar, su resplandor y el
-  /// énfasis de toda la app cuando es la propia (se ajustan a cada tema).
+  /// Los 14 colores de énfasis del prototipo (convertidos de OKLCH, ver
+  /// `test/theme_test.dart`): tiñen la app de quien lo elige y son el color
+  /// de su avatar.
   static const List<Color> accentPalette = [
-    Color(0xFFE8A04B),
-    Color(0xFFD26A5C),
-    Color(0xFF8DBB7A),
-    Color(0xFF5FA8D3),
-    Color(0xFFB08CF0),
-    Color(0xFFE07BB0),
-    Color(0xFF4FC3B0),
-    Color(0xFFF2D06B),
-    // Ronda 6: cobalto, cereza, esmeralda, mandarina, lima y magenta.
-    Color(0xFF5B7FE8),
-    Color(0xFFE0546E),
-    Color(0xFF3FAE7A),
-    Color(0xFFF08A3C),
-    Color(0xFFB5CF5A),
-    Color(0xFFC45BD6),
+    Color(0xFFFD6A3A), // oklch(0.7 0.19 38), bermellón
+    Color(0xFFF66B71), // oklch(0.7 0.17 20)
+    Color(0xFFE3AE28), // oklch(0.78 0.15 85)
+    Color(0xFFA0C849), // oklch(0.78 0.16 125)
+    Color(0xFF53BE70), // oklch(0.72 0.15 150)
+    Color(0xFF2FBDA7), // oklch(0.72 0.12 180)
+    Color(0xFF2FB5D8), // oklch(0.72 0.12 220)
+    Color(0xFF4990E8), // oklch(0.65 0.15 255)
+    Color(0xFF877FE6), // oklch(0.65 0.15 285)
+    Color(0xFFBB82E3), // oklch(0.7 0.15 310)
+    Color(0xFFDE73BD), // oklch(0.7 0.16 340)
+    Color(0xFFE44D7D), // oklch(0.64 0.19 5)
+    Color(0xFFAC713E), // oklch(0.6 0.1 60)
+    Color(0xFFEFEBE4), // tinta
   ];
+
+  /// El color de la paleta más parecido: los perfiles guardan cualquier
+  /// ARGB (los de antes del rediseño, uno de la paleta vieja) y se muestran
+  /// con el más cercano de la nueva, sin migrar nada.
+  static Color nearest(Color color) {
+    var best = accentPalette.first;
+    var bestDistance = double.infinity;
+    for (final candidate in accentPalette) {
+      if (candidate.toARGB32() == color.toARGB32()) return candidate;
+      final d = Oklch.distance(color, candidate);
+      if (d < bestDistance) {
+        bestDistance = d;
+        best = candidate;
+      }
+    }
+    return best;
+  }
 }
 
-/// Tipografía: Instrument Serif para lo editorial, Manrope para la interfaz.
-/// Sin `color`, el texto hereda el del tema (`DefaultTextStyle`).
+/// Tipografía del rediseño. Sin `color`, el texto hereda el del tema.
+/// - `display`: Archivo condensada (eje de ancho 62–80 %) para títulos,
+///   notas y numerales.
+/// - `ui`: Archivo de ancho normal para la interfaz.
+/// - `mono`: IBM Plex Mono para etiquetas y datos (el texto en mayúsculas lo
+///   pone `VMono`).
+/// - `quote`: Newsreader itálica para las citas de las reseñas.
+/// El interlineado se reparte arriba y abajo como en CSS; sin `height` es
+/// el "normal" de la fuente, igual que en el prototipo.
 class VText {
   VText._();
 
-  static const String serif = 'InstrumentSerif';
-  static const String sans = 'Manrope';
+  static const String archivo = 'Archivo';
+  static const String plexMono = 'PlexMono';
+  static const String newsreader = 'Newsreader';
 
+  // Nombres de antes (las pantallas viejas los usan como familia).
+  static const String serif = archivo;
+  static const String sans = archivo;
+
+  /// Títulos y numerales grandes. `stretch` es el `font-stretch` del
+  /// prototipo (62 a 80) y `tracking`, el espaciado en em.
   static TextStyle display(
     double size, {
     Color? color,
-    double height = 1.0,
+    double? height = 0.9,
+    int weight = 800,
+    double stretch = 62,
+    double tracking = -0.01,
+    double? letterSpacing,
     bool italic = false,
-    double letterSpacing = -0.5,
   }) {
-    return TextStyle(
-      fontFamily: serif,
-      fontSize: size,
+    return _archivo(
+      size,
+      weight: weight,
+      stretch: stretch,
       color: color,
       height: height,
-      letterSpacing: letterSpacing,
-      fontStyle: italic ? FontStyle.italic : FontStyle.normal,
-      fontWeight: FontWeight.w400,
+      letterSpacing: letterSpacing ?? tracking * size,
     );
   }
 
+  /// Texto de interfaz (Archivo de ancho normal).
   static TextStyle ui(
     double size, {
-    int weight = 500,
+    int weight = 400,
     Color? color,
-    double height = 1.3,
+    double? height,
+    double letterSpacing = 0,
+    double stretch = 100,
+  }) {
+    return _archivo(
+      size,
+      weight: weight,
+      stretch: stretch,
+      color: color,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
+  }
+
+  /// Etiquetas y datos en IBM Plex Mono. `tracking` en em (.06–.1).
+  static TextStyle mono(
+    double size, {
+    Color? color,
+    int weight = 500,
+    double tracking = 0.08,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: plexMono,
+      fontSize: size,
+      color: color,
+      height: height,
+      letterSpacing: tracking * size,
+      fontWeight: _weight(weight),
+      leadingDistribution: TextLeadingDistribution.even,
+    );
+  }
+
+  /// Citas de reseñas: Newsreader itálica 400, con el tamaño óptico que el
+  /// navegador elige solo (igual al tamaño de la letra).
+  static TextStyle quote(double size, {Color? color, double? height = 1.22}) {
+    return TextStyle(
+      fontFamily: newsreader,
+      fontSize: size,
+      color: color,
+      height: height,
+      fontStyle: FontStyle.italic,
+      fontWeight: FontWeight.w400,
+      fontVariations: [
+        FontVariation('opsz', size.clamp(6, 72).toDouble()),
+        const FontVariation('wght', 400),
+      ],
+      leadingDistribution: TextLeadingDistribution.even,
+    );
+  }
+
+  /// Etiquetas pequeñas de antes: ahora son mono.
+  static TextStyle label(double size, {Color? color}) => mono(size, color: color);
+
+  static TextStyle _archivo(
+    double size, {
+    required int weight,
+    required double stretch,
+    Color? color,
+    double? height,
     double letterSpacing = 0,
   }) {
     return TextStyle(
-      fontFamily: sans,
+      fontFamily: archivo,
       fontSize: size,
       color: color,
       height: height,
       letterSpacing: letterSpacing,
       fontWeight: _weight(weight),
-      fontVariations: [FontVariation('wght', weight.toDouble())],
+      fontVariations: [
+        FontVariation('wdth', stretch),
+        FontVariation('wght', weight.toDouble()),
+      ],
+      leadingDistribution: TextLeadingDistribution.even,
     );
-  }
-
-  /// Etiquetas pequeñas en mayúsculas con tracking amplio.
-  static TextStyle label(double size, {Color? color}) {
-    return ui(size, weight: 700, color: color, letterSpacing: 1.4, height: 1.2);
   }
 
   static FontWeight _weight(int w) =>
@@ -238,53 +395,50 @@ class VText {
 
 class VSpace {
   VSpace._();
+
+  /// Margen lateral de las pantallas (24 en la bienvenida).
   static const double page = 20;
-  static const double tabBarClearance = 110;
+
+  /// Aire al final de las listas de las pestañas: la barra inferior ya no
+  /// tapa el contenido.
+  static const double tabBarClearance = 24;
 }
 
 ThemeData buildViniloTheme(ViniloPalette p) {
-  final scheme = p.isDark
-      ? ColorScheme.dark(
-          primary: p.accent,
-          onPrimary: p.onAccent,
-          secondary: p.accent,
-          onSecondary: p.onAccent,
-          surface: p.surface,
-          onSurface: p.text,
-          error: p.danger,
-          onError: Colors.white,
-          outline: p.line,
-          surfaceContainerHighest: p.surface3,
-        )
-      : ColorScheme.light(
-          primary: p.accent,
-          onPrimary: p.onAccent,
-          secondary: p.accent,
-          onSecondary: p.onAccent,
-          surface: p.surface,
-          onSurface: p.text,
-          error: p.danger,
-          onError: Colors.white,
-          outline: p.line,
-          surfaceContainerHighest: p.surface3,
-        );
+  final scheme = ColorScheme.dark(
+    primary: p.accent,
+    onPrimary: p.onAccent,
+    secondary: p.accent,
+    onSecondary: p.onAccent,
+    surface: p.bg,
+    onSurface: p.ink,
+    error: p.danger,
+    onError: p.onAccent,
+    outline: p.lineStrong,
+    outlineVariant: p.line,
+    surfaceContainerHighest: p.sheet,
+  );
 
   final base = ThemeData(
     useMaterial3: true,
     brightness: p.brightness,
     colorScheme: scheme,
     scaffoldBackgroundColor: p.bg,
-    fontFamily: VText.sans,
+    canvasColor: p.bg,
+    fontFamily: VText.archivo,
+    splashFactory: NoSplash.splashFactory,
+    highlightColor: p.ink.withValues(alpha: 0.06),
+    hoverColor: Colors.transparent,
   );
 
-  final rounded = RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
+  const square = RoundedRectangleBorder();
 
   return base.copyWith(
     extensions: [p],
     textTheme: base.textTheme.apply(
-      bodyColor: p.text,
-      displayColor: p.text,
-      fontFamily: VText.sans,
+      bodyColor: p.ink,
+      displayColor: p.ink,
+      fontFamily: VText.archivo,
     ),
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
@@ -295,7 +449,7 @@ ThemeData buildViniloTheme(ViniloPalette p) {
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
-      foregroundColor: p.text,
+      foregroundColor: p.ink,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
@@ -304,12 +458,15 @@ ThemeData buildViniloTheme(ViniloPalette p) {
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       showDragHandle: false,
+      shape: square,
     ),
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: p.surface3,
-      contentTextStyle: VText.ui(14, color: p.text),
+      backgroundColor: p.sheet,
+      contentTextStyle: VText.ui(14, color: p.ink),
+      actionTextColor: p.accent,
       behavior: SnackBarBehavior.floating,
-      shape: rounded,
+      elevation: 0,
+      shape: RoundedRectangleBorder(side: BorderSide(color: p.line)),
     ),
     dividerTheme: DividerThemeData(color: p.line, thickness: 1, space: 1),
     textSelectionTheme: TextSelectionThemeData(
@@ -317,52 +474,64 @@ ThemeData buildViniloTheme(ViniloPalette p) {
       selectionColor: p.accent.withValues(alpha: 0.33),
       selectionHandleColor: p.accent,
     ),
+    // Campos sin caja: texto y una línea debajo, que con foco es de 2 px en
+    // el color de énfasis (`LineField` arma el suyo con la etiqueta mono).
     inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: p.surface2,
-      hintStyle: VText.ui(15, color: p.text3),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(color: p.accent.withValues(alpha: 0.7)),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      filled: false,
+      isDense: true,
+      hintStyle: VText.ui(17, color: p.placeholder),
+      border: UnderlineInputBorder(borderSide: BorderSide(color: p.lineStrong)),
+      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: p.lineStrong)),
+      focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: p.accent, width: 2)),
+      errorBorder: UnderlineInputBorder(borderSide: BorderSide(color: p.danger)),
+      focusedErrorBorder: UnderlineInputBorder(borderSide: BorderSide(color: p.danger, width: 2)),
+      contentPadding: const EdgeInsets.fromLTRB(0, 8, 0, 10),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: p.accent,
         foregroundColor: p.onAccent,
-        disabledBackgroundColor: p.surface3,
-        disabledForegroundColor: p.text3,
+        disabledBackgroundColor: p.surface,
+        disabledForegroundColor: p.ink4,
         minimumSize: const Size.fromHeight(56),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        textStyle: VText.ui(16, weight: 700),
+        shape: square,
+        elevation: 0,
+        textStyle: VText.ui(16, weight: 600),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: p.ink,
+        minimumSize: const Size.fromHeight(52),
+        shape: square,
+        side: BorderSide(color: p.lineStrong),
+        textStyle: VText.ui(16, weight: 500),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: p.text2,
-        textStyle: VText.ui(14, weight: 600),
+        foregroundColor: p.ink2,
+        shape: square,
+        textStyle: VText.ui(14, weight: 500),
       ),
     ),
-    iconTheme: IconThemeData(color: p.text),
+    iconTheme: IconThemeData(color: p.ink),
     progressIndicatorTheme: ProgressIndicatorThemeData(color: p.accent),
     dialogTheme: DialogThemeData(
-      backgroundColor: p.surface2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      backgroundColor: p.sheet,
+      elevation: 0,
+      shape: RoundedRectangleBorder(side: BorderSide(color: p.line)),
+    ),
+    popupMenuTheme: PopupMenuThemeData(
+      color: p.sheet,
+      elevation: 0,
+      shape: RoundedRectangleBorder(side: BorderSide(color: p.line)),
     ),
   );
 }
 
-/// Estilo de la barra de estado según el tema: iconos claros sobre fondo
-/// oscuro y viceversa.
+/// Estilo de la barra de estado según el brillo del tema: íconos claros
+/// sobre fondo oscuro y viceversa.
 SystemUiOverlayStyle overlayStyleFor(Brightness brightness) =>
     brightness == Brightness.dark
         ? SystemUiOverlayStyle.light

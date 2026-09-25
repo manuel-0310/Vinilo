@@ -7,12 +7,17 @@ import '../l10n/l10n.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/username.dart';
+import 'line_field.dart';
+import 'v_icons.dart';
+import 'v_sections.dart';
 
-enum _Status { idle, invalid, checking, available, taken, offline }
+enum _Status { idle, current, invalid, checking, available, taken, offline }
 
-/// Campo del @usuario: pasa a minúsculas mientras se escribe, valida las
-/// reglas al instante y, cuando el nombre es válido, pregunta a Firestore si
-/// está libre (con un pequeño retraso para no consultar en cada tecla).
+/// Campo del @usuario (un `LineField` con "@" delante): pasa a minúsculas
+/// mientras se escribe, valida las reglas al instante y, cuando el nombre es
+/// válido, pregunta a Firestore si está libre (con un pequeño retraso para
+/// no consultar en cada tecla). Junto a la etiqueta dice "✓ Disponible",
+/// "Comprobando…" u "Ocupado"; lo que falla va debajo de la línea.
 /// `onChanged` recibe el @usuario listo para reservar, o null si todavía no
 /// sirve.
 class UsernameField extends StatefulWidget {
@@ -23,6 +28,10 @@ class UsernameField extends StatefulWidget {
     this.forUid,
     this.autofocus = false,
     this.onSubmitted,
+    this.label,
+    this.error,
+    this.focusNode,
+    this.textInputAction = TextInputAction.done,
   });
 
   final ValueChanged<String?> onChanged;
@@ -33,6 +42,16 @@ class UsernameField extends StatefulWidget {
   final bool autofocus;
   final VoidCallback? onSubmitted;
 
+  /// Etiqueta mono ("Usuario"); sin ella solo queda el estado.
+  final String? label;
+
+  /// Error que pone quien lo usa (por ejemplo, "Elige tu @usuario." al
+  /// enviar vacío). Si la validación ya dice algo ("Ocupado", "Mínimo 3
+  /// caracteres"), se ve eso.
+  final String? error;
+  final FocusNode? focusNode;
+  final TextInputAction textInputAction;
+
   @override
   State<UsernameField> createState() => _UsernameFieldState();
 }
@@ -42,16 +61,16 @@ class _UsernameFieldState extends State<UsernameField> {
       TextEditingController(text: widget.initial);
   Timer? _debounce;
   _Status _status = _Status.idle;
-  /// El texto se arma en `build` (en `initState` todavía no hay idioma).
-  String Function(AppLocalizations l)? _message;
+  String _username = '';
+  UsernameProblem? _problem;
   int _request = 0;
 
   @override
   void initState() {
     super.initState();
     if (widget.initial.isNotEmpty) {
-      _status = _Status.available;
-      _message = (l) => l.usernameCurrent;
+      _status = _Status.current;
+      _username = widget.initial;
     }
   }
 
@@ -62,11 +81,11 @@ class _UsernameFieldState extends State<UsernameField> {
     super.dispose();
   }
 
-  void _set(_Status status, String Function(AppLocalizations l)? message, {String? valid}) {
+  void _set(_Status status, {UsernameProblem? problem, String? valid}) {
     if (!mounted) return;
     setState(() {
       _status = status;
-      _message = message;
+      _problem = problem;
     });
     widget.onChanged(valid);
   }
@@ -74,20 +93,21 @@ class _UsernameFieldState extends State<UsernameField> {
   void _onText(String raw) {
     _debounce?.cancel();
     final username = normalizeUsername(raw);
+    _username = username;
     final problem = usernameProblem(username);
     if (problem == UsernameProblem.empty) {
-      _set(_Status.idle, null);
+      _set(_Status.idle);
       return;
     }
     if (problem != null) {
-      _set(_Status.invalid, (l) => usernameProblemMessage(problem, l));
+      _set(_Status.invalid, problem: problem);
       return;
     }
     if (username == widget.initial) {
-      _set(_Status.available, (l) => l.usernameCurrent, valid: username);
+      _set(_Status.current, valid: username);
       return;
     }
-    _set(_Status.checking, (l) => l.usernameChecking);
+    _set(_Status.checking);
     final id = ++_request;
     _debounce = Timer(const Duration(milliseconds: 450), () => _check(username, id));
   }
@@ -99,95 +119,72 @@ class _UsernameFieldState extends State<UsernameField> {
           .isUsernameAvailable(username, forUid: widget.forUid);
       if (id != _request) return; // Ya se escribió otra cosa.
       if (free) {
-        _set(_Status.available, (l) => l.usernameAvailable(username), valid: username);
+        _set(_Status.available, valid: username);
       } else {
-        _set(_Status.taken, (l) => l.usernameTaken(username));
+        _set(_Status.taken);
       }
     } catch (_) {
       if (id != _request) return;
-      _set(_Status.offline, (l) => l.usernameOffline);
+      _set(_Status.offline);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final message = _message?.call(context.l10n) ?? '';
     final c = VColors.of(context);
-    final statusColor = switch (_status) {
-      _Status.available => c.success,
-      _Status.invalid || _Status.taken || _Status.offline => c.danger,
-      _ => c.text3,
+    final l = context.l10n;
+    final validation = switch (_status) {
+      _Status.invalid => usernameProblemMessage(_problem!, l),
+      _Status.taken => l.usernameTaken(_username),
+      _Status.offline => l.usernameOffline,
+      _ => null,
     };
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          key: const ValueKey('username-field'),
-          controller: _controller,
-          autofocus: widget.autofocus,
-          autocorrect: false,
-          enableSuggestions: false,
-          textCapitalization: TextCapitalization.none,
-          keyboardType: TextInputType.visiblePassword,
-          textInputAction: TextInputAction.done,
-          inputFormatters: [
-            const _UsernameFormatter(),
-            LengthLimitingTextInputFormatter(usernameMax),
+    final Widget? status = switch (_status) {
+      _Status.available => Row(
+          key: const ValueKey('username-status'),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            VIconView(VIcon.check, size: 10, color: c.success),
+            const SizedBox(width: 5),
+            VMono(l.usernameStatusAvailable, size: 10, color: c.success),
           ],
-          onChanged: _onText,
-          onSubmitted: (_) => widget.onSubmitted?.call(),
-          style: VText.ui(17, weight: 600),
-          decoration: InputDecoration(
-            hintText: context.l10n.usernameHint,
-            prefixText: '@',
-            prefixStyle: VText.ui(17, weight: 600, color: c.text2),
-            suffixIcon: _SuffixFor(status: _status),
-          ),
         ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          alignment: Alignment.topLeft,
-          child: message.isEmpty
-              ? const SizedBox(width: double.infinity)
-              : Padding(
-                  padding: const EdgeInsets.fromLTRB(6, 8, 6, 0),
-                  child: Text(
-                    message,
-                    key: const ValueKey('username-status'),
-                    style: VText.ui(12, weight: 600, color: statusColor),
-                  ),
-                ),
+      _Status.checking => VMono(
+          l.usernameStatusChecking,
+          key: const ValueKey('username-status'),
+          size: 10,
+          color: c.ink4,
         ),
-      ],
-    );
-  }
-}
-
-class _SuffixFor extends StatelessWidget {
-  const _SuffixFor({required this.status});
-
-  final _Status status;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    return switch (status) {
-      _Status.checking => Padding(
-          padding: const EdgeInsets.all(14),
-          child: SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2, color: c.text3),
-          ),
+      _Status.taken => VMono(
+          l.usernameStatusTaken,
+          key: const ValueKey('username-status'),
+          size: 10,
+          color: c.danger,
         ),
-      _Status.available => Icon(Icons.check_circle_rounded, color: c.success),
-      _Status.taken ||
-      _Status.invalid ||
-      _Status.offline =>
-        Icon(Icons.error_rounded, color: c.danger),
-      _Status.idle => const SizedBox.shrink(),
+      _ => null,
     };
+    return LineField(
+      label: widget.label,
+      status: status,
+      fieldKey: const ValueKey('username-field'),
+      controller: _controller,
+      focusNode: widget.focusNode,
+      prefix: '@',
+      hint: l.usernameHint,
+      autofocus: widget.autofocus,
+      autocorrect: false,
+      enableSuggestions: false,
+      keyboardType: TextInputType.visiblePassword,
+      textInputAction: widget.textInputAction,
+      autofillHints: const [AutofillHints.newUsername],
+      inputFormatters: [
+        const _UsernameFormatter(),
+        LengthLimitingTextInputFormatter(usernameMax),
+      ],
+      onChanged: _onText,
+      onSubmitted: (_) => widget.onSubmitted?.call(),
+      error: validation ?? widget.error,
+    );
   }
 }
 

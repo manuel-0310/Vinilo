@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../l10n/l10n.dart';
 import '../models/notification.dart';
@@ -8,14 +7,18 @@ import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
 import '../util/format.dart';
-import '../widgets/album_cover.dart';
-import '../widgets/misc.dart';
+import '../widgets/sheet.dart';
 import '../widgets/user_avatar.dart';
+import '../widgets/v_buttons.dart';
+import '../widgets/v_icons.dart';
+import '../widgets/v_sections.dart';
 import 'routes.dart';
 
-/// Notificaciones dentro de la app, de la más reciente a la más antigua.
-/// Al abrirla se marcan todas como leídas; las que estaban sin leer se
-/// distinguen hasta salir.
+/// Notificaciones de la más reciente a la más antigua, agrupadas por día
+/// (Hoy, Ayer, Esta semana, luego mes y año). Al abrirla se marcan todas
+/// como leídas; las que estaban sin leer llevan su punto de énfasis hasta
+/// salir. Deslizar a la izquierda borra una; "Borrar todas" pide
+/// confirmación.
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
@@ -39,34 +42,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _deleteAll(List<AppNotification> items) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        final c = VColors.of(ctx);
-        return AlertDialog(
-          title: Text(ctx.l10n.notificationsClearTitle, style: VText.display(28)),
-          content: Text(
-            ctx.l10n.notificationsClearBody,
-            style: VText.ui(14, color: c.text2, height: 1.4),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(ctx.l10n.cancel),
-            ),
-            TextButton(
-              key: const ValueKey('notifications-clear-confirm'),
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(
-                ctx.l10n.notificationsClear,
-                style: VText.ui(14, weight: 700, color: c.danger),
-              ),
-            ),
-          ],
-        );
-      },
+    final l = context.l10n;
+    final ok = await showConfirmSheet(
+      context,
+      title: l.notificationsClearTitle,
+      message: l.notificationsClearBody,
+      confirmLabel: l.notificationsClear,
+      danger: true,
+      confirmKey: const ValueKey('notifications-clear-confirm'),
     );
-    if (ok != true || !mounted) return;
+    if (!ok || !mounted) return;
     final me = CurrentUser.of(context);
     final repo = ServicesScope.of(context).notifications;
     setState(() => _removed.addAll(items.map((n) => n.id)));
@@ -115,132 +100,144 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    final topPad = MediaQuery.paddingOf(context).top;
+    final l = context.l10n;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
-      body: Stack(
-        children: [
-          StreamBuilder<List<AppNotification>>(
-            stream: _stream,
-            builder: (context, snap) {
-              final items = snap.data?.where((n) => !_removed.contains(n.id)).toList();
-              if (items != null) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) _markRead(items);
-                });
-              }
-              final unread = _wasUnread ?? {for (final n in items ?? const <AppNotification>[]) if (!n.read) n.id};
-              return CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
+      body: SafeArea(
+        bottom: false,
+        child: StreamBuilder<List<AppNotification>>(
+          stream: _stream,
+          builder: (context, snap) {
+            final items = snap.data?.where((n) => !_removed.contains(n.id)).toList();
+            if (items != null) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _markRead(items);
+              });
+            }
+            final unread = _wasUnread ??
+                {for (final n in items ?? const <AppNotification>[]) if (!n.read) n.id};
+            final unreadLeft = items?.where((n) => unread.contains(n.id)).length ?? 0;
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: VPageHeader(
+                    title: l.notificationsTitle,
+                    subtitle: items == null
+                        ? l.loading
+                        : unreadLeft == 0
+                            ? l.notificationsAllCaughtUp
+                            : l.notificationsUnread(unreadLeft),
+                    subtitleKey: const ValueKey('notifications-subtitle'),
+                    action: items != null && items.isNotEmpty ? l.notificationsClear : null,
+                    onAction: items == null ? null : () => _deleteAll(items),
+                    actionKey: const ValueKey('notifications-clear'),
+                  ),
+                ),
+                if (snap.hasError)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(VSpace.page, topPad + 62, VSpace.page, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  context.l10n.notificationsTitle,
-                                  style: VText.display(38, height: 1),
-                                ),
-                              ),
-                              if (items != null && items.isNotEmpty)
-                                TextButton(
-                                  key: const ValueKey('notifications-clear'),
-                                  onPressed: () => _deleteAll(items),
-                                  child: Text(
-                                    context.l10n.notificationsClear,
-                                    style: VText.ui(13, weight: 700, color: c.danger),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            items == null
-                                ? context.l10n.loading
-                                : unread.isEmpty
-                                    ? context.l10n.notificationsAllCaughtUp
-                                    : context.l10n.notificationsNew(unread.length),
-                            key: const ValueKey('notifications-subtitle'),
-                            style: VText.ui(13, color: c.text2),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 18)),
-                  if (snap.hasError)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                        child: Text(
-                          context.l10n.notificationsError(describeError(snap.error, context.l10n)),
-                          style: VText.ui(13, color: c.danger),
-                        ),
-                      ),
-                    )
-                  else if (items == null)
-                    SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                      sliver: SliverList.separated(
-                        itemCount: 5,
-                        separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (_, _) => const Skeleton(height: 60, radius: 14),
+                      child: Text(
+                        l.notificationsError(describeError(snap.error, l)),
+                        style: VText.ui(13, color: c.danger),
                       ),
-                    )
-                  else if (items.isEmpty)
-                    SliverToBoxAdapter(
-                      child: EmptyState(
-                        title: context.l10n.notificationsEmptyTitle,
-                        message: context.l10n.notificationsEmptyBody,
-                      ),
-                    )
-                  else
-                    SliverList.builder(
-                      itemCount: items.length,
-                      itemBuilder: (context, i) => Dismissible(
-                        key: ValueKey('dismiss-${items[i].id}'),
-                        direction: DismissDirection.endToStart,
-                        onDismissed: (_) => _delete(items[i]),
-                        background: Container(
-                          color: c.danger,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                          child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
-                        ),
-                        child: _NotificationRow(
-                          key: ValueKey('notification-$i'),
-                          item: items[i],
-                          fresh: unread.contains(items[i].id),
-                          onTap: () => _open(items[i]),
-                        ),
-                      ).animate().fadeIn(delay: (25 * (i % 12)).ms, duration: 300.ms),
                     ),
-                  SliverToBoxAdapter(child: SizedBox(height: bottomPad + 30)),
-                ],
-              );
-            },
-          ),
-          Positioned(
-            top: topPad + 8,
-            left: 16,
-            child: GlassIconButton(
-              key: const ValueKey('back'),
-              icon: Icons.arrow_back_ios_new_rounded,
-              onTap: () => Navigator.of(context).maybePop(),
-            ),
-          ),
-        ],
+                  )
+                else if (items == null)
+                  const _Skeleton()
+                else if (items.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Container(
+                      decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
+                      child: VEmptyState(
+                        title: l.notificationsEmptyTitle,
+                        message: l.notificationsEmptyBody,
+                      ),
+                    ),
+                  )
+                else
+                  for (final group in _groups(items, l))
+                    SliverMainAxisGroup(
+                      slivers: [
+                        SliverToBoxAdapter(child: _GroupHeader(group.label)),
+                        SliverList.builder(
+                          itemCount: group.items.length,
+                          itemBuilder: (context, i) {
+                            final (index, n) = group.items[i];
+                            return Dismissible(
+                              key: ValueKey('dismiss-${n.id}'),
+                              direction: DismissDirection.endToStart,
+                              onDismissed: (_) => _delete(n),
+                              background: Container(
+                                color: c.danger,
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+                                child: VIconView(VIcon.trash, size: 20, color: c.onAccent),
+                              ),
+                              child: _NotificationRow(
+                                key: ValueKey('notification-$index'),
+                                item: n,
+                                fresh: unread.contains(n.id),
+                                onTap: () => _open(n),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                SliverToBoxAdapter(child: SizedBox(height: bottomPad + 30)),
+              ],
+            );
+          },
+        ),
       ),
+    );
+  }
+
+  /// Las notificaciones (ya de la más reciente a la más antigua) en grupos
+  /// seguidos por día, con su posición en la lista completa para las
+  /// llaves de prueba.
+  List<_Group> _groups(List<AppNotification> items, AppLocalizations l) {
+    final now = DateTime.now();
+    final groups = <_Group>[];
+    for (final (i, n) in items.indexed) {
+      final label = dayGroup(n.createdAt, l, now: now);
+      if (groups.isEmpty || groups.last.label != label) {
+        groups.add(_Group(label, []));
+      }
+      groups.last.items.add((i, n));
+    }
+    return groups;
+  }
+}
+
+class _Group {
+  _Group(this.label, this.items);
+
+  final String label;
+  final List<(int, AppNotification)> items;
+}
+
+/// "AYER": etiqueta mono con la línea de arriba.
+class _GroupHeader extends StatelessWidget {
+  const _GroupHeader(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 10),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
+      child: VMono(label),
     );
   }
 }
 
+/// Una notificación: avatar de 36, la frase (14,5) con quien la provocó y el
+/// disco o la lista en negrita, la hora en mono y, si estaba sin leer, un
+/// punto de énfasis. Las leídas van al 78 %.
 class _NotificationRow extends StatelessWidget {
   const _NotificationRow({
     super.key,
@@ -258,90 +255,79 @@ class _NotificationRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    final name = item.from.name;
-    final text = item.text(context.l10n);
-    final rest = text.startsWith(name)
-        ? text.substring(name.length)
-        : text.replaceFirst(name, '');
-    final prefix = text.startsWith(name)
-        ? ''
-        : text.substring(0, text.indexOf(name).clamp(0, text.length));
-    Widget? trailing;
-    switch (item.type) {
-      case NotificationType.likeRating:
-      case NotificationType.reply:
-      case NotificationType.mention:
-        trailing = AlbumCover(url: item.album?.smallCover, size: 44, radius: 9);
-      case NotificationType.likeList:
-      case NotificationType.saveList:
-        trailing = Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: c.surface2,
-            borderRadius: BorderRadius.circular(9),
-          ),
-          child: Icon(
-            item.type == NotificationType.likeList
-                ? Icons.favorite_rounded
-                : Icons.bookmark_rounded,
-            size: 20,
-            color: c.text2,
-          ),
-        );
-      case NotificationType.follow:
-        trailing = null;
-    }
-    return Material(
-      color: fresh ? c.accent.withValues(alpha: 0.07) : Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 12),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: () => openUser(context, item.from.uid),
-                child: UserAvatar(
-                  name: item.from.name,
-                  color: Color(item.from.colorValue),
-                  url: item.from.avatarUrl,
-                  size: 44,
-                ),
+    final l = context.l10n;
+    final bold = VText.ui(14.5, weight: 700, color: c.ink, height: 1.35);
+    return Pressable(
+      onTap: onTap,
+      builder: (context, pressed) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 12),
+        decoration: BoxDecoration(
+          color: pressed ? c.inkA(0.04) : c.bg,
+          border: Border(top: BorderSide(color: c.lineSoft)),
+        ),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () => openUser(context, item.from.uid),
+              child: UserAvatar(
+                name: item.from.name,
+                color: Color(item.from.colorValue),
+                url: item.from.avatarUrl,
+                size: 36,
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          if (prefix.isNotEmpty) TextSpan(text: prefix),
-                          TextSpan(text: name, style: VText.ui(14, weight: 800)),
-                          TextSpan(text: rest),
-                        ],
-                      ),
-                      style: VText.ui(14, height: 1.35),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        for (final (text, strong) in item.parts(l))
+                          TextSpan(text: text, style: strong ? bold : null),
+                      ],
                     ),
-                    const SizedBox(height: 3),
-                    Text(timeAgo(item.createdAt, context.l10n), style: VText.ui(11, color: c.text3)),
-                  ],
-                ),
+                    style: VText.ui(14.5, height: 1.35, color: fresh ? c.ink : c.inkA(0.78)),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  VMono(timeAgo(item.createdAt, l), size: 10, tracking: 0.06, color: c.ink4),
+                ],
               ),
-              if (trailing != null) ...[const SizedBox(width: 12), trailing],
-              if (fresh) ...[
-                const SizedBox(width: 10),
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(color: c.accent, shape: BoxShape.circle),
-                ),
-              ],
-            ],
-          ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox.square(
+              dimension: 8,
+              child: fresh
+                  ? DecoratedBox(
+                      decoration: BoxDecoration(color: c.accent, shape: BoxShape.circle),
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Skeleton extends StatelessWidget {
+  const _Skeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverList.builder(
+      itemCount: 6,
+      itemBuilder: (_, _) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 12),
+        child: Row(
+          children: [
+            VSkeleton(width: 36, height: 36, circle: true),
+            SizedBox(width: 12),
+            Expanded(child: VSkeleton(height: 34)),
+          ],
         ),
       ),
     );

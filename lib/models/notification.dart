@@ -117,16 +117,52 @@ class AppNotification {
 
   /// Frase completa, con el nombre de quien la provocó, en el idioma de
   /// quien la lee.
-  String text(AppLocalizations l) => switch (type) {
-        NotificationType.follow => l.notifFollow(from.name),
-        NotificationType.likeRating =>
-          l.notifLikeRating(from.name, album?.name ?? l.notifSomeAlbum),
-        NotificationType.likeList => l.notifLikeList(from.name, listName ?? ''),
-        NotificationType.saveList => l.notifSaveList(from.name, listName ?? ''),
-        NotificationType.reply => l.notifReply(
-            from.name, album?.name ?? l.notifSomeAlbum, snippet ?? ''),
-        NotificationType.mention => l.notifMention(
-            from.name, album?.name ?? l.notifSomeAlbum, snippet ?? ''),
+  String text(AppLocalizations l) => _sentence(l, from.name, _target(l));
+
+  /// La misma frase en trozos, para pintar en negrita a quien la provocó y
+  /// el disco o la lista: `(texto, resaltado)`.
+  List<(String, bool)> parts(AppLocalizations l) {
+    const nameMark = '\u{E000}';
+    const targetMark = '\u{E001}';
+    final out = <(String, bool)>[];
+    final plain = StringBuffer();
+    void flush() {
+      if (plain.isEmpty) return;
+      out.add((plain.toString(), false));
+      plain.clear();
+    }
+
+    for (final rune in _sentence(l, nameMark, targetMark).runes) {
+      final ch = String.fromCharCode(rune);
+      if (ch == nameMark || ch == targetMark) {
+        flush();
+        final value = ch == nameMark ? from.name : _target(l);
+        if (value.isNotEmpty) out.add((value, true));
+      } else {
+        plain.write(ch);
+      }
+    }
+    flush();
+    return out;
+  }
+
+  /// El disco o la lista de la que se habla (nada en un seguimiento).
+  String _target(AppLocalizations l) => switch (type) {
+        NotificationType.follow => '',
+        NotificationType.likeList || NotificationType.saveList => listName ?? '',
+        NotificationType.likeRating ||
+        NotificationType.reply ||
+        NotificationType.mention =>
+          album?.name ?? l.notifSomeAlbum,
+      };
+
+  String _sentence(AppLocalizations l, String name, String target) => switch (type) {
+        NotificationType.follow => l.notifFollow(name),
+        NotificationType.likeRating => l.notifLikeRating(name, target),
+        NotificationType.likeList => l.notifLikeList(name, target),
+        NotificationType.saveList => l.notifSaveList(name, target),
+        NotificationType.reply => l.notifReply(name, target, snippet ?? ''),
+        NotificationType.mention => l.notifMention(name, target, snippet ?? ''),
       };
 
   /// Las que llevan al hilo de una nota.
