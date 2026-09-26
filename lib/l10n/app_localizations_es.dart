@@ -1518,6 +1518,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get welcomeHeadline => 'Tu diario de discos empieza aquí.';
 
   @override
+  String get welcomeTryIt => 'Pruébalo';
+
+  @override
   String get signInTitle => 'Iniciar\nsesión';
 
   @override
@@ -1718,9 +1721,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get albumTapToChange => 'Toca para cambiar';
-
-  @override
   String get albumBarsCommunity => 'Barras: comunidad';
 
   @override
@@ -1748,9 +1748,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get albumSeeArtist => 'Ver artista';
-
-  @override
-  String get ratingSavedShort => 'Nota guardada';
 
   @override
   String get rateSheetHint => 'Toca o desliza';
@@ -1836,4 +1833,177 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get shareCardRated => 'califiqué';
+
+  @override
+  String shareCardListBy(String handle) {
+    return 'lista de $handle';
+  }
+
+  @override
+  String shareCardRankingBy(String handle) {
+    return 'ranking de $handle';
+  }
+
+  @override
+  String get shareCardList => 'lista';
+
+  @override
+  String get shareCardRanking => 'ranking';
+
+  @override
+  String shareCardAlbums(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n discos',
+      one: '1 disco',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String shareCardTracks(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n canciones',
+      one: '1 canción',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String shareCardSaves(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n guardados',
+      one: '1 guardado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareCardArtist => 'artista';
+
+  @override
+  String get shareCardMyAverage => 'mi nota promedio';
+
+  @override
+  String shareCardRatedOf(int rated, int total) {
+    return '$rated de $total discos';
+  }
+
+  @override
+  String shareCardSince(String handle, String year) {
+    return '$handle · en vinilo desde $year';
+  }
+
+  @override
+  String get shareCardStatAlbums => 'discos';
+
+  @override
+  String get shareCardStatReviews => 'reseñas';
+
+  @override
+  String get shareCardStatAverage => 'nota media';
+
+  @override
+  String shareCardFavorites(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'mis $n favoritos',
+      one: 'mi favorito',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareCardFollowMe => 'Sígueme en Vinilo';
+
+  @override
+  String shareCardMyWeek(String range) {
+    return 'mi semana · $range';
+  }
+
+  @override
+  String shareCardWeekCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n discos.',
+      one: '1 disco.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareCardCompatibility => 'compatibilidad';
+
+  @override
+  String shareCardFriendAlmostAll(String name) {
+    return '$name y yo coincidimos en casi todo.';
+  }
+
+  @override
+  String shareCardFriendQuiteALot(String name) {
+    return '$name y yo coincidimos bastante.';
+  }
+
+  @override
+  String shareCardFriendOpposites(String name) {
+    return '$name y yo somos opuestos musicales.';
+  }
+
+  @override
+  String get shareCardMe => 'yo';
+
+  @override
+  String get shareCardAgree => 'coincidimos';
+
+  @override
+  String get shareCardDisagree => 'no coincidimos';
+
+  @override
+  String get shareTabStory => 'Historia';
+
+  @override
+  String get shareTabSquare => 'Cuadrado';
+
+  @override
+  String get shareTargetStories => 'historias';
+
+  @override
+  String get shareTargetWhatsapp => 'whatsapp';
+
+  @override
+  String get shareTargetSave => 'guardar';
+
+  @override
+  String get shareTargetLink => 'enlace';
+
+  @override
+  String get shareToStories => 'Compartir en Historias';
+
+  @override
+  String get shareImage => 'Compartir imagen';
+
+  @override
+  String get shareImageSaved => 'Imagen guardada';
+
+  @override
+  String get shareSaveDenied =>
+      'Vinilo no tiene permiso para guardar en tus fotos. Actívalo en Ajustes.';
+
+  @override
+  String get shareImageFailed =>
+      'No se pudo preparar la imagen. Inténtalo de nuevo.';
+
+  @override
+  String get shareImageUnsupported =>
+      'Esta versión de la app todavía no puede compartir imágenes.';
 }

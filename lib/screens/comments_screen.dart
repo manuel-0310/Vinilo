@@ -4,7 +4,6 @@ import '../l10n/l10n.dart';
 import '../models/album.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
-import '../theme/oklch.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/ranking.dart';
 import '../widgets/comment_card.dart';
@@ -47,7 +46,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
     final l10n = context.l10n;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
     final cover = _coverColor;
-    final tone = cover == null ? c.accent : coverTone(cover);
+    final tone = cover == null ? c.accentText : c.coverTone(cover);
     return Scaffold(
       body: SafeArea(
         bottom: false,

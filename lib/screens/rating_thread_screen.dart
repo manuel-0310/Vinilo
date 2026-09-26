@@ -5,17 +5,20 @@ import '../l10n/l10n.dart';
 import '../models/follow.dart';
 import '../models/rating.dart';
 import '../models/reply.dart';
+import '../models/user_profile.dart';
 import '../services/services.dart';
+import '../share_cards/share_card_data.dart';
+import '../share_cards/share_specs.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
 import '../util/format.dart';
 import '../util/share_links.dart';
-import '../theme/oklch.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/comment_card.dart';
 import '../widgets/line_field.dart';
 import '../widgets/mention_text.dart';
 import '../widgets/share_button.dart';
+import '../widgets/share_sheet.dart';
 import '../widgets/sheet.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/v_buttons.dart';
@@ -63,6 +66,25 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
   /// Las respuestas que se vieron la última vez: si llega una mía, baja al
   /// final; y sus autoras son a quienes se puede mencionar.
   List<Reply> _seen = const [];
+
+  /// La dueña de una nota ajena, para poner su @usuario en la imagen que
+  /// se comparte (la nota solo guarda su nombre).
+  UserProfile? _owner;
+  bool _ownerAsked = false;
+
+  void _askOwner(RatingEntry entry, String myUid) {
+    if (_ownerAsked || entry.uid == myUid) return;
+    _ownerAsked = true;
+    ServicesScope.of(context).users.fetch(entry.uid).then((p) {
+      if (mounted) setState(() => _owner = p);
+    }, onError: (_) {});
+  }
+
+  List<ShareCardSpec> _shareCards(RatingEntry entry, UserProfile me) {
+    final owner = entry.uid == me.uid ? me : _owner;
+    final person = owner == null ? null : CardPerson.fromProfile(owner);
+    return ShareSpecs.rating(entry, person: person ?? AlbumCardData.fromRating(entry).person, accent: ShareSpecs.accentOf(context));
+  }
 
   /// El color de la portada del disco (la nota va en su tono).
   Color? _coverColor;
@@ -208,7 +230,7 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
     final l10n = context.l10n;
     final me = CurrentUser.of(context);
     final cover = _coverColor;
-    final tone = cover == null ? c.accent : coverTone(cover);
+    final tone = cover == null ? c.accentText : c.coverTone(cover);
     return Scaffold(
       body: StreamBuilder<RatingEntry?>(
         stream: _rating,
@@ -217,7 +239,10 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
           final entry = ratingSnap.data;
           final gone = entry == null &&
               ratingSnap.connectionState == ConnectionState.active;
-          if (entry != null) _askPalette(entry);
+          if (entry != null) {
+            _askPalette(entry);
+            _askOwner(entry, me.uid);
+          }
           if (entry != null && _wantsFocus) {
             _wantsFocus = false;
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -251,6 +276,7 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
                                       key: const ValueKey('share-rating'),
                                       style: VIconButtonStyle.bordered,
                                       message: (l) => shareRatingMessage(entry, l, mine: entry.uid == me.uid),
+                                      cards: () => _shareCards(entry, me),
                                     ),
                             ),
                           ),
@@ -636,7 +662,7 @@ class _Composer extends StatelessWidget {
                             height: 40,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: enabled ? (pressed ? c.ink : c.accent) : null,
+                              color: enabled ? (pressed ? c.ink : c.accentText) : null,
                               border: enabled ? null : Border.all(color: c.buttonLine),
                             ),
                             child: sending

@@ -33,8 +33,10 @@ class AlbumStrip extends StatelessWidget {
   /// Llaves de prueba: `{keyPrefix}-N`.
   final String keyPrefix;
 
-  /// Portada, 8 de aire y la fila del título (título 15,2 + 2 + artista 13).
-  static double heightFor(double size) => size + 8 + 31;
+  /// Portada, 8 de aire y la fila del título: título + 2 + artista, cada
+  /// línea con el alto fijo de `AlbumTile` (la media, de 25,2, cabe).
+  static double heightFor(double size) =>
+      (size + 8 + AlbumTile.lineHeight(14) + 2 + AlbumTile.lineHeight(12)).ceilToDouble();
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +90,23 @@ class AlbumTile extends StatelessWidget {
   /// Solo el año debajo del título, sin el artista.
   final bool yearOnly;
 
+  /// El interlineado "normal" de Archivo (el del prototipo).
+  static const double _lineFactor = 1.088;
+
+  /// Alto de una línea de título o de artista de `size` puntos. Es fijo:
+  /// un carácter que Archivo no tiene (el "…" del corte, letras de otro
+  /// alfabeto) se dibuja con otra fuente de interlineado mayor, y sin el
+  /// strut la línea crecía y el carrusel se desbordaba.
+  static double lineHeight(double size) => size * _lineFactor;
+
+  static StrutStyle _strut(double size) => StrutStyle(
+        fontFamily: VText.archivo,
+        fontSize: size,
+        height: _lineFactor,
+        leadingDistribution: TextLeadingDistribution.even,
+        forceStrutHeight: true,
+      );
+
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
@@ -109,6 +128,7 @@ class AlbumTile extends StatelessWidget {
                     album.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    strutStyle: _strut(14),
                     style: VText.ui(14, weight: 600),
                   ),
                   const SizedBox(height: 2),
@@ -120,6 +140,7 @@ class AlbumTile extends StatelessWidget {
                             : album.artist,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    strutStyle: _strut(subtitleSize),
                     style: VText.ui(subtitleSize, color: c.ink3),
                   ),
                 ],
@@ -129,7 +150,7 @@ class AlbumTile extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 Score.formatAverage(avg, context.l10n.localeName),
-                style: VText.display(28, weight: 700, stretch: 65, height: 0.9, tracking: 0, color: c.accent),
+                style: VText.display(28, weight: 700, stretch: 65, height: 0.9, tracking: 0, color: c.accentText),
               ),
             ],
           ],

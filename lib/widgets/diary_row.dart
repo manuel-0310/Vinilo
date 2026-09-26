@@ -4,7 +4,6 @@ import '../l10n/l10n.dart';
 import '../models/rating.dart';
 import '../screens/routes.dart';
 import '../services/services.dart';
-import '../theme/oklch.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/format.dart';
 import 'album_cover.dart';
@@ -185,7 +184,7 @@ class _DiaryRowState extends State<DiaryRow> {
                 weight: 700,
                 height: 1,
                 tracking: 0,
-                color: cover == null ? c.accent : coverTone(cover),
+                color: cover == null ? c.accentText : c.coverTone(cover),
               ),
             ),
           ],

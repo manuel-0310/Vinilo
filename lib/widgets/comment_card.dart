@@ -68,7 +68,7 @@ class CommentCard extends StatelessWidget {
                 '${entry.score}',
                 maxLines: 1,
                 softWrap: false,
-                style: VText.display(52, weight: 700, height: 0.8, tracking: 0, color: tone ?? c.accent),
+                style: VText.display(52, weight: 700, height: 0.8, tracking: 0, color: tone ?? c.accentText),
               ),
             ),
             const SizedBox(width: 12),

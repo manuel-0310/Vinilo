@@ -5,13 +5,15 @@ import '../l10n/l10n.dart';
 import '../models/music_list.dart';
 import '../models/user_profile.dart';
 import '../services/services.dart';
-import '../theme/oklch.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
 import '../util/share_links.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/photo_picker.dart';
+import '../widgets/pull_stretch.dart';
+import '../share_cards/share_specs.dart';
 import '../widgets/share_button.dart';
+import '../widgets/share_sheet.dart';
 import '../widgets/sheet.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/v_buttons.dart';
@@ -355,9 +357,12 @@ class _ListScreenState extends State<ListScreen> {
           _loadCoverColor(list);
           final mine = list.isMine(me.uid);
           ShareMessage share(AppLocalizations l) => shareListMessage(list, l, mine: mine);
+          List<ShareCardSpec> shareCards() => list.items.isEmpty
+              ? const []
+              : ShareSpecs.list(list, accent: ShareSpecs.accentOf(context));
           return Stack(
             children: [
-              _body(context, c, me, list, mine, share),
+              _body(context, c, me, list, mine, share, shareCards),
               Positioned(
                 top: 0,
                 left: 0,
@@ -369,6 +374,7 @@ class _ListScreenState extends State<ListScreen> {
                           key: const ValueKey('list-bar'),
                           title: list.name,
                           share: share,
+                          shareCards: shareCards,
                           onMenu: mine ? () => _ownerMenu(list) : null,
                         )
                       : const SizedBox.shrink(),
@@ -388,13 +394,14 @@ class _ListScreenState extends State<ListScreen> {
     MusicList list,
     bool mine,
     ShareMessage Function(AppLocalizations l) share,
+    List<ShareCardSpec> Function() shareCards,
   ) {
     final l = context.l10n;
     final topPad = MediaQuery.paddingOf(context).top;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
     final cover = _coverColor;
-    final stripe = cover == null ? c.surface : coverShade(cover);
-    final tone = cover == null ? c.accent : coverTone(cover);
+    final stripe = cover == null ? c.surface : c.coverShade(cover);
+    final tone = cover == null ? c.accentText : c.coverTone(cover);
     final items = list.items;
     final first = items.isEmpty ? null : items.first;
     final bigCover = list.coverUrl ?? first?.cover ?? first?.smallCover;
@@ -429,8 +436,8 @@ class _ListScreenState extends State<ListScreen> {
 
     return CustomScrollView(
       controller: _scroll,
-      // Sin rebote arriba: por encima de la franja no hay nada.
-      physics: const ClampingScrollPhysics(),
+      // Rebota arriba: al tirar hacia abajo la franja crece.
+      physics: pullPhysics,
       slivers: [
         SliverToBoxAdapter(
           child: Stack(
@@ -440,35 +447,42 @@ class _ListScreenState extends State<ListScreen> {
                 left: 0,
                 right: 0,
                 height: topPad + _stripeBelowStatus,
-                child: ColoredBox(color: stripe),
+                child: PullStretch(
+                  controller: _scroll,
+                  height: topPad + _stripeBelowStatus,
+                  child: ColoredBox(color: stripe),
+                ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(16, topPad + 4, 16, 0),
-                    child: Row(
-                      children: [
-                        VIconButton(
-                          key: const ValueKey('back'),
-                          icon: VIcon.back,
-                          style: VIconButtonStyle.filled,
-                          fill: veil,
-                          onTap: () => Navigator.of(context).maybePop(),
-                        ),
-                        const Spacer(),
-                        ShareButton(key: const ValueKey('share-list'), message: share, fill: veil),
-                        if (mine) ...[
-                          const SizedBox(width: 4),
+                  PullPinned(
+                    controller: _scroll,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(16, topPad + 4, 16, 0),
+                      child: Row(
+                        children: [
                           VIconButton(
-                            key: const ValueKey('list-menu'),
-                            icon: VIcon.more,
+                            key: const ValueKey('back'),
+                            icon: VIcon.back,
                             style: VIconButtonStyle.filled,
                             fill: veil,
-                            onTap: () => _ownerMenu(list),
+                            onTap: () => Navigator.of(context).maybePop(),
                           ),
+                          const Spacer(),
+                          ShareButton(key: const ValueKey('share-list'), message: share, cards: shareCards, fill: veil),
+                          if (mine) ...[
+                            const SizedBox(width: 4),
+                            VIconButton(
+                              key: const ValueKey('list-menu'),
+                              icon: VIcon.more,
+                              style: VIconButtonStyle.filled,
+                              fill: veil,
+                              onTap: () => _ownerMenu(list),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                   Padding(
@@ -684,8 +698,8 @@ class _Actions extends StatelessWidget {
         center: true,
         height: 44,
         fontSize: 14,
-        color: editing ? c.accent : null,
-        borderColor: editing ? c.accent : null,
+        color: editing ? c.accentText : null,
+        borderColor: editing ? c.accentText : null,
         onPressed: onToggleEdit,
       );
     } else {
@@ -724,12 +738,12 @@ class _Actions extends StatelessWidget {
       second = VSecondaryButton(
         key: const ValueKey('list-save'),
         label: saved ? l.saved : l.save,
-        leading: saved ? VIconView(VIcon.check, size: 12, color: c.accent) : null,
+        leading: saved ? VIconView(VIcon.check, size: 12, color: c.accentText) : null,
         center: true,
         height: 44,
         fontSize: 14,
-        color: saved ? c.accent : null,
-        borderColor: saved ? c.accent : null,
+        color: saved ? c.accentText : null,
+        borderColor: saved ? c.accentText : null,
         onPressed: () {
           HapticFeedback.lightImpact();
           services.lists.toggleSave(list, me);
@@ -871,11 +885,13 @@ class _StickyBar extends StatelessWidget {
     super.key,
     required this.title,
     required this.share,
+    required this.shareCards,
     required this.onMenu,
   });
 
   final String title;
   final ShareMessage Function(AppLocalizations l) share;
+  final List<ShareCardSpec> Function() shareCards;
   final VoidCallback? onMenu;
 
   @override
@@ -904,7 +920,7 @@ class _StickyBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          ShareButton(message: share, style: VIconButtonStyle.bordered),
+          ShareButton(message: share, cards: shareCards, style: VIconButtonStyle.bordered),
           if (onMenu != null) ...[
             const SizedBox(width: 4),
             VIconButton(icon: VIcon.more, onTap: onMenu),

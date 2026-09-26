@@ -52,7 +52,7 @@ class _Counter extends StatelessWidget {
     final c = VColors.of(context);
     return Text(
       '$count/${UserRepo.maxFavorites}',
-      style: VText.display(28, weight: 700, height: 1, tracking: 0, color: c.accent),
+      style: VText.display(28, weight: 700, height: 1, tracking: 0, color: c.accentText),
     );
   }
 }
@@ -194,7 +194,7 @@ class _FavoritesPickerState extends State<_FavoritesPicker> {
                             if (selected) ...[
                               DecoratedBox(
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: c.accent, width: 2),
+                                  border: Border.all(color: c.accentText, width: 2),
                                 ),
                               ),
                               Positioned(top: 6, right: 6, child: _OrderBadge(index + 1)),
@@ -392,15 +392,15 @@ class _ArtistPickerState extends State<_ArtistPicker> {
                     onTap: () => _toggle(a),
                     builder: (context, pressed) => Container(
                       padding: const EdgeInsets.fromLTRB(6, 0, 10, 0),
-                      decoration: BoxDecoration(border: Border.all(color: pressed ? c.ink : c.accent)),
+                      decoration: BoxDecoration(border: Border.all(color: pressed ? c.ink : c.accentText)),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           ArtistAvatar(artist: a, size: 24),
                           const SizedBox(width: 8),
-                          Text(a.name, style: VText.ui(13, weight: 600, color: c.accent)),
+                          Text(a.name, style: VText.ui(13, weight: 600, color: c.accentText)),
                           const SizedBox(width: 8),
-                          VIconView(VIcon.close, size: 11, color: c.accent),
+                          VIconView(VIcon.close, size: 11, color: c.accentText),
                         ],
                       ),
                     ),
@@ -455,7 +455,7 @@ class _ArtistResultRow extends StatelessWidget {
                   artist.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: VText.ui(15, weight: 600, color: selected ? c.accent : c.ink),
+                  style: VText.ui(15, weight: 600, color: selected ? c.accentText : c.ink),
                 ),
               ),
               const SizedBox(width: 12),

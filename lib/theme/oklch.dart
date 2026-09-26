@@ -72,26 +72,41 @@ class Oklch {
 /// (las portadas muy claras se quedan claras) y un croma moderado; los
 /// grises siguen grises. Es el color de la nota grande y del artista en el
 /// disco, de la regla de notas, del diario, de la discografía y de los
-/// números del ranking.
-Color coverTone(Color cover) {
+/// números del ranking. En el tema claro (`coverToneFor`) va oscuro, con
+/// luminosidad ≈ 0,48, para leerse sobre el papel.
+Color coverTone(Color cover) => coverToneFor(cover, Brightness.dark);
+
+Color coverToneFor(Color cover, Brightness brightness) {
   final o = Oklch.fromColor(cover);
-  final l = o.l.clamp(0.76, 0.86).toDouble();
+  final l = brightness == Brightness.dark
+      ? o.l.clamp(0.76, 0.86).toDouble()
+      : o.l.clamp(0.44, 0.52).toDouble();
   final c = o.c < 0.02 ? o.c * 2 : math.min(0.15, 0.6 * o.c + 0.05);
   return Oklch(l, c, o.h).toColor();
 }
 
 /// Tono oscuro de una portada o de un color: la franja de 300 px de las
-/// listas (luminosidad 0,31) y el banner de un perfil sin foto (0,35).
-Color coverShade(Color color, {double lightness = 0.31}) {
+/// listas (luminosidad 0,31) y el banner de un perfil sin foto (0,35). En
+/// claro (`coverShadeFor`) es el mismo tono pero claro (1,17 − luminosidad:
+/// 0,86 y 0,82), porque encima va la tinta oscura.
+Color coverShade(Color color, {double lightness = 0.31}) =>
+    coverShadeFor(color, Brightness.dark, lightness: lightness);
+
+Color coverShadeFor(Color color, Brightness brightness, {double lightness = 0.31}) {
+  if (brightness == Brightness.light) lightness = 1.17 - lightness;
   final o = Oklch.fromColor(color);
   final c = o.c < 0.02 ? o.c : (0.6 * o.c + 0.01).clamp(0.02, 0.08).toDouble();
   return Oklch(lightness, c, o.h).toColor();
 }
 
-/// Fondo del avatar de una persona sin foto: su color, apagado.
-Color personTone(Color color) {
+/// Fondo del avatar de una persona sin foto: su color, apagado (claro en el
+/// tema claro, porque la inicial va en tinta).
+Color personTone(Color color) => personToneFor(color, Brightness.dark);
+
+Color personToneFor(Color color, Brightness brightness) {
   final o = Oklch.fromColor(color);
-  return Oklch(0.44, math.min(o.c, 0.12), o.h).toColor();
+  final l = brightness == Brightness.dark ? 0.44 : 0.82;
+  return Oklch(l, math.min(o.c, brightness == Brightness.dark ? 0.12 : 0.08), o.h).toColor();
 }
 
 (double, double, double) _oklab(Color color) {

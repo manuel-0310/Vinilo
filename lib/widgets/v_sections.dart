@@ -95,7 +95,7 @@ class VSectionHeader extends StatelessWidget {
                 opacity: pressed ? 0.6 : 1,
                 child: VMono(
                   action!,
-                  color: onAction != null && accentAction ? c.accent : c.ink3,
+                  color: onAction != null && accentAction ? c.accentText : c.ink3,
                 ),
               ),
             ),
@@ -159,7 +159,7 @@ class VBlockTitle extends StatelessWidget {
                 opacity: pressed ? 0.6 : 1,
                 child: Padding(
                   padding: const EdgeInsets.only(left: 12, bottom: 3),
-                  child: VMono(action!, color: c.accent),
+                  child: VMono(action!, color: c.accentText),
                 ),
               ),
             ),

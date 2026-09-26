@@ -1037,6 +1037,7 @@
   "welcomeIssue": "Nº 001",
   "welcomeOverline": "Diario de discos",
   "welcomeHeadline": "Tu diario de discos empieza aquí.",
+  "welcomeTryIt": "Pruébalo",
   "signInTitle": "Iniciar\nsesión",
   "signInIdentifierLabel": "Correo o usuario",
   "authPasswordLabel": "Contraseña",
@@ -1141,7 +1142,6 @@
       }
     }
   },
-  "albumTapToChange": "Toca para cambiar",
   "albumBarsCommunity": "Barras: comunidad",
   "albumHoldToAdd": "Mantén pulsada para agregar",
   "albumFriendsAverage": "Promedio amigos",
@@ -1159,7 +1159,6 @@
     }
   },
   "albumSeeArtist": "Ver artista",
-  "ratingSavedShort": "Nota guardada",
   "rateSheetHint": "Toca o desliza",
   "rateSheetSaveMine": "Guardar mi nota",
   "pickerOverlineTrack": "Canción · {name}",
@@ -1215,5 +1214,140 @@
         "type": "int"
       }
     }
-  }
+  },
+  "shareCardRated": "califiqué",
+  "shareCardListBy": "lista de {handle}",
+  "@shareCardListBy": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "shareCardRankingBy": "ranking de {handle}",
+  "@shareCardRankingBy": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "shareCardList": "lista",
+  "shareCardRanking": "ranking",
+  "shareCardAlbums": "{n, plural, =1{1 disco} other{{n} discos}}",
+  "@shareCardAlbums": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shareCardTracks": "{n, plural, =1{1 canción} other{{n} canciones}}",
+  "@shareCardTracks": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shareCardSaves": "{n, plural, =1{1 guardado} other{{n} guardados}}",
+  "@shareCardSaves": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shareCardArtist": "artista",
+  "shareCardMyAverage": "mi nota promedio",
+  "shareCardRatedOf": "{rated} de {total} discos",
+  "@shareCardRatedOf": {
+    "placeholders": {
+      "rated": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "shareCardSince": "{handle} · en vinilo desde {year}",
+  "@shareCardSince": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "shareCardStatAlbums": "discos",
+  "shareCardStatReviews": "reseñas",
+  "shareCardStatAverage": "nota media",
+  "shareCardFavorites": "{n, plural, =1{mi favorito} other{mis {n} favoritos}}",
+  "@shareCardFavorites": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shareCardFollowMe": "Sígueme en Vinilo",
+  "shareCardMyWeek": "mi semana · {range}",
+  "@shareCardMyWeek": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "shareCardWeekCount": "{n, plural, =1{1 disco.} other{{n} discos.}}",
+  "@shareCardWeekCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shareCardCompatibility": "compatibilidad",
+  "shareCardFriendAlmostAll": "{name} y yo coincidimos en casi todo.",
+  "@shareCardFriendAlmostAll": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareCardFriendQuiteALot": "{name} y yo coincidimos bastante.",
+  "@shareCardFriendQuiteALot": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareCardFriendOpposites": "{name} y yo somos opuestos musicales.",
+  "@shareCardFriendOpposites": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareCardMe": "yo",
+  "shareCardAgree": "coincidimos",
+  "shareCardDisagree": "no coincidimos",
+  "shareTabStory": "Historia",
+  "shareTabSquare": "Cuadrado",
+  "shareTargetStories": "historias",
+  "shareTargetWhatsapp": "whatsapp",
+  "shareTargetSave": "guardar",
+  "shareTargetLink": "enlace",
+  "shareToStories": "Compartir en Historias",
+  "shareImage": "Compartir imagen",
+  "shareImageSaved": "Imagen guardada",
+  "shareSaveDenied": "Vinilo no tiene permiso para guardar en tus fotos. Actívalo en Ajustes.",
+  "shareImageFailed": "No se pudo preparar la imagen. Inténtalo de nuevo.",
+  "shareImageUnsupported": "Esta versión de la app todavía no puede compartir imágenes."
 }

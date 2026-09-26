@@ -7,7 +7,6 @@ import '../models/album.dart';
 import '../models/music_list.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
-import '../theme/oklch.dart';
 import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
@@ -17,8 +16,11 @@ import '../util/streams.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/album_strip.dart';
 import '../widgets/comment_card.dart';
+import '../widgets/pull_stretch.dart';
 import '../widgets/rating_sheet.dart';
+import '../share_cards/share_specs.dart';
 import '../widgets/share_button.dart';
+import '../widgets/share_sheet.dart';
 import '../widgets/sheet.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/v_buttons.dart';
@@ -83,9 +85,6 @@ class _AlbumScreenState extends State<AlbumScreen> {
   /// no borre nada.
   RatingEntry? _pendingDelete;
   int _deleteToken = 0;
-
-  /// La nota que se tocó en la regla, mientras Firestore la confirma.
-  int? _quickScore;
 
   Album get _album => _detail ?? widget.album;
 
@@ -176,36 +175,19 @@ class _AlbumScreenState extends State<AlbumScreen> {
       _cancelPendingDelete();
       existing = pending;
     }
+    final cover = _coverColor;
     final result = await showRatingSheet(
       context,
       album: _album,
       existing: existing,
+      tone: cover == null ? null : VColors.of(context).coverTone(cover),
     );
     if (!mounted || result == null) return;
     if (result == RatingSheetResult.deleted) {
       if (existing != null) _deleteWithUndo(existing);
       return;
     }
-    setState(() => _quickScore = null);
     _snack(context.l10n.ratingSaved, seconds: 2);
-  }
-
-  /// Con nota, tocar otra celda de la regla la cambia al instante (con el
-  /// mismo comentario).
-  Future<void> _quickRate(RatingEntry mine, int score) async {
-    if (score == (_quickScore ?? mine.score)) return;
-    HapticFeedback.selectionClick();
-    setState(() => _quickScore = score);
-    final me = CurrentUser.of(context);
-    final l10n = context.l10n;
-    try {
-      await _services!.ratings.rate(user: me, album: _album, score: score, note: mine.note);
-      _snack(l10n.ratingSavedShort, seconds: 2);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _quickScore = null);
-      _snack(l10n.couldNotSave(describeError(e, l10n)));
-    }
   }
 
   /// Oculta la nota y ofrece "Deshacer" unos segundos. Si el aviso se cierra
@@ -217,10 +199,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
     final uid = entry.uid;
     final albumId = entry.albumId;
     final token = ++_deleteToken;
-    setState(() {
-      _pendingDelete = entry;
-      _quickScore = null;
-    });
+    setState(() => _pendingDelete = entry);
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
     final controller = messenger.showSnackBar(
@@ -428,7 +407,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
     // El color de la portada tal cual (las celdas de la regla) y su tono
     // claro (la nota, el artista, el botón); sin color, el énfasis.
     final cover = _coverColor;
-    final tone = cover == null ? c.accent : coverTone(cover);
+    final tone = cover == null ? c.accentText : c.coverTone(cover);
     final fill = cover ?? c.accent;
 
     return Scaffold(
@@ -439,25 +418,30 @@ class _AlbumScreenState extends State<AlbumScreen> {
           final mine = pending != null && mineSnap.data?.id == pending.id
               ? null
               : mineSnap.data;
-          if (_quickScore != null && mine?.score == _quickScore) {
-            // Firestore ya tiene la nota que se tocó.
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) setState(() => _quickScore = null);
-            });
-          }
           final waitingMine = mineSnap.connectionState == ConnectionState.waiting;
           ShareMessage share(AppLocalizations l) => mine != null
               ? shareRatingMessage(mine, l, mine: true)
               : shareAlbumMessage(album, l);
+          // Con mi nota, las imágenes del disco; sin nota, solo el enlace.
+          List<ShareCardSpec> shareCards() {
+            final person = ShareSpecs.meOf(context);
+            if (mine == null || person == null) return const [];
+            return ShareSpecs.album(mine, person: person, accent: ShareSpecs.accentOf(context));
+          }
 
           return Stack(
             children: [
               CustomScrollView(
                 controller: _scroll,
-                physics: const ClampingScrollPhysics(),
+                // Rebota arriba: al tirar hacia abajo la portada crece.
+                physics: pullPhysics,
                 slivers: [
                   SliverToBoxAdapter(
-                    child: AlbumCover(url: album.bestCover, heroTag: widget.heroTag),
+                    child: PullStretch(
+                      controller: _scroll,
+                      height: MediaQuery.sizeOf(context).width,
+                      child: AlbumCover(url: album.bestCover, heroTag: widget.heroTag),
+                    ),
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
@@ -472,12 +456,10 @@ class _AlbumScreenState extends State<AlbumScreen> {
                             builder: (context, statsSnap) => _Scores(
                               stats: statsSnap.data,
                               mine: mine,
-                              quickScore: _quickScore,
                               waiting: waitingMine,
                               tone: tone,
                               fill: fill,
                               onRate: () => _rate(mine),
-                              onQuickRate: mine == null ? null : (k) => _quickRate(mine, k),
                             ),
                           ),
                         ],
@@ -609,6 +591,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                             album: album,
                             topPad: topPad,
                             share: share,
+                            shareCards: shareCards,
                             onLists: _listActions,
                             onTitleTap: _scrollToTop,
                           )
@@ -618,6 +601,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                             child: _TopButtons(
                               style: VIconButtonStyle.filled,
                               share: share,
+                              shareCards: shareCards,
                               onLists: _listActions,
                             ),
                           ),
@@ -758,10 +742,11 @@ class _AlbumScreenState extends State<AlbumScreen> {
 
 /// Volver a la izquierda; compartir y listas a la derecha, separados 4.
 class _TopButtons extends StatelessWidget {
-  const _TopButtons({required this.style, required this.share, required this.onLists});
+  const _TopButtons({required this.style, required this.share, required this.shareCards, required this.onLists});
 
   final VIconButtonStyle style;
   final ShareMessage Function(AppLocalizations l) share;
+  final List<ShareCardSpec> Function() shareCards;
   final VoidCallback onLists;
 
   @override
@@ -776,7 +761,7 @@ class _TopButtons extends StatelessWidget {
         ),
         const Spacer(),
         // Con nota, se comparte la mía; sin nota, el disco.
-        ShareButton(key: const ValueKey('share-album'), message: share, style: style),
+        ShareButton(key: const ValueKey('share-album'), message: share, cards: shareCards, style: style),
         const SizedBox(width: 4),
         VIconButton(
           key: const ValueKey('list-actions'),
@@ -797,6 +782,7 @@ class _StickyBar extends StatelessWidget {
     required this.album,
     required this.topPad,
     required this.share,
+    required this.shareCards,
     required this.onLists,
     required this.onTitleTap,
   });
@@ -804,6 +790,7 @@ class _StickyBar extends StatelessWidget {
   final Album album;
   final double topPad;
   final ShareMessage Function(AppLocalizations l) share;
+  final List<ShareCardSpec> Function() shareCards;
   final VoidCallback onLists;
 
   /// Tocar la portada o el nombre vuelve arriba.
@@ -850,6 +837,7 @@ class _StickyBar extends StatelessWidget {
           ShareButton(
             key: const ValueKey('share-album'),
             message: share,
+            cards: shareCards,
             style: VIconButtonStyle.bordered,
           ),
           const SizedBox(width: 4),
@@ -919,28 +907,24 @@ class _Heading extends StatelessWidget {
 
 /// "Tu nota" (o "Tu nota · editar" con la nota y su veredicto) y
 /// "Comunidad · N notas" con el promedio, el histograma de la comunidad y,
-/// debajo, los números con "Calificar este disco" o la regla para cambiar
-/// la nota con un toque.
+/// debajo, los números con "Calificar este disco" o la regla con mi nota. La
+/// regla solo muestra: la nota se cambia con "Tu nota · editar".
 class _Scores extends StatelessWidget {
   const _Scores({
     required this.stats,
     required this.mine,
-    required this.quickScore,
     required this.waiting,
     required this.tone,
     required this.fill,
     required this.onRate,
-    required this.onQuickRate,
   });
 
   final AlbumStats? stats;
   final RatingEntry? mine;
-  final int? quickScore;
   final bool waiting;
   final Color tone;
   final Color fill;
   final VoidCallback onRate;
-  final ValueChanged<int>? onQuickRate;
 
   @override
   Widget build(BuildContext context) {
@@ -948,7 +932,7 @@ class _Scores extends StatelessWidget {
     final l10n = context.l10n;
     final s = stats;
     final count = s?.count ?? 0;
-    final mineScore = mine == null ? null : (quickScore ?? mine!.score);
+    final mineScore = mine?.score;
     final bigNumber = VText.display(56, weight: 700, height: 0.85, tracking: 0);
 
     final Widget left;
@@ -1037,17 +1021,14 @@ class _Scores extends StatelessWidget {
         children: [
           RulerCells(
             selected: mineScore,
-            onTap: onQuickRate,
             selectedColor: tone,
             fill: fill,
             afterNumberColor: c.ink4,
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: VMono(l10n.albumTapToChange, size: 10, tracking: 0.06, color: c.ink4)),
-              VMono(l10n.albumBarsCommunity, size: 10, tracking: 0.06, color: c.ink4),
-            ],
+          Align(
+            alignment: Alignment.centerRight,
+            child: VMono(l10n.albumBarsCommunity, size: 10, tracking: 0.06, color: c.ink4),
           ),
         ],
       );
@@ -1250,7 +1231,7 @@ class _RatedBy extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         '${entry.score}',
-                        style: VText.display(30, weight: 700, height: 0.9, tracking: 0, color: c.accent),
+                        style: VText.display(30, weight: 700, height: 0.9, tracking: 0, color: c.accentText),
                       ),
                     ],
                   ),

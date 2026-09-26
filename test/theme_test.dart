@@ -110,14 +110,75 @@ void main() {
     });
   });
 
-  test('la paleta clara es la oscura mientras llega su diseño', () {
-    expect(ViniloPalette.light.bg, ViniloPalette.dark.bg);
-    expect(ViniloPalette.light.brightness, Brightness.dark);
+  group('modo claro', () {
+    const light = ViniloPalette.light;
+
+    test('los tokens son los de la especificación', () {
+      expect(light.brightness, Brightness.light);
+      expect(light.bg, const Color(0xFFF3EFE7));
+      expect(light.sheet, const Color(0xFFFBF9F5));
+      expect(light.surface, const Color(0xFFE2DDD3));
+      expect(light.ink, const Color(0xFF161412));
+      expect(light.ink2.a, closeTo(0.68, 0.005));
+      expect(light.ink3.a, closeTo(0.62, 0.005));
+      expect(light.ink4.a, closeTo(0.55, 0.005));
+      expect(light.line.a, closeTo(0.14, 0.005));
+      expect(light.lineSoft.a, closeTo(0.08, 0.005));
+      expect(light.lineStrong.a, closeTo(0.30, 0.005));
+      expect(light.scrim.a, closeTo(0.40, 0.005));
+      expect(light.onAccent, const Color(0xFF0F0E0D));
+    });
+
+    test('accentText baja a luminosidad 0,52 con la misma tonalidad', () {
+      for (final accent in VColors.accentPalette.take(13)) {
+        final p = light.withAccent(accent);
+        expect(p.accent, accent);
+        final o = Oklch.fromColor(p.accentText);
+        expect(o.l, closeTo(0.52, 0.01));
+        expect(o.h, closeTo(Oklch.fromColor(accent).h, 3));
+      }
+    });
+
+    test('el énfasis como texto se lee sobre el papel (3:1 o más)', () {
+      for (final accent in VColors.accentPalette) {
+        final p = light.withAccent(accent);
+        expect(contrastRatio(p.accentText, p.bg), greaterThanOrEqualTo(3), reason: '$accent');
+        expect(contrastRatio(p.onAccent, p.accent), greaterThanOrEqualTo(3), reason: '$accent');
+      }
+    });
+
+    test('la opción de tinta pasa a ser la tinta oscura con papel encima', () {
+      final p = light.withAccent(VColors.inkAccent);
+      expect(p.accent, light.ink);
+      expect(p.accentText, light.ink);
+      expect(p.onAccent, light.bg);
+      expect(p.swatch(VColors.inkAccent), light.ink);
+      expect(ViniloPalette.dark.swatch(VColors.inkAccent), VColors.inkAccent);
+    });
+
+    test('los tonos de portada se oscurecen y los fondos se aclaran', () {
+      const cover = Color(0xFF3A6EA5);
+      expect(Oklch.fromColor(light.coverTone(cover)).l, closeTo(0.48, 0.05));
+      expect(contrastRatio(light.coverTone(cover), light.bg), greaterThanOrEqualTo(3));
+      expect(Oklch.fromColor(light.coverShade(cover)).l, closeTo(0.86, 0.01));
+      expect(Oklch.fromColor(light.coverShade(cover, lightness: 0.35)).l, closeTo(0.82, 0.01));
+      expect(contrastRatio(light.ink, light.personTone(cover)), greaterThanOrEqualTo(4.5));
+      // En oscuro no cambia nada.
+      expect(ViniloPalette.dark.coverTone(cover), coverTone(cover));
+    });
+
+    test('el tema claro se arma con brillo claro', () {
+      final theme = buildViniloTheme(light.withAccent(VColors.accentPalette[3]));
+      expect(theme.brightness, Brightness.light);
+      expect(theme.colorScheme.brightness, Brightness.light);
+      expect(theme.scaffoldBackgroundColor, light.bg);
+    });
   });
 
   test('withAccent cambia solo el énfasis', () {
     final p = ViniloPalette.dark.withAccent(VColors.accentPalette[7]);
     expect(p.accent, VColors.accentPalette[7]);
+    expect(p.accentText, VColors.accentPalette[7]);
     expect(p.bg, ViniloPalette.dark.bg);
     expect(p.onAccent, const Color(0xFF0F0E0D));
   });

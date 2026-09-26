@@ -85,7 +85,7 @@ class _FollowButtonState extends State<FollowButton> {
           style: VText.ui(
             widget.compact ? 13 : 15,
             weight: 600,
-            color: following ? c.accent : c.onAccent,
+            color: following ? c.accentText : c.onAccent,
           ),
         );
         return AnimatedOpacity(
@@ -99,14 +99,14 @@ class _FollowButtonState extends State<FollowButton> {
               padding: EdgeInsets.symmetric(horizontal: widget.compact ? 12 : 20),
               decoration: BoxDecoration(
                 color: following ? null : (pressed ? c.ink : c.accent),
-                border: following ? Border.all(color: pressed ? c.ink : c.accent) : null,
+                border: following ? Border.all(color: pressed ? c.ink : c.accentText) : null,
               ),
               child: Row(
                 mainAxisSize: widget.compact ? MainAxisSize.min : MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (following) ...[
-                    VIconView(VIcon.check, size: widget.compact ? 11 : 13, color: c.accent),
+                    VIconView(VIcon.check, size: widget.compact ? 11 : 13, color: c.accentText),
                     const SizedBox(width: 8),
                   ],
                   Flexible(child: label),

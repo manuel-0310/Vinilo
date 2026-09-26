@@ -235,7 +235,7 @@ class ProfileListsTab extends StatelessWidget {
                   onTap: onNewList,
                   builder: (context, pressed) => Opacity(
                     opacity: pressed ? 0.6 : 1,
-                    child: VMono(l.listNewPlus, color: c.accent),
+                    child: VMono(l.listNewPlus, color: c.accentText),
                   ),
                 ),
             ],
@@ -277,7 +277,7 @@ class _Heading extends StatelessWidget {
               padding: const EdgeInsets.only(left: 3),
               child: Text(
                 count == null ? '' : '$count',
-                style: VText.mono(11, tracking: 0, color: selected ? c.accent : color),
+                style: VText.mono(11, tracking: 0, color: selected ? c.accentText : color),
               ),
             ),
           ),

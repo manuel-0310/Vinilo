@@ -41,7 +41,11 @@ class LineField extends StatefulWidget {
     this.errorKey,
     this.enabled = true,
     this.padding = const EdgeInsets.fromLTRB(0, 8, 0, 10),
+    this.focusColor,
   });
+
+  /// Color del foco (línea, etiqueta y cursor); si no, el énfasis.
+  final Color? focusColor;
 
   final String? label;
   final TextEditingController? controller;
@@ -141,8 +145,9 @@ class _LineFieldState extends State<LineField> {
   Widget build(BuildContext context) {
     final c = VColors.of(context);
     final focused = _focus.hasFocus;
+    final focusColor = widget.focusColor ?? c.accentText;
     final hasError = widget.error != null && widget.error!.isNotEmpty;
-    final lineColor = hasError ? c.danger : (focused ? c.accent : c.lineStrong);
+    final lineColor = hasError ? c.danger : (focused ? focusColor : c.lineStrong);
     final lineWidth = focused || hasError ? 2.0 : 1.0;
     final textStyle = VText.ui(widget.fontSize, weight: widget.fontWeight, color: c.ink);
     final maxLength = widget.maxLength;
@@ -159,7 +164,7 @@ class _LineFieldState extends State<LineField> {
                   child: VMono(
                     widget.label!,
                     size: 10,
-                    color: focused ? c.accent : c.ink3,
+                    color: focused ? focusColor : c.ink3,
                   ),
                 )
               else
@@ -211,13 +216,25 @@ class _LineFieldState extends State<LineField> {
                   style: widget.obscure
                       ? textStyle.copyWith(letterSpacing: 0.2 * widget.fontSize, color: c.inkA(0.8))
                       : textStyle,
-                  cursorColor: c.accent,
+                  cursorColor: focusColor,
                   cursorWidth: 2,
                   cursorHeight: widget.fontSize + 1,
                   cursorRadius: Radius.zero,
-                  decoration: InputDecoration.collapsed(
+                  // Sin ningún borde propio: `collapsed` solo quita `border`
+                  // y los demás se heredaban del tema, así que salían dos
+                  // rayas. La única línea es la del `Container`.
+                  decoration: InputDecoration(
+                    isCollapsed: true,
+                    contentPadding: EdgeInsets.zero,
+                    filled: false,
                     hintText: widget.hint,
                     hintStyle: textStyle.copyWith(color: c.placeholder, letterSpacing: 0),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
                   ),
                 ),
               ),

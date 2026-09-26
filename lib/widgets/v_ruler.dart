@@ -90,9 +90,10 @@ class RulerNumbers extends StatelessWidget {
   }
 }
 
-/// Celdas del 1 al 10, tocables. La elegida lleva `selectedColor` y el
-/// número oscuro; con `fill`, las anteriores se rellenan con ese color cada
-/// vez más opaco (la regla del disco calificado).
+/// Celdas del 1 al 10. La elegida lleva `selectedColor` y el número oscuro;
+/// con `fill`, las anteriores se rellenan con ese color cada vez más opaco
+/// (la regla del disco calificado). Con `onTap` se pueden tocar (el filtro
+/// del diario); sin él solo muestran, sin estado presionado ni háptico.
 class RulerCells extends StatelessWidget {
   const RulerCells({
     super.key,

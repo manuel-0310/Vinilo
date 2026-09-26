@@ -28,6 +28,7 @@ Future<RatingSheetResult?> showRatingSheet(
   required Album album,
   RatingEntry? existing,
   int? initialScore,
+  Color? tone,
 }) {
   return showVSheet<RatingSheetResult>(
     context,
@@ -35,6 +36,7 @@ Future<RatingSheetResult?> showRatingSheet(
       album: album,
       existing: existing,
       initialScore: initialScore,
+      tone: tone,
     ),
   );
 }
@@ -50,6 +52,7 @@ class RatingSheet extends StatefulWidget {
     required this.album,
     this.existing,
     this.initialScore,
+    this.tone,
   });
 
   final Album album;
@@ -57,6 +60,11 @@ class RatingSheet extends StatefulWidget {
 
   /// Nota preseleccionada; si no, la que ya tenía (o ninguna).
   final int? initialScore;
+
+  /// El tono de la portada, como en el disco: pinta el número, el
+  /// veredicto, las barras, el foco del comentario y "Guardar mi nota".
+  /// Sin él, el énfasis.
+  final Color? tone;
 
   @override
   State<RatingSheet> createState() => _RatingSheetState();
@@ -121,6 +129,7 @@ class _RatingSheetState extends State<RatingSheet> {
     final score = _score;
     final album = widget.album;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final tone = widget.tone ?? c.accentText;
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 200),
@@ -195,7 +204,7 @@ class _RatingSheetState extends State<RatingSheet> {
                         weight: 800,
                         height: 0.78,
                         tracking: -0.02,
-                        color: score == null ? c.inkA(0.28) : c.accent,
+                        color: score == null ? c.inkA(0.28) : tone,
                       ),
                     ),
                   ),
@@ -209,7 +218,7 @@ class _RatingSheetState extends State<RatingSheet> {
                         Text(
                           score == null ? '' : Score.label(score, l),
                           key: const ValueKey('rating-verdict'),
-                          style: VText.display(28, weight: 700, stretch: 70, height: 1, tracking: 0, color: c.accent),
+                          style: VText.display(28, weight: 700, stretch: 70, height: 1, tracking: 0, color: tone),
                         ),
                       ],
                     ),
@@ -219,6 +228,7 @@ class _RatingSheetState extends State<RatingSheet> {
               const SizedBox(height: 22),
               RatingBars(
                 value: score,
+                color: widget.tone,
                 onChanged: (v) => setState(() => _score = v),
               ),
               const SizedBox(height: 8),
@@ -234,14 +244,24 @@ class _RatingSheetState extends State<RatingSheet> {
                 maxLines: 3,
                 textCapitalization: TextCapitalization.sentences,
                 padding: const EdgeInsets.symmetric(vertical: 10),
+                focusColor: widget.tone,
               ),
               const SizedBox(height: 14),
-              VPrimaryButton.accent(
-                key: const ValueKey('rating-save'),
-                label: l.rateSheetSaveMine,
-                busy: _busy,
-                onPressed: score == null ? null : _save,
-              ),
+              if (widget.tone != null)
+                VPrimaryButton.tone(
+                  key: const ValueKey('rating-save'),
+                  label: l.rateSheetSaveMine,
+                  color: widget.tone!,
+                  busy: _busy,
+                  onPressed: score == null ? null : _save,
+                )
+              else
+                VPrimaryButton.accent(
+                  key: const ValueKey('rating-save'),
+                  label: l.rateSheetSaveMine,
+                  busy: _busy,
+                  onPressed: score == null ? null : _save,
+                ),
               if (widget.existing != null) ...[
                 const SizedBox(height: 4),
                 Pressable(

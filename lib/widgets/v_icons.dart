@@ -34,6 +34,10 @@ enum VIcon {
   send,
   track,
   disc,
+  story,
+  chat,
+  download,
+  link,
 }
 
 /// Un ícono de `VIcon` a `size` px. El grosor del trazo escala con el
@@ -126,6 +130,13 @@ const Map<VIcon, _IconSpec> _specs = {
   // Del prototipo.
   VIcon.back: _IconSpec(20, 1.6, [_PathShape('M12 4L6 10l6 6')]),
   VIcon.share: _IconSpec(20, 1.6, [_PathShape('M10 3v10M6 7l4-4 4 4M4 11v6h12v-6')]),
+  // Destinos de la hoja "Compartir" (`targets` de "Vinilo Compartir.dc.html").
+  VIcon.story: _IconSpec(24, 1.6, [_PathShape('M7 3h10v18H7zM12 17.5v.01')]),
+  VIcon.chat: _IconSpec(24, 1.6, [_PathShape('M4 5h16v11H9l-5 4z')]),
+  VIcon.download: _IconSpec(24, 1.6, [_PathShape('M12 4v11M7 10l5 5 5-5M5 20h14')]),
+  VIcon.link: _IconSpec(24, 1.6, [
+    _PathShape('M10 14l4-4M8.5 11.5 6 14a3 3 0 0 0 4 4l2.5-2.5M15.5 12.5 18 10a3 3 0 0 0-4-4l-2.5 2.5'),
+  ]),
   VIcon.addToList: _IconSpec(20, 1.6, [_PathShape('M3 5h10M3 10h10M3 15h6M15 12v6M12 15h6')]),
   VIcon.bell: _IconSpec(20, 1.5, [
     _PathShape('M5 14V9a5 5 0 0110 0v5l1.5 2h-13z'),

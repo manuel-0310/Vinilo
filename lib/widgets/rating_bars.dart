@@ -43,16 +43,34 @@ class RatingBarSpec {
 /// con menos opacidad y el número en tinta. Cambia en 220 ms (ease-out) y
 /// da un toque háptico por columna.
 class RatingBars extends StatelessWidget {
-  const RatingBars({super.key, required this.value, required this.onChanged});
+  const RatingBars({super.key, required this.value, required this.onChanged, this.onEnd, this.preview, this.color});
 
   final int? value;
+
+  /// Nota que se dibuja mientras no hay `value` (la demostración de la
+  /// bienvenida). No cuenta como elegida: tocar esa misma columna sí avisa.
+  final int? preview;
+
+  /// Color de las barras (el tono de la portada en el disco); si no, el
+  /// énfasis.
+  final Color? color;
+
+  /// Avisa cada columna nueva mientras se toca o se arrastra.
   final ValueChanged<int> onChanged;
+
+  /// Avisa al soltar el dedo, al terminar un toque o un arrastre (la
+  /// bienvenida espera a que se suelte para seguir).
+  final VoidCallback? onEnd;
 
   static const double areaHeight = 140;
   static const double gap = 3;
   static const Duration duration = Duration(milliseconds: 220);
 
-  void _pick(Offset local, double width) {
+  /// El ancho se mide al tocar (sin `LayoutBuilder`, que no deja que un
+  /// `SliverFillRemaining` como el de la bienvenida le pregunte su alto).
+  void _pick(BuildContext context, Offset local) {
+    final width = context.size?.width ?? 0;
+    if (width <= 0) return;
     final k = ((local.dx / width) * 10).floor().clamp(0, 9) + 1;
     if (k != value) {
       HapticFeedback.selectionClick();
@@ -63,38 +81,36 @@ class RatingBars extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: (d) => _pick(d.localPosition, width),
-          onHorizontalDragStart: (d) => _pick(d.localPosition, width),
-          onHorizontalDragUpdate: (d) => _pick(d.localPosition, width),
-          child: Container(
-            height: areaHeight,
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: c.line))),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                for (var k = 1; k <= 10; k++) ...[
-                  if (k > 1) const SizedBox(width: gap),
-                  Expanded(child: _Bar(key: ValueKey('dial-$k'), k: k, spec: RatingBarSpec.of(k, value))),
-                ],
-              ],
-            ),
-          ),
-        );
-      },
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (d) => _pick(context, d.localPosition),
+      onTapUp: onEnd == null ? null : (_) => onEnd!(),
+      onHorizontalDragStart: (d) => _pick(context, d.localPosition),
+      onHorizontalDragUpdate: (d) => _pick(context, d.localPosition),
+      onHorizontalDragEnd: onEnd == null ? null : (_) => onEnd!(),
+      child: Container(
+        height: areaHeight,
+        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: c.line))),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            for (var k = 1; k <= 10; k++) ...[
+              if (k > 1) const SizedBox(width: gap),
+              Expanded(child: _Bar(key: ValueKey('dial-$k'), k: k, spec: RatingBarSpec.of(k, value ?? preview), color: color)),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
 
 class _Bar extends StatelessWidget {
-  const _Bar({super.key, required this.k, required this.spec});
+  const _Bar({super.key, required this.k, required this.spec, this.color});
 
   final int k;
   final RatingBarSpec spec;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +123,7 @@ class _Bar extends StatelessWidget {
         duration: RatingBars.duration,
         curve: Curves.easeOut,
         height: spec.height,
-        color: c.accent,
+        color: color ?? c.accent,
         alignment: Alignment.bottomCenter,
         padding: const EdgeInsets.only(bottom: 6),
         child: AnimatedDefaultTextStyle(

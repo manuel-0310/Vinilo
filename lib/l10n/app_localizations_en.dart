@@ -1514,6 +1514,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeHeadline => 'Your record diary starts here.';
 
   @override
+  String get welcomeTryIt => 'Try it';
+
+  @override
   String get signInTitle => 'Sign\nin';
 
   @override
@@ -1713,9 +1716,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get albumTapToChange => 'Tap to change';
-
-  @override
   String get albumBarsCommunity => 'Bars: community';
 
   @override
@@ -1743,9 +1743,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get albumSeeArtist => 'See artist';
-
-  @override
-  String get ratingSavedShort => 'Rating saved';
 
   @override
   String get rateSheetHint => 'Tap or slide';
@@ -1831,4 +1828,176 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get shareCardRated => 'rated';
+
+  @override
+  String shareCardListBy(String handle) {
+    return 'list by $handle';
+  }
+
+  @override
+  String shareCardRankingBy(String handle) {
+    return 'ranking by $handle';
+  }
+
+  @override
+  String get shareCardList => 'list';
+
+  @override
+  String get shareCardRanking => 'ranking';
+
+  @override
+  String shareCardAlbums(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n records',
+      one: '1 record',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String shareCardTracks(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n songs',
+      one: '1 song',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String shareCardSaves(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n saves',
+      one: '1 save',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareCardArtist => 'artist';
+
+  @override
+  String get shareCardMyAverage => 'my average score';
+
+  @override
+  String shareCardRatedOf(int rated, int total) {
+    return '$rated of $total records';
+  }
+
+  @override
+  String shareCardSince(String handle, String year) {
+    return '$handle · on vinilo since $year';
+  }
+
+  @override
+  String get shareCardStatAlbums => 'records';
+
+  @override
+  String get shareCardStatReviews => 'reviews';
+
+  @override
+  String get shareCardStatAverage => 'average';
+
+  @override
+  String shareCardFavorites(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'my $n favorites',
+      one: 'my favorite',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareCardFollowMe => 'Follow me on Vinilo';
+
+  @override
+  String shareCardMyWeek(String range) {
+    return 'my week · $range';
+  }
+
+  @override
+  String shareCardWeekCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n records.',
+      one: '1 record.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareCardCompatibility => 'compatibility';
+
+  @override
+  String shareCardFriendAlmostAll(String name) {
+    return '$name and I agree on almost everything.';
+  }
+
+  @override
+  String shareCardFriendQuiteALot(String name) {
+    return '$name and I agree quite a lot.';
+  }
+
+  @override
+  String shareCardFriendOpposites(String name) {
+    return '$name and I are musical opposites.';
+  }
+
+  @override
+  String get shareCardMe => 'me';
+
+  @override
+  String get shareCardAgree => 'we agree';
+
+  @override
+  String get shareCardDisagree => 'we disagree';
+
+  @override
+  String get shareTabStory => 'Story';
+
+  @override
+  String get shareTabSquare => 'Square';
+
+  @override
+  String get shareTargetStories => 'stories';
+
+  @override
+  String get shareTargetWhatsapp => 'whatsapp';
+
+  @override
+  String get shareTargetSave => 'save';
+
+  @override
+  String get shareTargetLink => 'link';
+
+  @override
+  String get shareToStories => 'Share to Stories';
+
+  @override
+  String get shareImage => 'Share image';
+
+  @override
+  String get shareImageSaved => 'Image saved';
+
+  @override
+  String get shareSaveDenied =>
+      'Vinilo can\'t save to your photos. Turn it on in Settings.';
+
+  @override
+  String get shareImageFailed => 'Couldn\'t prepare the image. Try again.';
+
+  @override
+  String get shareImageUnsupported =>
+      'This version of the app can\'t share images yet.';
 }

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../l10n/l10n.dart';
@@ -242,13 +244,27 @@ class MusicList {
         (ListKind.ranking, ListItemType.albums) => l.listFullTypeAlbumRanking,
       };
 
-  /// Hasta cuatro portadas distintas para el mosaico.
+  /// Hasta cuatro portadas distintas, para las portadas apiladas.
+  ///
+  /// En las de canciones, las del mismo disco comparten portada, así que se
+  /// toma una por disco y, si salen menos de 3, se repiten en orden hasta
+  /// `min(3, canciones con portada)`: con 2 canciones o más siempre se ve la
+  /// pila. Las de discos dan solo las distintas.
   List<String> get covers {
     final out = <String>[];
+    final seen = <String>{};
+    var withCover = 0;
     for (final i in items) {
       final c = i.smallCover;
-      if (c != null && !out.contains(c)) out.add(c);
-      if (out.length == 4) break;
+      if (c == null) continue;
+      withCover++;
+      if (out.length < 4 && seen.add(i.albumId ?? c) && !out.contains(c)) out.add(c);
+    }
+    if (itemType == ListItemType.tracks && out.isNotEmpty) {
+      final target = math.min(3, withCover);
+      for (var k = 0; out.length < target; k++) {
+        out.add(out[k]);
+      }
     }
     return out;
   }

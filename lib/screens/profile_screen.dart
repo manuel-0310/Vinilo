@@ -8,6 +8,7 @@ import '../services/services.dart';
 import '../services/user_repo.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
+import '../widgets/pull_stretch.dart';
 import '../widgets/v_buttons.dart';
 import '../widgets/v_icons.dart';
 import '../widgets/v_sections.dart';
@@ -169,8 +170,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             CustomScrollView(
               controller: _scroll,
-              // Sin rebote arriba: por encima del banner no hay nada.
-              physics: const ClampingScrollPhysics(),
+              // Rebota arriba: al tirar hacia abajo el banner crece.
+              physics: pullPhysics,
               slivers: [
                 SliverToBoxAdapter(
                   child: ProfileHeader(
@@ -180,6 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ratings: ratings,
                     mine: _mineForAffinity,
                     followsMe: _followsMe,
+                    scroll: _scroll,
                   ),
                 ),
                 SliverToBoxAdapter(

@@ -434,7 +434,7 @@ class _Suggestions extends StatelessWidget {
                   onTap: () => onPick(s),
                   builder: (context, pressed) => Text(
                     s,
-                    style: big.copyWith(color: pressed ? c.accent : c.ink),
+                    style: big.copyWith(color: pressed ? c.accentText : c.ink),
                   ),
                 ),
               ],

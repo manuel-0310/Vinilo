@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import '../theme/oklch.dart';
 import '../theme/vinilo_theme.dart';
 
 /// Avatar de una persona: siempre un círculo. Con foto, la foto; sin foto,
@@ -69,7 +68,7 @@ class UserAvatar extends StatelessWidget {
       dimension: size,
       child: ClipOval(
         child: ColoredBox(
-          color: filled ? color : personTone(color),
+          color: filled ? color : c.personTone(color),
           child: SizedBox.expand(child: child),
         ),
       ),

@@ -126,14 +126,14 @@ class FeedCard extends StatelessWidget {
                   children: [
                     Text(
                       '${entry.score}',
-                      style: VText.display(64, weight: 700, height: 0.8, tracking: 0, color: c.accent),
+                      style: VText.display(64, weight: 700, height: 0.8, tracking: 0, color: c.accentText),
                     ),
                     const SizedBox(height: 6),
                     VMono(
                       Score.label(entry.score, l),
                       size: 9.5,
                       tracking: 0.1,
-                      color: c.accent,
+                      color: c.accentText,
                     ),
                   ],
                 ),
@@ -225,7 +225,7 @@ class LikeButton extends StatelessWidget {
     final l = context.l10n;
     final me = CurrentUser.maybeOf(context);
     final liked = me != null && entry.likedByMe(me.uid);
-    final color = liked ? c.accent : c.ink3;
+    final color = liked ? c.accentText : c.ink3;
     final text = showLabel
         ? (liked ? l.feedLiked : l.feedLike)
         : (entry.likes > 0 ? '${entry.likes}' : null);

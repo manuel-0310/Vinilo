@@ -54,7 +54,7 @@ class _MentionTextState extends State<MentionText> {
             text: piece.text,
             // Archivo es variable: el grosor va también en `fontVariations`.
             style: TextStyle(
-              color: c.accent,
+              color: c.accentText,
               fontWeight: FontWeight.w600,
               fontVariations: const [FontVariation('wdth', 100), FontVariation('wght', 600)],
             ),

@@ -16,7 +16,7 @@ La app quedó rediseñada para ser **idéntica al prototipo del diseñador** (`V
 
 "Estuche editorial". Toda pantalla nueva o cambiada tiene que parecer salida del prototipo: antes de tocar una, leer su bloque en el HTML (`data-screen-label="…"`) y copiar medidas, tamaños, anchos de fuente, pesos, rellenos y colores.
 - **Forma:** un solo carácter oscuro (fondo `#0F0E0D`). Esquinas rectas en todo (radio 0) salvo personas y artistas, que van en círculo; portadas siempre cuadradas; secciones separadas con líneas de 1 px. Nada de sombras, gradientes, desenfoques, píldoras ni tarjetas con fondo. El prototipo no fija `box-sizing`: un borde suma al tamaño.
-- **Tema claro:** el diseñador ya lo definió (`ESPECIFICACION.md`, "Modo claro") pero no está implementado: `ViniloPalette.light = dark`, así que "Claro" en Configuración se ve oscuro. Todo color sale de los tokens para que el claro entre sin tocar pantallas.
+- **Tema claro:** implementado (fase 9) con los valores de `ESPECIFICACION.md` ("Modo claro") en `ViniloPalette.light`. El énfasis usado como texto o línea fina va con `accentText` (en claro, L 0,52; en oscuro = `accent`); los rellenos siguen con `accent`. Los tonos de portada salen de la paleta (`c.coverTone`, `c.coverShade`, `c.personTone`), que en claro los oscurece o aclara; las muestras de color van con `c.swatch`. Sin perfil (splash, bienvenida) la app sigue oscura. Todo color sale de los tokens.
 - **Colores:** solo tokens, con `final c = VColors.of(context);`. Los tokens son `bg`, `sheet`, `surface`, `ink`, `ink2` (.62), `ink3` (.58, etiquetas), `ink4` (.50), `line`, `lineSoft`, `lineStrong`, `buttonLine`, `inactive`, `placeholder`, `scrim`, `overButton`, `accent`, `onAccent`, `success`, `danger` e `inkA(alpha)` para las opacidades sueltas. Nunca hex en los widgets.
 - **Énfasis:** es el color de la persona (`users.color`) llevado al más parecido de los 14 de `VColors.accentPalette` con `VColors.nearest`, sin migrar Firestore. `main.dart` arma los temas con `ViniloPalette.dark.withAccent(…)`. El texto sobre el énfasis es siempre `onAccent`. Tiñe botones primarios, enlaces ("Ver todo", "Elegir"), la raya de la pestaña activa, el foco de los campos, las notas del inicio y de "Calificado por", las barras de Calificar y lo elegido.
 - **Tono de portada** (`lib/theme/oklch.dart`):
@@ -42,7 +42,7 @@ La app quedó rediseñada para ser **idéntica al prototipo del diseñador** (`V
 - **Barra inferior:** `VBottomBar` (84 de alto, línea arriba, activa en tinta 600 con una raya de énfasis de 32×2). La barra nativa con Liquid Glass ya no se usa (ver más abajo).
 - **Calificar:**
   - `RatingSheet` usa `RatingBars` con las fórmulas de la especificación (220 ms ease-out, se toca o se arrastra, un háptico por columna). La primera vez arranca sin barra elegida.
-  - En el disco con nota, la regla (`RulerCells`) cambia la nota al tocarla ("Nota guardada"), y "Tu nota · editar" abre la hoja.
+  - En el disco con nota, la regla (`RulerCells` sin `onTap`) solo muestra la nota: se cambia únicamente con "Tu nota · editar", que abre la hoja (desde el 2026-09-25).
   - "Borrar nota" oculta la nota y ofrece "Deshacer" 4 s; solo se borra de Firestore si el aviso se cierra sin deshacer.
   - Nada de estrellas.
 - **Barras fijas:** en el disco y en la lista, una barra (volver, nombre, compartir) aparece al pasar la portada o la franja. En el perfil, el nombre con "N discos · promedio" y las pestañas quedan fijos al bajar, en las dos pestañas.

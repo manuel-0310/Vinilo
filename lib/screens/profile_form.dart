@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
-import '../theme/oklch.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/auth_errors.dart';
 import '../widgets/line_field.dart';
@@ -209,7 +208,7 @@ class _ProfileFormState extends State<ProfileForm> {
           onTap: onTap,
           builder: (context, pressed) => Opacity(
             opacity: pressed ? 0.6 : 1,
-            child: VMono(label, color: c.accent),
+            child: VMono(label, color: c.accentText),
           ),
         );
 
@@ -341,7 +340,7 @@ class ColorSwatches extends StatelessWidget {
             clipBehavior: Clip.none,
             fit: StackFit.expand,
             children: [
-              ColoredBox(color: color),
+              ColoredBox(color: c.swatch(color)),
               if (isChosen)
                 Positioned(
                   left: -4,
@@ -405,7 +404,7 @@ class _BannerField extends StatelessWidget {
       child: AspectRatio(
         aspectRatio: bannerAspect,
         child: ColoredBox(
-          color: coverShade(color, lightness: 0.35),
+          color: c.coverShade(color, lightness: 0.35),
           child: Stack(
             fit: StackFit.expand,
             children: [

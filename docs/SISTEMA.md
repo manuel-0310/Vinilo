@@ -80,7 +80,7 @@ Lo que dejó el rediseño (terminado el 2026-09-25) y sigue vigente: decisiones 
   - `RulerCells(selected:, onTap:, selectedColor:, fill:, lines:)`: las celdas anteriores a la elegida usan `fillAlphas`, de .28 a .82.
 - **`rating_bars.dart`:**
   - `RatingBarSpec.of(k, n)`: las fórmulas exactas de la especificación;
-  - `RatingBars(value:, onChanged:)`: 220 ms ease-out, se toca o se arrastra, un háptico por columna; llaves `dial-N`;
+  - `RatingBars(value:, onChanged:, onEnd:)`: 220 ms ease-out, se toca o se arrastra, un háptico por columna; `onEnd` avisa al soltar el dedo (lo usa la bienvenida); llaves `dial-N`;
 - **`sheet.dart`:**
   - `SheetScaffold`, con el estilo nuevo: fondo `sheet`, sin radio, asa de 40×4, título de 46, y `overline`, `footer` y `titleSize`;
   - `showVSheet`, con velo .72;
@@ -91,6 +91,7 @@ Lo que dejó el rediseño (terminado el 2026-09-25) y sigue vigente: decisiones 
   - `SegmentedBoxes`: los selectores de Configuración;
   - `ChoiceBox(icon:, title:, subtitle:, selected:)`: las cajas Lista y Ranking, con check de 14 px;
   - `DashedBox`.
+- **`pull_stretch.dart`** (2026-09-25): `pullPhysics` (rebote en iOS y Android), `pullExtent(controller)` (cuánto se tiró de más arriba), `PullStretch(controller:, height:)` (escala desde el centro del borde de abajo: crece hacia arriba lo que se tira) y `PullPinned` (se queda quieto al tirar). Lo usan el disco, el perfil (`ProfileHeader(scroll:)`), la lista y el artista.
 - **`cover_stack.dart`:** `CoverStack(urls:, size:, offset:, separator:, single:)`, con portadas apiladas y una separación de 2 px del color de fondo.
 - **Widgets viejos rediseñados que conservan su API:**
   - `AlbumCover` e `ArtistAvatar`: cuadrada y redondo, sin sombra;
@@ -131,7 +132,7 @@ Lo que dejó el rediseño (terminado el 2026-09-25) y sigue vigente: decisiones 
 ### Lo que sumaron las fases 6 y 7: usar esto también
 
 - **Perfil partido en tres:** `profile_screen.dart` (datos, pestañas y la barra compacta fija: aparece cuando las pestañas del contenido llegan a donde van las suyas, medido con una `GlobalKey`), `profile_header.dart` (`ProfileHeader`: banner de `topPad + 102`, avatar de 88 montado 44, nombre, "@usuario · te sigue", biografía, `FollowButton`, las cuatro cifras y la afinidad; `ProfileCompactBar`), `profile_tab.dart` (`ProfileTab`, un `SliverMainAxisGroup`) y `profile_lists_tab.dart` (`ProfileListsTab`). Los selectores de favoritos y artistas viven en `favorites_pickers.dart` (`showFavoritesPicker`, `showArtistsPicker`).
-- **`affinityBetween`** (`models/affinity.dart`) y **`ListFilter`** + `ListQuery.filter`/`withFilter` + `nextListSort` (`models/music_list.dart`), con sus pruebas.
+- **`affinityBetween`** (`models/affinity.dart`, que desde el 2026-09-25 devuelve también `albums`: los `CommonAlbum` con mi nota y la suya, misma nota primero, luego menos diferencia y, empatados, el más reciente), **`CommonAlbumsRow`** (`profile_header.dart`) y **`ListFilter`** + `ListQuery.filter`/`withFilter` + `nextListSort` (`models/music_list.dart`), con sus pruebas.
 - **`FollowButton`:** 48 a lo ancho ("+ Seguir" en énfasis, "✓ Siguiendo" con borde de énfasis); `compact` es de 32 para las filas.
 - **`DiaryList`/`DiaryRow`:** encabezado por mes con cifra (`monthCounts`), filas de 48 con la nota en el tono de la portada (con `PaletteService.cached`).
 - **`ListRowTile`:** `CoverStack` de 64, título de 21 y "Lista · 12 canciones". `list_mosaic.dart` y `histogram.dart` ya no existen.
@@ -148,7 +149,7 @@ Lo que dejó el rediseño (terminado el 2026-09-25) y sigue vigente: decisiones 
 2. **Portadas de la Bienvenida:** desde `GET /portadas` de la función `web`, con colores planos si no responde (fase 2).
 3. **Popular esta semana** con "Ver todo" (fase 3).
 4. **"N nuevas":** las notas de amigos de las últimas 24 h (fase 3).
-5. **Disco calificado:** la regla se toca para cambiar la nota al instante, y "Tu nota · editar" abre la hoja (fase 4).
+5. **Disco calificado:** la regla solo muestra la nota; se cambia únicamente con "Tu nota · editar", que abre la hoja (fase 4; hasta el 2026-09-25 la regla también la cambiaba al tocarla, lo quitó Manuel).
 6. **Calificar por primera vez:** arranca sin columna elegida (fase 4).
 7. **Calificado por:** tocar una foto abre esa calificación (fase 4).
 8. **"@usuario · te sigue"** en perfiles ajenos (fase 6).
@@ -183,28 +184,40 @@ Van también los ajustes chicos que se anotaron en cada fase: 2 comentarios dest
 - **Suavizado del texto:** difiere en subpíxeles entre Chrome en Mac y Flutter en iOS.
 - **Tema claro:** por ahora se ve igual que el oscuro, hasta que llegue su diseño.
 - **Botones de acceso:** Apple, Google, Términos y Privacidad se ven pero no hacen nada, por decisión de Manuel.
+- **Bienvenida interactiva (2026-09-25, pedido de Manuel):** el prototipo tiene la regla 1–10 y los botones a la vista. En la app, en el hueco de los botones van "Pruébalo · ¿qué nota le pones…?" con la nota y su veredicto a la derecha (ancho fijo de 96), las barras de Calificar y "Toca o desliza"; al soltar el dedo con una nota se ve 700 ms, las barras bajan y se desvanecen (320 ms) y los botones suben con rebote (`Curves.easeOutBack`, 650 ms, el segundo 70 ms después) con un háptico suave. Es `WelcomeActions` en `welcome_screen.dart`. Por decisión de Manuel no hay otra forma de ver los botones: hay que tocar la gráfica. Las barras siguen ocupando su hueco después de irse, así nada se mueve; entre el párrafo y ellas hay 22 (antes 28 sobre los botones) para que quepa sin desplazarse en un iPhone de 874 de alto.
 - **Disco (fase 4):**
   - el pie muestra el texto de derechos tal como lo manda Spotify ("℗ 1999 …", "(P) 1999 …" o "© …"), y no muestra el sello (el modo desarrollo de Spotify no lo manda);
   - las canciones con artistas invitados llevan una segunda línea con ellos, que el prototipo no tiene (sus canciones no tienen invitados);
   - "Comentarios destacados": si un comentario tiene respuestas, dice "N respuestas" en vez de "Responder";
-  - la barra fija aparece con un fundido corto al pasar la portada, y la portada no rebota al tirar hacia abajo (así no se ve el fondo encima);
+  - la barra fija aparece con un fundido corto al pasar la portada;
+  - al tirar hacia abajo estando arriba, la portada crece pegada al borde de arriba (no se ve el fondo) y vuelve con el rebote al soltar; el prototipo no lo tiene (pedido de Manuel, 2026-09-25). Lo mismo el banner del perfil, la franja de Lista y Ranking y la foto del artista; los botones de encima se quedan quietos;
   - sin diseño en el prototipo: la selección de canciones (casillas cuadradas y una barra plana abajo), el menú de listas del disco, "Ver todos" los comentarios, el hilo y agregar desde una lista.
-- **Artista (fase 5):** sin notas, el bloque dice "—" y "Sin notas" (el prototipo no tiene ese estado); el tono de cada disco se calcula de su portada pequeña.
+- **Artista (fase 5):** sin notas, el bloque dice "—" y "Sin notas" (el prototipo no tiene ese estado); el tono de cada disco se calcula de su portada pequeña. Desde el 2026-09-25, a pedido de Manuel, el encabezado va centrado (foto, "Artista · N discos", nombre y calificación, con el histograma a lo ancho debajo), aunque el prototipo lo alinea a la izquierda; la discografía sigue igual.
 - **Perfiles (fase 6):**
   - la barra compacta fija aparece de golpe (sin fundido) y no lleva volver: en el perfil de otra persona se vuelve deslizando desde el borde;
   - el superíndice de "Mías²" se alinea arriba de la línea, parecido al `vertical-align: super` del navegador;
   - sin diseño en el prototipo: el perfil ajeno en la pestaña Listas ("Listas" con su cifra) y "Cómo califica", los huecos vacíos de favoritos (con +), la afinidad sin discos en común ("—"), los selectores de favoritos y artistas, "Editar perfil", el diario completo (con la regla del 1 al 10 para filtrar) y seguidores/seguidos;
-  - el mes del diario va en tres letras ("SEP"), como el prototipo.
+  - el mes del diario va en tres letras ("SEP"), como el prototipo;
+  - sin diseño en el prototipo (2026-09-25, pedido de Manuel): bajo la afinidad del perfil ajeno, los discos en común en portadas de 40 con separación 2 (a lo ancho, empezando en el margen), hasta 6 y una celda "+N" sobre `surface` si hay más; tocar una abre el disco. Por decisión de Manuel no llevan las notas debajo. Sin discos en común no aparece la fila.
 - **Lista, Ranking y Configuración (fase 7):**
   - el título va en 52 hasta 22 letras y en 40 si es más largo; la descripción (si la hay) va debajo, aunque el prototipo no la muestra;
   - en las listas de discos, a la derecha va el año en vez de la duración;
   - en la lista de otra persona, "♥ Me gusta · N" va en tinta (en énfasis si ya te gusta) y "Guardar" con borde ("✓ Guardada" en énfasis); la autora ya no ve cuántos "me gusta" tiene su lista;
   - sin diseño: la barra fija de la lista, el menú ···, el modo edición (× y asa) y, en Configuración, "Cerrar sesión" y "Eliminar cuenta" con su hoja.
+  - en las listas y rankings de canciones, las portadas apiladas de la fila salen una por disco y, si hay menos de 3, se repiten hasta 3 (con 2 canciones o más siempre se ve la pila); la portada que elige la autora sigue yendo sola (2026-09-25).
 - **Web (fase 8):**
   - la franja y el tono de portada se calculan en el navegador cuando carga la portada: un instante se ven en bermellón; si Spotify no dejara leer la imagen, se quedan en bermellón;
   - el prototipo parte el título a mano ("OK / Computer"); la página lo parte donde le toca;
   - los histogramas atenúan (al 60 %) las barras que no son la más votada, como el ejemplo del disco;
-  - sin diseño: lista, nota y perfil (armados con los mismos bloques), la versión para teléfono y `hosting/index.html` (la bienvenida de la app en grande, con las portadas de `/portadas`);
+  - sin diseño: lista, nota y perfil (armados con los mismos bloques) y la versión para teléfono; `hosting/index.html` era la bienvenida de la app en grande hasta que llegó la landing del diseñador (ver "Landing");
   - la función `web` quedó desplegada; el hosting (`index.html` y `404.html`) lo despliega Manuel.
-- **Ícono (fase 9):** es el de Manuel en Icon Composer (la V y la barra corridas a la izquierda y abajo, con versión clara y oscura), no el boceto del prototipo (V y barra centradas); fue su decisión. Android y la web usan la versión oscura.
+- **Landing (`hosting/index.html`, 2026-09-25):** es el prototipo `Vinilo Landing.dc.html` con estas diferencias:
+  - el prototipo pone el giro y la aparición del disco en el mismo elemento, y la aparición, al terminar, deja fija la transformación y tapa el giro; aquí el contenedor aparece y el disco de dentro gira;
+  - sin URLs de tienda (`APP_STORE_URL` y `PLAY_STORE_URL`, vacías arriba del script), los botones y las filas de descarga dicen "Muy pronto" en vez de la flecha y no enlazan; el estado dice "Muy pronto en iOS y Android";
+  - las filas de descarga dicen "iOS 15+" y "Android 7+", lo que la app admite de verdad (el prototipo decía 16+ y 9+);
+  - la portada de 64 de la demo es el cuadro liso del prototipo (la función solo da URLs, no nombres, y "Artista · 2026" junto a una portada real confundiría);
+  - PRIVACIDAD, TÉRMINOS y CONTACTO se ven pero no llevan a ningún lado (decisión de Manuel: no existen esas páginas ni el correo);
+  - suma el selector "ES · EN" en el nav (textos en un diccionario del script; manda `?lang=`, luego lo elegido en `localStorage` y luego el navegador), el respaldo en hex de los 6 colores OKLCH, `prefers-reduced-motion` (sin giro, sin cinta, sin rotación ni demo sola, todo visible) y el dedo en la demo (tocar o deslizar de lado);
+  - la tarjeta de WhatsApp (Open Graph, en español) usa el ícono oscuro de 512 (`hosting/icon-512.png`, copia de `web/icons/Icon-512.png`), que también es el favicon grande.
+- **Ícono (fase 9):** es el de Manuel en Icon Composer (la V y la barra corridas a la izquierda y abajo, con versión clara y oscura), no el boceto del prototipo (V y barra centradas); fue su decisión. Android y la web usan la versión oscura. La especificación nueva dice que el ícono se queda oscuro en los dos modos; el 2026-09-25 Manuel decidió conservar la versión clara y la oscura. El `Assets.car` que genera `actool` trae las variantes clara, oscura y teñida. Si en el iPhone se ve siempre claro, es el ajuste de íconos de iOS 18+ (mantener pulsada la pantalla de inicio → Editar → Personalizar → Oscuro o Automático) o la caché de íconos (borrar la app y reinstalarla).
 

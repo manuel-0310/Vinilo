@@ -81,7 +81,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
           onTap: onTap,
           builder: (context, pressed) => Opacity(
             opacity: pressed ? 0.6 : 1,
-            child: VMono(label, color: selected ? c.accent : c.ink3),
+            child: VMono(label, color: selected ? c.accentText : c.ink3),
           ),
         );
 

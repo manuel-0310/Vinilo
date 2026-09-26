@@ -163,22 +163,22 @@ class _NewListRow extends StatelessWidget {
           children: [
             DashedBox(
               size: 56,
-              color: c.accent,
+              color: c.accentText,
               child: busy
                   ? SizedBox.square(
                       dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 1.6, color: c.accent),
+                      child: CircularProgressIndicator(strokeWidth: 1.6, color: c.accentText),
                     )
-                  : VIconView(VIcon.plus, size: 20, color: c.accent, strokeWidth: 1.4),
+                  : VIconView(VIcon.plus, size: 20, color: c.accentText, strokeWidth: 1.4),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
                 context.l10n.listNew,
-                style: VText.ui(17, weight: 600, color: c.accent),
+                style: VText.ui(17, weight: 600, color: c.accentText),
               ),
             ),
-            Text('→', style: VText.ui(16, color: c.accent)),
+            Text('→', style: VText.ui(16, color: c.accentText)),
           ],
         ),
       ),

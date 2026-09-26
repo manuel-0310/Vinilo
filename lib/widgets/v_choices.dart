@@ -87,7 +87,7 @@ class ChoiceBox extends StatelessWidget {
       builder: (context, pressed) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          border: Border.all(color: selected ? c.accent : c.inkA(0.2)),
+          border: Border.all(color: selected ? c.accentText : c.inkA(0.2)),
         ),
         child: Stack(
           clipBehavior: Clip.none,
@@ -95,9 +95,9 @@ class ChoiceBox extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                VIconView(icon, size: 22, color: selected ? c.accent : c.inkA(0.75)),
+                VIconView(icon, size: 22, color: selected ? c.accentText : c.inkA(0.75)),
                 const SizedBox(height: 12),
-                Text(title, style: VText.ui(16, weight: 600, color: selected ? c.accent : c.ink)),
+                Text(title, style: VText.ui(16, weight: 600, color: selected ? c.accentText : c.ink)),
                 const SizedBox(height: 3),
                 Text(subtitle, style: VText.ui(12.5, color: c.ink3, height: 1.3)),
               ],

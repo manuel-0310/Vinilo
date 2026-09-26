@@ -6,25 +6,28 @@ import '../models/artist.dart';
 import '../models/artist_stats.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
-import '../theme/oklch.dart';
 import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
 import '../util/share_links.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/artist_avatar.dart';
+import '../widgets/pull_stretch.dart';
+import '../share_cards/share_card_data.dart';
+import '../share_cards/share_specs.dart';
 import '../widgets/share_button.dart';
+import '../widgets/share_sheet.dart';
 import '../widgets/v_buttons.dart';
 import '../widgets/v_icons.dart';
 import '../widgets/v_ruler.dart';
 import '../widgets/v_sections.dart';
 import 'routes.dart';
 
-/// Ficha de un artista: volver y compartir, la foto redonda de 140,
-/// "Artista · N discos" y el nombre; su calificación en Vinilo (promedio
-/// ponderado de todas las notas a sus discos) con el histograma, y la
-/// discografía, que se ordena por recientes o por mejor calificados y se
-/// carga por páginas al llegar al final.
+/// Ficha de un artista: volver y compartir, y centrados la foto redonda de
+/// 140, "Artista · N discos", el nombre y su calificación en Vinilo
+/// (promedio ponderado de todas las notas a sus discos) con el histograma;
+/// debajo, la discografía, que se ordena por recientes o por mejor
+/// calificados y se carga por páginas al llegar al final.
 class ArtistScreen extends StatefulWidget {
   const ArtistScreen({super.key, required this.artist});
 
@@ -44,8 +47,14 @@ class _ArtistScreenState extends State<ArtistScreen> {
   bool _loadingMore = false;
   Stream<List<AlbumStats>>? _stats;
 
+  /// Mis notas (para la imagen "Historia · artista"; se filtran por
+  /// `artistIds` al compartir).
+  List<RatingEntry>? _myRatings;
+
   /// "Mejor calificados ↓" en lugar de "Recientes ↓".
   bool _bestFirst = false;
+
+  final ScrollController _scroll = ScrollController();
 
   Artist get _artist => _detail ?? widget.artist;
 
@@ -57,6 +66,38 @@ class _ArtistScreenState extends State<ArtistScreen> {
     _stats = _services!.ratings.artistAlbumStats(widget.artist.id);
     _loadDetail();
     _loadAlbums();
+    _loadMyRatings();
+  }
+
+  Future<void> _loadMyRatings() async {
+    final me = CurrentUser.maybeOf(context);
+    if (me == null) return;
+    try {
+      final ratings = await _services!.ratings.fetchUserRatings(me.uid);
+      if (mounted) setState(() => _myRatings = ratings);
+    } catch (_) {
+      // Sin mis notas se comparte solo el enlace.
+    }
+  }
+
+  /// La historia del artista, si califiqué algún disco suyo.
+  List<ShareCardSpec> _shareCards(Artist artist, AlbumPage? page) {
+    final person = ShareSpecs.meOf(context);
+    final ratings = _myRatings;
+    if (person == null || ratings == null) return const [];
+    final data = artistCardFrom(
+      artist: artist,
+      myRatings: ratings,
+      totalAlbums: page?.total ?? 0,
+      person: person,
+    );
+    return ShareSpecs.artist(data, accent: ShareSpecs.accentOf(context));
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   Future<void> _loadDetail() async {
@@ -124,24 +165,32 @@ class _ArtistScreenState extends State<ArtistScreen> {
             return NotificationListener<ScrollNotification>(
               onNotification: _onScroll,
               child: CustomScrollView(
+                controller: _scroll,
+                // Rebota arriba: al tirar hacia abajo la foto crece.
+                physics: pullPhysics,
                 slivers: [
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                      child: Row(
-                        children: [
-                          VIconButton(
-                            key: const ValueKey('back'),
-                            icon: VIcon.back,
-                            onTap: () => Navigator.of(context).maybePop(),
-                          ),
-                          const Spacer(),
-                          ShareButton(
-                            key: const ValueKey('share-artist'),
-                            style: VIconButtonStyle.bordered,
-                            message: (l) => shareArtistMessage(artist, l),
-                          ),
-                        ],
+                    // Volver y compartir no bajan al tirar.
+                    child: PullPinned(
+                      controller: _scroll,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                        child: Row(
+                          children: [
+                            VIconButton(
+                              key: const ValueKey('back'),
+                              icon: VIcon.back,
+                              onTap: () => Navigator.of(context).maybePop(),
+                            ),
+                            const Spacer(),
+                            ShareButton(
+                              key: const ValueKey('share-artist'),
+                              style: VIconButtonStyle.bordered,
+                              message: (l) => shareArtistMessage(artist, l),
+                              cards: () => _shareCards(artist, page),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -149,20 +198,28 @@ class _ArtistScreenState extends State<ArtistScreen> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(VSpace.page, 16, VSpace.page, 0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          ArtistAvatar(artist: artist, size: 140),
+                          // Crece desde abajo lo que se tira: el círculo no
+                          // se deforma y el resto baja con el contenido.
+                          PullStretch(
+                            controller: _scroll,
+                            height: 140,
+                            child: ArtistAvatar(artist: artist, size: 140),
+                          ),
                           const SizedBox(height: 14),
                           VMono(
                             page == null
                                 ? l10n.artistLabel
                                 : '${l10n.artistLabel} · ${l10n.countAlbums(page.total)}',
                             key: const ValueKey('artist-overline'),
+                            align: TextAlign.center,
                           ),
                           const SizedBox(height: 6),
                           Text(
                             artist.name,
                             key: const ValueKey('artist-name'),
+                            textAlign: TextAlign.center,
                             style: VText.display(64, weight: 800, height: 0.86, tracking: 0),
                           ),
                         ],
@@ -259,8 +316,9 @@ class _ArtistScreenState extends State<ArtistScreen> {
   }
 }
 
-/// "Calificación": el promedio en 72 en énfasis con " /10" y "N notas · M
-/// discos"; a la derecha, el histograma de 60 con "1" y "10" en las puntas.
+/// "Calificación", centrado: el promedio en 72 en énfasis con " /10", "N
+/// notas · M discos" y, debajo, el histograma de 60 a lo ancho (como la
+/// regla del disco) con "1" y "10" en las puntas.
 class _ArtistScoreBlock extends StatelessWidget {
   const _ArtistScoreBlock({required this.summary, required this.waiting});
 
@@ -277,50 +335,40 @@ class _ArtistScoreBlock extends StatelessWidget {
       key: ValueKey(average == null && !waiting ? 'artist-unrated' : 'artist-score'),
       padding: const EdgeInsets.only(top: 12),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              VMono(l10n.ratingLabel),
-              const SizedBox(height: 4),
-              if (waiting)
-                const VSkeleton(width: 96, height: 61)
-              else
-                Text.rich(
+          VMono(l10n.ratingLabel, align: TextAlign.center),
+          const SizedBox(height: 4),
+          if (waiting)
+            const Center(child: VSkeleton(width: 96, height: 61))
+          else
+            Text.rich(
+              TextSpan(
+                children: [
                   TextSpan(
-                    children: [
-                      TextSpan(
-                        text: average == null ? '—' : Score.formatAverage(average, l10n.localeName),
-                        style: TextStyle(color: average == null ? c.inkA(0.28) : c.accent),
-                      ),
-                      if (average != null)
-                        TextSpan(text: ' /10', style: VText.ui(14, weight: 500, color: c.ink4)),
-                    ],
+                    text: average == null ? '—' : Score.formatAverage(average, l10n.localeName),
+                    style: TextStyle(color: average == null ? c.inkA(0.28) : c.accentText),
                   ),
-                  style: big,
-                ),
-              const SizedBox(height: 4),
-              Text(
-                average == null
-                    ? l10n.artistNoRatings
-                    : '${l10n.countRatings(summary.count)} · ${l10n.countAlbums(summary.ratedAlbums)}',
-                style: VText.ui(12.5, color: c.ink3),
+                  if (average != null)
+                    TextSpan(text: ' /10', style: VText.ui(14, weight: 500, color: c.ink4)),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Histogram10(counts: summary.hist, height: 60, barMargin: 1),
-                const SizedBox(height: 5),
-                const RulerNumbers(onlyEnds: true, fontSize: 9.5),
-              ],
+              textAlign: TextAlign.center,
+              style: big,
             ),
+          const SizedBox(height: 4),
+          Text(
+            average == null
+                ? l10n.artistNoRatings
+                : '${l10n.countRatings(summary.count)} · ${l10n.countAlbums(summary.ratedAlbums)}',
+            textAlign: TextAlign.center,
+            style: VText.ui(12.5, color: c.ink3),
           ),
+          const SizedBox(height: 16),
+          Histogram10(counts: summary.hist, height: 60, barMargin: 1),
+          const SizedBox(height: 5),
+          const RulerNumbers(onlyEnds: true, fontSize: 9.5),
         ],
       ),
     );
@@ -438,8 +486,8 @@ class _AlbumRowState extends State<_AlbumRow> {
                 color: !rated
                     ? c.inkA(0.25)
                     : cover == null
-                        ? c.accent
-                        : coverTone(cover),
+                        ? c.accentText
+                        : c.coverTone(cover),
               ),
             ),
           ],

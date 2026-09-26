@@ -208,7 +208,7 @@ class _AddToListState extends State<_AddToList> {
               child: VMono(
                 _notice!,
                 key: const ValueKey('add-notice'),
-                color: c.accent,
+                color: c.accentText,
                 maxLines: 2,
               ),
             ),
@@ -426,7 +426,7 @@ class _AddToListState extends State<_AddToList> {
                         height: 14,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: selected ? c.accent : null,
+                          color: selected ? c.accentText : null,
                           border: selected ? null : Border.all(color: c.lineStrong),
                         ),
                         child: selected ? VIconView(VIcon.check, size: 9, color: c.onAccent) : null,

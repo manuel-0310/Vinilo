@@ -2414,6 +2414,12 @@ abstract class AppLocalizations {
   /// **'Tu diario de discos empieza aquí.'**
   String get welcomeHeadline;
 
+  /// No description provided for @welcomeTryIt.
+  ///
+  /// In es, this message translates to:
+  /// **'Pruébalo'**
+  String get welcomeTryIt;
+
   /// No description provided for @signInTitle.
   ///
   /// In es, this message translates to:
@@ -2744,12 +2750,6 @@ abstract class AppLocalizations {
   /// **'Comunidad · {n, plural, =1{1 nota} other{{n} notas}}'**
   String albumCommunity(int n);
 
-  /// No description provided for @albumTapToChange.
-  ///
-  /// In es, this message translates to:
-  /// **'Toca para cambiar'**
-  String get albumTapToChange;
-
   /// No description provided for @albumBarsCommunity.
   ///
   /// In es, this message translates to:
@@ -2791,12 +2791,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ver artista'**
   String get albumSeeArtist;
-
-  /// No description provided for @ratingSavedShort.
-  ///
-  /// In es, this message translates to:
-  /// **'Nota guardada'**
-  String get ratingSavedShort;
 
   /// No description provided for @rateSheetHint.
   ///
@@ -2923,6 +2917,234 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{n, plural, =1{disco} other{discos}}'**
   String listAlbumsWord(int n);
+
+  /// No description provided for @shareCardRated.
+  ///
+  /// In es, this message translates to:
+  /// **'califiqué'**
+  String get shareCardRated;
+
+  /// No description provided for @shareCardListBy.
+  ///
+  /// In es, this message translates to:
+  /// **'lista de {handle}'**
+  String shareCardListBy(String handle);
+
+  /// No description provided for @shareCardRankingBy.
+  ///
+  /// In es, this message translates to:
+  /// **'ranking de {handle}'**
+  String shareCardRankingBy(String handle);
+
+  /// No description provided for @shareCardList.
+  ///
+  /// In es, this message translates to:
+  /// **'lista'**
+  String get shareCardList;
+
+  /// No description provided for @shareCardRanking.
+  ///
+  /// In es, this message translates to:
+  /// **'ranking'**
+  String get shareCardRanking;
+
+  /// No description provided for @shareCardAlbums.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 disco} other{{n} discos}}'**
+  String shareCardAlbums(int n);
+
+  /// No description provided for @shareCardTracks.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 canción} other{{n} canciones}}'**
+  String shareCardTracks(int n);
+
+  /// No description provided for @shareCardSaves.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 guardado} other{{n} guardados}}'**
+  String shareCardSaves(int n);
+
+  /// No description provided for @shareCardArtist.
+  ///
+  /// In es, this message translates to:
+  /// **'artista'**
+  String get shareCardArtist;
+
+  /// No description provided for @shareCardMyAverage.
+  ///
+  /// In es, this message translates to:
+  /// **'mi nota promedio'**
+  String get shareCardMyAverage;
+
+  /// No description provided for @shareCardRatedOf.
+  ///
+  /// In es, this message translates to:
+  /// **'{rated} de {total} discos'**
+  String shareCardRatedOf(int rated, int total);
+
+  /// No description provided for @shareCardSince.
+  ///
+  /// In es, this message translates to:
+  /// **'{handle} · en vinilo desde {year}'**
+  String shareCardSince(String handle, String year);
+
+  /// No description provided for @shareCardStatAlbums.
+  ///
+  /// In es, this message translates to:
+  /// **'discos'**
+  String get shareCardStatAlbums;
+
+  /// No description provided for @shareCardStatReviews.
+  ///
+  /// In es, this message translates to:
+  /// **'reseñas'**
+  String get shareCardStatReviews;
+
+  /// No description provided for @shareCardStatAverage.
+  ///
+  /// In es, this message translates to:
+  /// **'nota media'**
+  String get shareCardStatAverage;
+
+  /// No description provided for @shareCardFavorites.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{mi favorito} other{mis {n} favoritos}}'**
+  String shareCardFavorites(int n);
+
+  /// No description provided for @shareCardFollowMe.
+  ///
+  /// In es, this message translates to:
+  /// **'Sígueme en Vinilo'**
+  String get shareCardFollowMe;
+
+  /// No description provided for @shareCardMyWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'mi semana · {range}'**
+  String shareCardMyWeek(String range);
+
+  /// No description provided for @shareCardWeekCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 disco.} other{{n} discos.}}'**
+  String shareCardWeekCount(int n);
+
+  /// No description provided for @shareCardCompatibility.
+  ///
+  /// In es, this message translates to:
+  /// **'compatibilidad'**
+  String get shareCardCompatibility;
+
+  /// No description provided for @shareCardFriendAlmostAll.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} y yo coincidimos en casi todo.'**
+  String shareCardFriendAlmostAll(String name);
+
+  /// No description provided for @shareCardFriendQuiteALot.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} y yo coincidimos bastante.'**
+  String shareCardFriendQuiteALot(String name);
+
+  /// No description provided for @shareCardFriendOpposites.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} y yo somos opuestos musicales.'**
+  String shareCardFriendOpposites(String name);
+
+  /// No description provided for @shareCardMe.
+  ///
+  /// In es, this message translates to:
+  /// **'yo'**
+  String get shareCardMe;
+
+  /// No description provided for @shareCardAgree.
+  ///
+  /// In es, this message translates to:
+  /// **'coincidimos'**
+  String get shareCardAgree;
+
+  /// No description provided for @shareCardDisagree.
+  ///
+  /// In es, this message translates to:
+  /// **'no coincidimos'**
+  String get shareCardDisagree;
+
+  /// No description provided for @shareTabStory.
+  ///
+  /// In es, this message translates to:
+  /// **'Historia'**
+  String get shareTabStory;
+
+  /// No description provided for @shareTabSquare.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuadrado'**
+  String get shareTabSquare;
+
+  /// No description provided for @shareTargetStories.
+  ///
+  /// In es, this message translates to:
+  /// **'historias'**
+  String get shareTargetStories;
+
+  /// No description provided for @shareTargetWhatsapp.
+  ///
+  /// In es, this message translates to:
+  /// **'whatsapp'**
+  String get shareTargetWhatsapp;
+
+  /// No description provided for @shareTargetSave.
+  ///
+  /// In es, this message translates to:
+  /// **'guardar'**
+  String get shareTargetSave;
+
+  /// No description provided for @shareTargetLink.
+  ///
+  /// In es, this message translates to:
+  /// **'enlace'**
+  String get shareTargetLink;
+
+  /// No description provided for @shareToStories.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir en Historias'**
+  String get shareToStories;
+
+  /// No description provided for @shareImage.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir imagen'**
+  String get shareImage;
+
+  /// No description provided for @shareImageSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Imagen guardada'**
+  String get shareImageSaved;
+
+  /// No description provided for @shareSaveDenied.
+  ///
+  /// In es, this message translates to:
+  /// **'Vinilo no tiene permiso para guardar en tus fotos. Actívalo en Ajustes.'**
+  String get shareSaveDenied;
+
+  /// No description provided for @shareImageFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo preparar la imagen. Inténtalo de nuevo.'**
+  String get shareImageFailed;
+
+  /// No description provided for @shareImageUnsupported.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta versión de la app todavía no puede compartir imágenes.'**
+  String get shareImageUnsupported;
 }
 
 class _AppLocalizationsDelegate

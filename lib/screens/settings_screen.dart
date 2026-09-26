@@ -254,7 +254,7 @@ class _ProfileRow extends StatelessWidget {
               opacity: pressed ? 0.6 : 1,
               child: Text(
                 '${context.l10n.editProfile} →',
-                style: VText.ui(14, weight: 500, color: c.accent),
+                style: VText.ui(14, weight: 500, color: c.accentText),
               ),
             ),
           ],

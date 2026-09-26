@@ -21,15 +21,15 @@ El rediseño terminó el 2026-09-25 (commit `941238a`, rama `rediseno`). Manuel 
 
 | # | Fase | Estado |
 |---|---|---|
-| 1 | Arreglos rápidos: doble raya, desborde, regla sin toque, artista centrado, portadas de listas de canciones | Pendiente |
-| 2 | Bienvenida interactiva | Pendiente |
-| 3 | Portada y banner que se estiran | Pendiente |
-| 4 | Discos en común | Pendiente |
-| 5 | Ícono en modo oscuro | Pendiente |
-| 6 | Landing web en español e inglés | Pendiente |
-| 7 | Imágenes para compartir: las tarjetas | Pendiente |
-| 8 | Imágenes para compartir: hoja y envío (nativo) | Pendiente |
-| 9 | Tema claro (opcional: solo si Manuel lo pide) | Pendiente |
+| 1 | Arreglos rápidos: doble raya, desborde, regla sin toque, artista centrado, portadas de listas de canciones | Hecha (2026-09-25) |
+| 2 | Bienvenida interactiva | Hecha (2026-09-25) |
+| 3 | Portada y banner que se estiran | Hecha (2026-09-25) |
+| 4 | Discos en común | Hecha (2026-09-25) |
+| 5 | Ícono en modo oscuro | Hecha (2026-09-25): se queda claro y oscuro, decisión de Manuel |
+| 6 | Landing web en español e inglés | Hecha (2026-09-25), falta que Manuel despliegue el hosting |
+| 7 | Imágenes para compartir: las tarjetas | Hecha (2026-09-25) |
+| 8 | Imágenes para compartir: hoja y envío (nativo) | Hecha (2026-09-25) |
+| 9 | Tema claro (opcional: solo si Manuel lo pide) | Hecha (2026-09-25) |
 | 10 | Cierre: documentación | Pendiente |
 
 **Primer paso del agente:**

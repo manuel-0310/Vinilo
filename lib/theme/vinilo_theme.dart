@@ -8,12 +8,13 @@ import 'oklch.dart';
 /// énfasis (`accent`) es el color que eligió la persona, uno de
 /// `VColors.accentPalette`; el texto encima de él es siempre `onAccent`.
 ///
-/// Todo color de la interfaz sale de aquí: el tema claro todavía no está
-/// diseñado y, cuando llegue, solo cambian los valores de `light`.
+/// Todo color de la interfaz sale de aquí: el tema claro ("Modo claro" de
+/// `ESPECIFICACION.md`) son los mismos tokens con otros valores.
 class ViniloPalette extends ThemeExtension<ViniloPalette> {
   const ViniloPalette({
     required this.brightness,
     this.accent = defaultAccent,
+    this.accentText = defaultAccent,
     required this.bg,
     required this.sheet,
     required this.surface,
@@ -42,6 +43,11 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
   /// Color de énfasis: botones primarios, enlaces, pestaña activa, punto de
   /// avisos, "Siguiendo", notas, barras, foco de los campos.
   final Color accent;
+
+  /// El énfasis usado como texto o línea fina sobre el fondo ("Ver todo",
+  /// notas, "Siguiendo", foco de los campos). En oscuro es `accent`; en
+  /// claro, la misma tonalidad y croma con luminosidad 0,52 para que se lea.
+  final Color accentText;
 
   /// Fondo de la app.
   final Color bg;
@@ -102,8 +108,33 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
   /// Tinta con otra opacidad (los valores sueltos del prototipo: .78, .7…).
   Color inkA(double alpha) => ink.withValues(alpha: alpha);
 
-  /// La misma paleta con otro color de énfasis.
-  ViniloPalette withAccent(Color accent) => copyWith(accent: accent);
+  /// La misma paleta con otro color de énfasis (uno de `accentPalette`).
+  /// En claro, la opción de tinta pasa a ser la tinta clara (con el fondo
+  /// como texto encima) y `accentText` baja a luminosidad 0,52.
+  ViniloPalette withAccent(Color accent) {
+    if (isDark) return copyWith(accent: accent, accentText: accent);
+    if (accent.toARGB32() == VColors.inkAccent.toARGB32()) {
+      return copyWith(accent: ink, accentText: ink, onAccent: bg);
+    }
+    final o = Oklch.fromColor(accent);
+    return copyWith(accent: accent, accentText: Oklch(0.52, o.c, o.h).toColor());
+  }
+
+  /// Cómo se ve una opción de la paleta en este tema: en claro, la de tinta
+  /// es la tinta oscura (si no, sería un cuadro casi invisible).
+  Color swatch(Color option) =>
+      !isDark && option.toARGB32() == VColors.inkAccent.toARGB32() ? ink : option;
+
+  /// Tono de portada para texto (nota y artista del disco, diario…): claro
+  /// en oscuro y oscuro en claro.
+  Color coverTone(Color cover) => coverToneFor(cover, brightness);
+
+  /// Tono de fondo de una portada o un color (franja de lista, banner).
+  Color coverShade(Color color, {double lightness = 0.31}) =>
+      coverShadeFor(color, brightness, lightness: lightness);
+
+  /// Fondo del avatar sin foto.
+  Color personTone(Color color) => personToneFor(color, brightness);
 
   static const ViniloPalette dark = ViniloPalette(
     brightness: Brightness.dark,
@@ -127,14 +158,38 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
     danger: Color(0xFFED756E),
   );
 
-  /// Tema claro: pendiente del diseñador. Mientras tanto es el oscuro (con
-  /// su brillo, para que el teclado y la barra de estado sigan oscuros).
-  static const ViniloPalette light = dark;
+  /// "Modo claro" de la especificación: papel cálido y tinta casi negra.
+  /// `buttonLine`, `inactive`, `placeholder`, `overButton`, `success` y
+  /// `danger` no están en la tabla del diseñador: siguen las mismas
+  /// opacidades que en oscuro (un poco más fuertes, como hace él con las
+  /// tintas) y los colores de estado bajan de luminosidad para leerse.
+  static const ViniloPalette light = ViniloPalette(
+    brightness: Brightness.light,
+    bg: Color(0xFFF3EFE7),
+    sheet: Color(0xFFFBF9F5),
+    surface: Color(0xFFE2DDD3),
+    ink: Color(0xFF161412),
+    ink2: Color(0xAD161412),
+    ink3: Color(0x9E161412),
+    ink4: Color(0x8C161412),
+    line: Color(0x24161412),
+    lineSoft: Color(0x14161412),
+    lineStrong: Color(0x4D161412),
+    buttonLine: Color(0x33161412),
+    inactive: Color(0x8C161412),
+    placeholder: Color(0x80161412),
+    scrim: Color(0x66161412),
+    overButton: Color(0x8CF3EFE7),
+    onAccent: Color(0xFF0F0E0D),
+    success: Color(0xFF2E8A4A),
+    danger: Color(0xFFC23F36),
+  );
 
   @override
   ViniloPalette copyWith({
     Brightness? brightness,
     Color? accent,
+    Color? accentText,
     Color? bg,
     Color? sheet,
     Color? surface,
@@ -157,6 +212,7 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
     return ViniloPalette(
       brightness: brightness ?? this.brightness,
       accent: accent ?? this.accent,
+      accentText: accentText ?? this.accentText,
       bg: bg ?? this.bg,
       sheet: sheet ?? this.sheet,
       surface: surface ?? this.surface,
@@ -185,6 +241,7 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
     return ViniloPalette(
       brightness: t < 0.5 ? brightness : other.brightness,
       accent: mix(accent, other.accent),
+      accentText: mix(accentText, other.accentText),
       bg: mix(bg, other.bg),
       sheet: mix(sheet, other.sheet),
       surface: mix(surface, other.surface),
@@ -231,8 +288,12 @@ class VColors {
     Color(0xFFDE73BD), // oklch(0.7 0.16 340)
     Color(0xFFE44D7D), // oklch(0.64 0.19 5)
     Color(0xFFAC713E), // oklch(0.6 0.1 60)
-    Color(0xFFEFEBE4), // tinta
+    inkAccent, // tinta
   ];
+
+  /// La opción de tinta de la paleta (en claro se ve como la tinta oscura,
+  /// ver `ViniloPalette.withAccent` y `swatch`).
+  static const Color inkAccent = Color(0xFFEFEBE4);
 
   /// El color de la paleta más parecido: los perfiles guardan cualquier
   /// ARGB (los de antes del rediseño, uno de la paleta vieja) y se muestran
@@ -384,7 +445,7 @@ class VSpace {
 }
 
 ThemeData buildViniloTheme(ViniloPalette p) {
-  final scheme = ColorScheme.dark(
+  final scheme = (p.isDark ? ColorScheme.dark : ColorScheme.light)(
     primary: p.accent,
     onPrimary: p.onAccent,
     secondary: p.accent,
@@ -442,28 +503,30 @@ ThemeData buildViniloTheme(ViniloPalette p) {
     snackBarTheme: SnackBarThemeData(
       backgroundColor: p.sheet,
       contentTextStyle: VText.ui(14, color: p.ink),
-      actionTextColor: p.accent,
+      actionTextColor: p.accentText,
       behavior: SnackBarBehavior.floating,
       elevation: 0,
       shape: RoundedRectangleBorder(side: BorderSide(color: p.line)),
     ),
     dividerTheme: DividerThemeData(color: p.line, thickness: 1, space: 1),
     textSelectionTheme: TextSelectionThemeData(
-      cursorColor: p.accent,
+      cursorColor: p.accentText,
       selectionColor: p.accent.withValues(alpha: 0.33),
-      selectionHandleColor: p.accent,
+      selectionHandleColor: p.accentText,
     ),
-    // Campos sin caja: texto y una línea debajo, que con foco es de 2 px en
-    // el color de énfasis (`LineField` arma el suyo con la etiqueta mono).
+    // Campos sin caja y sin borde propio: la línea de debajo (1 px, 2 px de
+    // énfasis con foco) la dibuja `LineField`. Si el tema pintara otra, un
+    // campo que la herede sale con dos rayas.
     inputDecorationTheme: InputDecorationTheme(
       filled: false,
       isDense: true,
       hintStyle: VText.ui(17, color: p.placeholder),
-      border: UnderlineInputBorder(borderSide: BorderSide(color: p.lineStrong)),
-      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: p.lineStrong)),
-      focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: p.accent, width: 2)),
-      errorBorder: UnderlineInputBorder(borderSide: BorderSide(color: p.danger)),
-      focusedErrorBorder: UnderlineInputBorder(borderSide: BorderSide(color: p.danger, width: 2)),
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      disabledBorder: InputBorder.none,
+      errorBorder: InputBorder.none,
+      focusedErrorBorder: InputBorder.none,
       contentPadding: const EdgeInsets.fromLTRB(0, 8, 0, 10),
     ),
     filledButtonTheme: FilledButtonThemeData(
