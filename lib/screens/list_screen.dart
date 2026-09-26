@@ -1,8 +1,5 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../l10n/l10n.dart';
 import '../models/music_list.dart';
@@ -12,20 +9,31 @@ import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
 import '../util/share_links.dart';
 import '../widgets/album_cover.dart';
-import '../widgets/list_mosaic.dart';
-import '../widgets/misc.dart';
 import '../widgets/photo_picker.dart';
+import '../widgets/pull_stretch.dart';
+import '../share_cards/share_specs.dart';
 import '../widgets/share_button.dart';
+import '../widgets/share_sheet.dart';
 import '../widgets/sheet.dart';
 import '../widgets/user_avatar.dart';
+import '../widgets/v_buttons.dart';
+import '../widgets/v_icons.dart';
+import '../widgets/v_sections.dart';
 import 'add_to_list_sheet.dart';
 import 'list_form_sheet.dart';
 import 'routes.dart';
 
-/// Una lista o ranking: mosaico, nombre, descripción, tipo, autor y sus
-/// elementos. Quien la creó reordena (arrastrando), quita, edita y borra;
-/// las demás personas la ven en modo lectura y pueden darle "me gusta" o
-/// guardarla.
+/// Alto de la franja de color debajo de la barra de estado (300 en el
+/// prototipo, con sus 54 de barra de estado).
+const double _stripeBelowStatus = 246;
+
+/// Una lista o un ranking: una franja del color de su portada con volver,
+/// compartir y ···; la portada de 150 con "Lista · 12 canciones"; el título;
+/// "Tu lista @usuario"; "+ Agregar" y "Editar" (o, en la de otra persona,
+/// "♥ Me gusta" y "Guardar"); y sus elementos. En un ranking, los tres
+/// primeros llevan el número grande en el tono de la portada. Quien la creó
+/// reordena (mantener pulsado, o con el asa en "Editar"), quita con
+/// "Deshacer", edita y borra.
 class ListScreen extends StatefulWidget {
   const ListScreen({super.key, required this.listId, this.initial});
 
@@ -39,9 +47,15 @@ class ListScreen extends StatefulWidget {
 class _ListScreenState extends State<ListScreen> {
   Services? _services;
   Stream<MusicList?>? _stream;
-  Color? _glow;
-  String? _glowFor;
+
+  /// El color dominante de la portada de la lista (la franja y los números
+  /// del ranking); null mientras no se sabe.
+  Color? _coverColor;
+  String? _coverFor;
   bool _editing = false;
+
+  final ScrollController _scroll = ScrollController();
+  final ValueNotifier<bool> _collapsed = ValueNotifier(false);
 
   // Orden optimista: al soltar (o quitar) un elemento la lista se pinta ya
   // con el cambio, sin esperar a que vuelva el documento; así no salta un
@@ -52,23 +66,45 @@ class _ListScreenState extends State<ListScreen> {
   MusicList? _optimisticBase;
 
   @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(() {
+      // La barra fija aparece cuando la franja pasa por debajo de ella.
+      _collapsed.value = _scroll.offset > _stripeBelowStatus - 54;
+    });
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_services != null) return;
     _services = ServicesScope.of(context);
     _stream = _services!.lists.watch(widget.listId);
     final initial = widget.initial;
-    if (initial != null) _loadGlow(initial);
+    if (initial != null) _loadCoverColor(initial);
   }
 
-  Future<void> _loadGlow(MusicList list) async {
-    // El resplandor sale de la portada elegida o, sin ella, de la primera
-    // carátula del mosaico.
-    final first = list.coverUrl ?? (list.covers.isEmpty ? null : list.covers.first);
-    if (first == null || first == _glowFor) return;
-    _glowFor = first;
-    final color = await _services!.palette.dominant(first);
-    if (color != null && mounted && _glowFor == first) setState(() => _glow = color);
+  @override
+  void dispose() {
+    _scroll.dispose();
+    _collapsed.dispose();
+    super.dispose();
+  }
+
+  /// El color sale de la portada elegida o, sin ella, de la del primer
+  /// elemento.
+  void _loadCoverColor(MusicList list) {
+    final url = list.coverUrl ?? (list.covers.isEmpty ? null : list.covers.first);
+    if (url == null || url == _coverFor) return;
+    _coverFor = url;
+    final known = _services!.palette.cached(url);
+    if (known != null) {
+      _coverColor = known;
+      return;
+    }
+    _services!.palette.dominant(url).then((color) {
+      if (color != null && mounted && _coverFor == url) setState(() => _coverColor = color);
+    });
   }
 
   void _snack(String text) {
@@ -154,34 +190,16 @@ class _ListScreenState extends State<ListScreen> {
   }
 
   Future<void> _delete(MusicList list) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        final c = VColors.of(ctx);
-        return AlertDialog(
-          title: Text(ctx.l10n.listDeleteTitle(list.name), style: VText.display(28)),
-          content: Text(
-            ctx.l10n.listDeleteBody,
-            style: VText.ui(14, color: c.text2, height: 1.4),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(ctx.l10n.cancel),
-            ),
-            TextButton(
-              key: const ValueKey('list-delete-confirm'),
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(
-                ctx.l10n.listDelete,
-                style: VText.ui(14, weight: 700, color: c.danger),
-              ),
-            ),
-          ],
-        );
-      },
+    final l = context.l10n;
+    final ok = await showConfirmSheet(
+      context,
+      title: l.listDeleteTitle(list.name),
+      message: l.listDeleteBody,
+      confirmLabel: l.listDelete,
+      danger: true,
+      confirmKey: const ValueKey('list-delete-confirm'),
     );
-    if (ok != true || !mounted) return;
+    if (!ok || !mounted) return;
     try {
       await _services!.lists.delete(list);
       if (mounted) Navigator.of(context).maybePop();
@@ -202,7 +220,7 @@ class _ListScreenState extends State<ListScreen> {
     _snack(context.l10n.listCoverUploading);
     try {
       await _services!.lists.setCover(list, bytes);
-      _glowFor = null;
+      _coverFor = null;
       if (mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
     } catch (e) {
       if (mounted) _snack(context.l10n.listCoverFailed(describeError(e, context.l10n)));
@@ -212,70 +230,67 @@ class _ListScreenState extends State<ListScreen> {
   Future<void> _removeCover(MusicList list) async {
     try {
       await _services!.lists.removeCover(list);
-      _glowFor = null;
+      _coverFor = null;
     } catch (e) {
       if (mounted) _snack(context.l10n.listCoverRemoveFailed(describeError(e, context.l10n)));
     }
   }
 
   Future<void> _ownerMenu(MusicList list) {
+    final l = context.l10n;
     return showVSheet<void>(
       context,
       (ctx) => SheetScaffold(
         title: list.name,
-        subtitle: list.typeLabel(context.l10n),
+        subtitle: list.typeLabel(l),
+        titleSize: 40,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SheetAction(
               key: const ValueKey('list-menu-edit'),
-              icon: Icons.edit_rounded,
-              label: context.l10n.listMenuEdit,
+              vicon: VIcon.pencil,
+              label: l.listMenuEdit,
               onTap: () {
                 Navigator.of(ctx).pop();
                 _editMeta(list);
               },
             ),
-            const SizedBox(height: 10),
             SheetAction(
               key: const ValueKey('list-menu-add'),
-              icon: Icons.add_rounded,
-              label: list.itemType.addLabel(context.l10n),
-              hint: context.l10n.listMenuAddHint,
+              vicon: VIcon.plus,
+              label: list.itemType.addLabel(l),
+              hint: l.listMenuAddHint,
               onTap: () {
                 Navigator.of(ctx).pop();
                 _add(list);
               },
             ),
-            const SizedBox(height: 10),
             SheetAction(
               key: const ValueKey('list-menu-cover'),
-              icon: Icons.image_rounded,
-              label: list.coverUrl == null ? context.l10n.listCoverChoose : context.l10n.listCoverChange,
-              hint: context.l10n.listCoverHint,
+              vicon: VIcon.image,
+              label: list.coverUrl == null ? l.listCoverChoose : l.listCoverChange,
+              hint: l.listCoverHint,
               onTap: () {
                 Navigator.of(ctx).pop();
                 _changeCover(list);
               },
             ),
-            if (list.coverUrl != null) ...[
-              const SizedBox(height: 10),
+            if (list.coverUrl != null)
               SheetAction(
                 key: const ValueKey('list-menu-cover-remove'),
-                icon: Icons.grid_view_rounded,
-                label: context.l10n.listCoverRemove,
-                hint: context.l10n.listCoverRemoveHint,
+                vicon: VIcon.close,
+                label: l.listCoverRemove,
+                hint: l.listCoverRemoveHint,
                 onTap: () {
                   Navigator.of(ctx).pop();
                   _removeCover(list);
                 },
               ),
-            ],
-            const SizedBox(height: 10),
             SheetAction(
               key: const ValueKey('list-menu-delete'),
-              icon: Icons.delete_outline_rounded,
-              label: context.l10n.listDelete,
+              vicon: VIcon.trash,
+              label: l.listDelete,
               danger: true,
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -291,8 +306,8 @@ class _ListScreenState extends State<ListScreen> {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
+    final l = context.l10n;
     final me = CurrentUser.of(context);
-    final topPad = MediaQuery.paddingOf(context).top;
     return Scaffold(
       body: StreamBuilder<MusicList?>(
         stream: _stream,
@@ -305,54 +320,64 @@ class _ListScreenState extends State<ListScreen> {
             _optimisticBase = null;
           }
           final optimistic = _optimistic;
-          final list = raw == null || optimistic == null
-              ? raw
-              : raw.copyWith(items: optimistic);
-          if (snap.connectionState == ConnectionState.waiting && list == null) {
-            return Stack(
-              children: [
-                const Center(child: CircularProgressIndicator()),
-                _back(topPad),
-              ],
-            );
-          }
+          final list = raw == null || optimistic == null ? raw : raw.copyWith(items: optimistic);
           if (list == null) {
-            return Stack(
-              children: [
-                Center(
-                  child: EmptyState(
-                    title: context.l10n.listGone,
-                    message: context.l10n.listGoneBody,
+            final waiting = snap.connectionState == ConnectionState.waiting;
+            return SafeArea(
+              bottom: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: VIconButton(
+                        key: const ValueKey('back'),
+                        icon: VIcon.back,
+                        onTap: () => Navigator.of(context).maybePop(),
+                      ),
+                    ),
                   ),
-                ),
-                _back(topPad),
-              ],
+                  if (waiting)
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(VSpace.page, 28, VSpace.page, 0),
+                      child: VSkeleton(width: 150, height: 150),
+                    )
+                  else
+                    VEmptyState(
+                      title: l.listGone,
+                      message: l.listGoneBody,
+                      padding: const EdgeInsets.fromLTRB(VSpace.page, 28, VSpace.page, 24),
+                    ),
+                ],
+              ),
             );
           }
-          _loadGlow(list);
+          _loadCoverColor(list);
           final mine = list.isMine(me.uid);
+          ShareMessage share(AppLocalizations l) => shareListMessage(list, l, mine: mine);
+          List<ShareCardSpec> shareCards() => list.items.isEmpty
+              ? const []
+              : ShareSpecs.list(list, accent: ShareSpecs.accentOf(context));
           return Stack(
             children: [
-              _body(context, c, me, list, mine),
-              _back(topPad),
+              _body(context, c, me, list, mine, share, shareCards),
               Positioned(
-                top: topPad + 8,
-                right: 16,
-                child: Row(
-                  children: [
-                    ShareButton(
-                      key: const ValueKey('share-list'),
-                      message: (l) => shareListMessage(list, l, mine: mine),
-                    ),
-                    if (mine) ...[
-                      const SizedBox(width: 8),
-                      GlassIconButton(
-                        key: const ValueKey('list-menu'),
-                        icon: Icons.more_horiz_rounded,
-                        onTap: () => _ownerMenu(list),
-                      ),
-                    ],
-                  ],
+                top: 0,
+                left: 0,
+                right: 0,
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: _collapsed,
+                  builder: (context, collapsed, _) => collapsed
+                      ? _StickyBar(
+                          key: const ValueKey('list-bar'),
+                          title: list.name,
+                          share: share,
+                          shareCards: shareCards,
+                          onMenu: mine ? () => _ownerMenu(list) : null,
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ),
             ],
@@ -362,29 +387,25 @@ class _ListScreenState extends State<ListScreen> {
     );
   }
 
-  Widget _back(double topPad) => Positioned(
-        top: topPad + 8,
-        left: 16,
-        child: GlassIconButton(
-          key: const ValueKey('back'),
-          icon: Icons.arrow_back_ios_new_rounded,
-          onTap: () => Navigator.of(context).maybePop(),
-        ),
-      );
-
   Widget _body(
     BuildContext context,
     ViniloPalette c,
     UserProfile me,
     MusicList list,
     bool mine,
+    ShareMessage Function(AppLocalizations l) share,
+    List<ShareCardSpec> Function() shareCards,
   ) {
-    final glow = _glow ?? c.surface3;
-    final size = MediaQuery.sizeOf(context);
+    final l = context.l10n;
     final topPad = MediaQuery.paddingOf(context).top;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
-    final mosaicSize = math.min(size.width * 0.56, 260.0);
+    final cover = _coverColor;
+    final stripe = cover == null ? c.surface : c.coverShade(cover);
+    final tone = cover == null ? c.accentText : c.coverTone(cover);
     final items = list.items;
+    final first = items.isEmpty ? null : items.first;
+    final bigCover = list.coverUrl ?? first?.cover ?? first?.smallCover;
+    final veil = c.bg.withValues(alpha: 0.45);
 
     Widget row(int i) {
       final item = items[i];
@@ -392,7 +413,8 @@ class _ListScreenState extends State<ListScreen> {
         key: ValueKey('list-item-${item.id}'),
         item: item,
         index: i,
-        position: list.isRanking ? i + 1 : null,
+        ranking: list.isRanking,
+        tone: tone,
         editing: mine && _editing,
         reorderable: mine,
         onRemove: () => _remove(list, item),
@@ -413,159 +435,174 @@ class _ListScreenState extends State<ListScreen> {
     }
 
     return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
+      controller: _scroll,
+      // Rebota arriba: al tirar hacia abajo la franja crece.
+      physics: pullPhysics,
       slivers: [
         SliverToBoxAdapter(
           child: Stack(
-            clipBehavior: Clip.none,
             children: [
               Positioned(
-                top: -AmbientGlow.bleed,
+                top: 0,
                 left: 0,
                 right: 0,
-                bottom: 0,
-                child: AmbientGlow(color: glow),
+                height: topPad + _stripeBelowStatus,
+                child: PullStretch(
+                  controller: _scroll,
+                  height: topPad + _stripeBelowStatus,
+                  child: ColoredBox(color: stripe),
+                ),
               ),
-              Padding(
-                padding: EdgeInsets.only(top: topPad + 66),
-                child: Column(
-                  children: [
-                    Center(
-                      child: ListMosaic(
-                        covers: list.covers,
-                        coverUrl: list.coverUrl,
-                        size: mosaicSize,
-                        radius: 20,
-                        shadow: true,
-                        shadowColor: glow,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 28),
-                      child: Column(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PullPinned(
+                    controller: _scroll,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(16, topPad + 4, 16, 0),
+                      child: Row(
                         children: [
-                          Text(
-                            list.name,
-                            key: const ValueKey('list-title'),
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: VText.display(34, height: 1.02),
+                          VIconButton(
+                            key: const ValueKey('back'),
+                            icon: VIcon.back,
+                            style: VIconButtonStyle.filled,
+                            fill: veil,
+                            onTap: () => Navigator.of(context).maybePop(),
                           ),
-                          if (list.description.isNotEmpty) ...[
-                            const SizedBox(height: 10),
-                            Text(
-                              list.description,
-                              key: const ValueKey('list-description-text'),
-                              textAlign: TextAlign.center,
-                              style: VText.ui(14, color: c.text2, height: 1.4),
+                          const Spacer(),
+                          ShareButton(key: const ValueKey('share-list'), message: share, cards: shareCards, fill: veil),
+                          if (mine) ...[
+                            const SizedBox(width: 4),
+                            VIconButton(
+                              key: const ValueKey('list-menu'),
+                              icon: VIcon.more,
+                              style: VIconButtonStyle.filled,
+                              fill: veil,
+                              onTap: () => _ownerMenu(list),
                             ),
                           ],
-                          const SizedBox(height: 10),
-                          Text(
-                            '${list.typeLabel(context.l10n)} · ${list.itemType.count(list.count, context.l10n)}',
-                            key: const ValueKey('list-meta'),
-                            textAlign: TextAlign.center,
-                            style: VText.ui(13, color: c.text3),
-                          ),
-                          const SizedBox(height: 10),
-                          GestureDetector(
-                            key: const ValueKey('list-owner'),
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () => openUser(context, list.ownerUid),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                UserAvatar(
-                                  name: list.owner.name,
-                                  color: Color(list.owner.colorValue),
-                                  url: list.owner.avatarUrl,
-                                  size: 22,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  mine ? context.l10n.listYours : context.l10n.listBy(list.owner.name),
-                                  style: VText.ui(13, weight: 700),
-                                ),
-                                if (list.owner.username != null) ...[
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    list.owner.handle,
-                                    style: VText.ui(13, color: c.text2),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
                         ],
                       ),
-                    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.06),
-                    const SizedBox(height: 18),
-                    _Actions(
-                      list: list,
-                      me: me,
-                      mine: mine,
-                      editing: _editing,
-                      onAdd: () => _add(list),
-                      onToggleEdit: () => setState(() => _editing = !_editing),
                     ),
-                    const SizedBox(height: 26),
-                  ],
-                ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(VSpace.page, 20, VSpace.page, 0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        AlbumCover(url: bigCover, size: 150),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            key: const ValueKey('list-meta'),
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              VMono(list.kind.label(l), color: c.inkA(0.7)),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${list.count}',
+                                style: VText.display(44, weight: 700, height: 0.85, tracking: 0),
+                              ),
+                              VMono(
+                                list.itemType == ListItemType.tracks
+                                    ? l.listTracksWord(list.count)
+                                    : l.listAlbumsWord(list.count),
+                                color: c.inkA(0.7),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(VSpace.page, 18, VSpace.page, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          list.name,
+                          key: const ValueKey('list-title'),
+                          style: VText.display(
+                            list.name.characters.length > 22 ? 40 : 52,
+                            weight: 800,
+                            height: 0.9,
+                            tracking: 0,
+                          ),
+                        ),
+                        if (list.description.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            list.description,
+                            key: const ValueKey('list-description-text'),
+                            style: VText.ui(14, color: c.ink2, height: 1.4),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        _Owner(list: list, mine: mine),
+                        const SizedBox(height: 16),
+                        _Actions(
+                          list: list,
+                          me: me,
+                          mine: mine,
+                          editing: _editing,
+                          onAdd: () => _add(list),
+                          onToggleEdit: () => setState(() => _editing = !_editing),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                ],
               ),
             ],
           ),
         ),
         if (items.isEmpty)
           SliverToBoxAdapter(
-            child: EmptyState(
-              title: mine ? context.l10n.listEmptyMineTitle : context.l10n.listEmptyTheirsTitle,
-              message: mine
-                  ? (list.itemType == ListItemType.tracks
-                      ? context.l10n.listEmptyMineTracks
-                      : context.l10n.listEmptyMineAlbums)
-                  : context.l10n.listEmptyTheirs(list.owner.name),
-              action: mine
-                  ? FilledButton.icon(
-                      key: const ValueKey('list-add-empty'),
-                      onPressed: () => _add(list),
-                      icon: const Icon(Icons.add_rounded),
-                      label: Text(list.itemType.addLabel(context.l10n)),
-                    )
-                  : null,
+            child: Container(
+              decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
+              child: VEmptyState(
+                title: mine ? l.listEmptyMineTitle : l.listEmptyTheirsTitle,
+                message: mine
+                    ? (list.itemType == ListItemType.tracks ? l.listEmptyMineTracks : l.listEmptyMineAlbums)
+                    : l.listEmptyTheirs(list.owner.name),
+                action: mine
+                    ? VPrimaryButton.accent(
+                        key: const ValueKey('list-add-empty'),
+                        label: list.itemType.addLabel(l),
+                        onPressed: () => _add(list),
+                      )
+                    : null,
+              ),
             ),
           )
         else if (mine)
           SliverReorderableList(
             itemCount: items.length,
             onReorder: (o, n) => _reorder(list, o, n),
-            proxyDecorator: (child, _, animation) => AnimatedBuilder(
-              animation: animation,
-              builder: (context, _) => Material(
-                color: c.surface2,
-                elevation: 8 * animation.value,
-                shadowColor: Colors.black.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(16),
-                child: child,
-              ),
-            ),
+            proxyDecorator: (child, _, _) => ColoredBox(color: c.sheet, child: child),
             itemBuilder: (context, i) => row(i),
           )
         else
           SliverList.builder(
             itemCount: items.length,
-            itemBuilder: (context, i) =>
-                row(i).animate().fadeIn(delay: (25 * (i % 12)).ms, duration: 300.ms),
+            itemBuilder: (context, i) => row(i),
           ),
         SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.fromLTRB(VSpace.page, 30, VSpace.page, bottomPad + 30),
-            child: Text(
-              mine && items.isNotEmpty
-                  ? context.l10n.listFooterOwner
-                  : context.l10n.spotifyCredit,
-              style: VText.ui(11, color: c.text3, height: 1.5),
+            child: Container(
+              padding: const EdgeInsets.only(top: 12),
+              decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
+              child: VMono(
+                mine && items.isNotEmpty ? l.listFooterOwner : l.spotifyCredit,
+                size: 10,
+                tracking: 0.04,
+                height: 1.8,
+                color: c.ink4,
+                uppercase: false,
+              ),
             ),
           ),
         ),
@@ -574,9 +611,54 @@ class _ListScreenState extends State<ListScreen> {
   }
 }
 
-/// Píldoras de acción bajo el encabezado: para la dueña, agregar y editar;
-/// para las demás personas, "me gusta" y guardar. El número de likes se ve
-/// siempre.
+/// "Tu lista @usuario" (o el nombre de quien la hizo), con su avatar de 22.
+class _Owner extends StatelessWidget {
+  const _Owner({required this.list, required this.mine});
+
+  final MusicList list;
+  final bool mine;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final owner = list.owner;
+    return Pressable(
+      key: const ValueKey('list-owner'),
+      onTap: () => openUser(context, list.ownerUid),
+      builder: (context, pressed) => Opacity(
+        opacity: pressed ? 0.6 : 1,
+        child: Row(
+          children: [
+            UserAvatar(
+              name: owner.name,
+              color: Color(owner.colorValue),
+              url: owner.avatarUrl,
+              size: 22,
+              initialSize: 11,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                mine ? context.l10n.listYours : owner.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: VText.ui(13.5, weight: 700),
+              ),
+            ),
+            if (owner.username != null) ...[
+              const SizedBox(width: 8),
+              Text(owner.handle, style: VText.ui(13.5, color: c.ink3)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Los dos botones bajo el título: para la autora, "+ Agregar" (tinta) y
+/// "Editar" (con borde); para las demás personas, "♥ Me gusta · N" y
+/// "Guardar" (o "Guardada").
 class _Actions extends StatelessWidget {
   const _Actions({
     required this.list,
@@ -597,131 +679,98 @@ class _Actions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
+    final l = context.l10n;
     final services = ServicesScope.of(context);
-    final liked = list.likedByMe(me.uid);
-    final saved = list.savedByMe(me.uid);
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      alignment: WrapAlignment.center,
+    final Widget first;
+    final Widget second;
+    if (mine) {
+      first = VPrimaryButton(
+        key: const ValueKey('list-add'),
+        label: l.listAddPlus,
+        center: true,
+        height: 44,
+        fontSize: 14,
+        onPressed: onAdd,
+      );
+      second = VSecondaryButton(
+        key: const ValueKey('list-edit-toggle'),
+        label: editing ? l.done : l.edit,
+        center: true,
+        height: 44,
+        fontSize: 14,
+        color: editing ? c.accentText : null,
+        borderColor: editing ? c.accentText : null,
+        onPressed: onToggleEdit,
+      );
+    } else {
+      final liked = list.likedByMe(me.uid);
+      final saved = list.savedByMe(me.uid);
+      final likeLabel = list.likes > 0 ? '${l.like} · ${list.likes}' : l.like;
+      final heart = VIconView(
+        liked ? VIcon.heartFilled : VIcon.heart,
+        size: 12,
+        color: liked ? c.onAccent : c.bg,
+      );
+      void toggleLike() {
+        HapticFeedback.lightImpact();
+        services.lists.toggleLike(list, me);
+      }
+
+      first = liked
+          ? VPrimaryButton.accent(
+              key: const ValueKey('list-like'),
+              label: likeLabel,
+              leading: heart,
+              center: true,
+              height: 44,
+              fontSize: 14,
+              onPressed: toggleLike,
+            )
+          : VPrimaryButton(
+              key: const ValueKey('list-like'),
+              label: likeLabel,
+              leading: heart,
+              center: true,
+              height: 44,
+              fontSize: 14,
+              onPressed: toggleLike,
+            );
+      second = VSecondaryButton(
+        key: const ValueKey('list-save'),
+        label: saved ? l.saved : l.save,
+        leading: saved ? VIconView(VIcon.check, size: 12, color: c.accentText) : null,
+        center: true,
+        height: 44,
+        fontSize: 14,
+        color: saved ? c.accentText : null,
+        borderColor: saved ? c.accentText : null,
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          services.lists.toggleSave(list, me);
+        },
+      );
+    }
+    return Row(
       children: [
-        if (mine) ...[
-          _ActionPill(
-            key: const ValueKey('list-add'),
-            icon: Icons.add_rounded,
-            label: context.l10n.add,
-            active: true,
-            onTap: onAdd,
-          ),
-          _ActionPill(
-            key: const ValueKey('list-edit-toggle'),
-            icon: editing ? Icons.check_rounded : Icons.edit_rounded,
-            label: editing ? context.l10n.done : context.l10n.edit,
-            active: editing,
-            onTap: onToggleEdit,
-          ),
-          if (list.likes > 0)
-            _ActionPill(
-              key: const ValueKey('list-likes'),
-              icon: Icons.favorite_rounded,
-              label: '${list.likes}',
-              color: c.danger,
-              onTap: null,
-            ),
-        ] else ...[
-          _ActionPill(
-            key: const ValueKey('list-like'),
-            icon: liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-            label: list.likes > 0 ? '${list.likes}' : context.l10n.like,
-            active: liked,
-            color: c.danger,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              services.lists.toggleLike(list, me);
-            },
-          ),
-          _ActionPill(
-            key: const ValueKey('list-save'),
-            icon: saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-            label: saved ? context.l10n.saved : context.l10n.save,
-            active: saved,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              services.lists.toggleSave(list, me);
-            },
-          ),
-        ],
+        Expanded(child: first),
+        const SizedBox(width: 8),
+        Expanded(child: second),
       ],
     );
   }
 }
 
-class _ActionPill extends StatelessWidget {
-  const _ActionPill({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.active = false,
-    this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-  final bool active;
-
-  /// Color del estado activo (por defecto el énfasis).
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    final tint = color ?? c.accent;
-    final fg = active ? tint : c.text;
-    return Material(
-      color: active ? tint.withValues(alpha: 0.14) : c.surface2,
-      borderRadius: BorderRadius.circular(999),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: active ? tint.withValues(alpha: 0.5) : Colors.transparent,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 17, color: fg)
-                  .animate(key: ValueKey(active))
-                  .scale(
-                    begin: const Offset(1.3, 1.3),
-                    end: const Offset(1, 1),
-                    duration: 300.ms,
-                    curve: Curves.elasticOut,
-                  ),
-              const SizedBox(width: 7),
-              Text(label, style: VText.ui(14, weight: 700, color: fg)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Una canción o un disco de la lista. En rankings lleva su posición; en
-/// modo edición, el botón de quitar y el asa para arrastrar.
+/// Un elemento. En una lista: portada de 44, título, artista y duración (o
+/// año). En un ranking: su posición (60 el primero, 40 el segundo y el
+/// tercero, en el tono de la portada; 28 y apagada del cuarto en adelante),
+/// título y artista. En modo edición, quitar (×) y el asa para arrastrar.
 class _ItemRow extends StatelessWidget {
   const _ItemRow({
     super.key,
     required this.item,
     required this.index,
-    required this.position,
+    required this.ranking,
+    required this.tone,
     required this.editing,
     required this.reorderable,
     required this.onRemove,
@@ -730,7 +779,8 @@ class _ItemRow extends StatelessWidget {
 
   final ListItem item;
   final int index;
-  final int? position;
+  final bool ranking;
+  final Color tone;
   final bool editing;
   final bool reorderable;
   final VoidCallback onRemove;
@@ -739,71 +789,143 @@ class _ItemRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: editing ? null : onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 8),
-          child: Row(
+    final position = index + 1;
+    final top = ranking && position == 1;
+    final number = !ranking
+        ? null
+        : Text(
+            '$position',
+            maxLines: 1,
+            softWrap: false,
+            style: VText.display(
+              position == 1 ? 60 : (position <= 3 ? 40 : 28),
+              weight: position == 1 ? 800 : 700,
+              height: 0.8,
+              tracking: 0,
+              color: position <= 3 ? tone : c.ink4,
+            ),
+          );
+    final Widget trailing = editing
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              if (editing) ...[
-                GestureDetector(
-                  key: ValueKey('list-remove-$index'),
-                  behavior: HitTestBehavior.opaque,
-                  onTap: onRemove,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: Icon(Icons.remove_circle_rounded, color: c.danger, size: 22),
-                  ),
-                ),
-              ],
-              if (position != null)
-                SizedBox(
-                  width: 34,
-                  child: Text(
-                    '$position',
-                    style: VText.display(
-                      position! < 100 ? 24 : 18,
-                      height: 1,
-                      color: position! <= 3 ? c.accent : c.text2,
-                    ),
-                  ),
-                ),
-              AlbumCover(url: item.smallCover, size: 52, radius: 10),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: VText.ui(15, weight: 700),
-                    ),
-                    Text(
-                      item.subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: VText.ui(12, color: c.text2),
-                    ),
-                  ],
+              Pressable(
+                key: ValueKey('list-remove-$index'),
+                onTap: onRemove,
+                builder: (context, pressed) => Container(
+                  width: 32,
+                  height: 32,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(border: Border.all(color: pressed ? c.danger : c.lineStrong)),
+                  child: VIconView(VIcon.close, size: 12, color: c.danger),
                 ),
               ),
-              const SizedBox(width: 12),
-              Text(item.meta, style: VText.ui(13, color: c.text3)),
-              if (editing && reorderable)
+              if (reorderable)
                 ReorderableDragStartListener(
                   index: index,
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 12),
-                    child: Icon(Icons.drag_handle_rounded, color: c.text3),
+                    padding: const EdgeInsets.only(left: 10),
+                    child: VIconView(VIcon.drag, size: 18, color: c.ink3),
                   ),
                 ),
             ],
-          ),
+          )
+        : Text(item.meta, style: VText.mono(12, tracking: 0, color: c.ink3));
+
+    return Pressable(
+      onTap: editing ? null : onTap,
+      builder: (context, pressed) => Container(
+        padding: EdgeInsets.symmetric(horizontal: VSpace.page, vertical: top ? 12 : 10),
+        decoration: BoxDecoration(
+          color: pressed ? c.inkA(0.04) : c.bg,
+          border: Border(top: BorderSide(color: index == 0 ? c.line : c.lineSoft)),
         ),
+        child: Row(
+          children: [
+            if (ranking)
+              SizedBox(width: 52, child: number)
+            else
+              AlbumCover(url: item.smallCover, size: 44),
+            SizedBox(width: ranking ? 10 : 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    maxLines: top ? 2 : 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: top
+                        ? VText.display(24, weight: 700, stretch: 75, height: 1, tracking: 0)
+                        : VText.ui(15, weight: 600),
+                  ),
+                  SizedBox(height: top ? 3 : 0),
+                  Text(
+                    item.artist,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: VText.ui(12.5, color: c.ink3),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            trailing,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// La barra que queda arriba al pasar la franja: volver, el nombre de la
+/// lista, compartir y ···, con una línea debajo.
+class _StickyBar extends StatelessWidget {
+  const _StickyBar({
+    super.key,
+    required this.title,
+    required this.share,
+    required this.shareCards,
+    required this.onMenu,
+  });
+
+  final String title;
+  final ShareMessage Function(AppLocalizations l) share;
+  final List<ShareCardSpec> Function() shareCards;
+  final VoidCallback? onMenu;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Container(
+      padding: EdgeInsets.fromLTRB(16, MediaQuery.paddingOf(context).top + 4, 16, 10),
+      decoration: BoxDecoration(
+        color: c.bg,
+        border: Border(bottom: BorderSide(color: c.line)),
+      ),
+      child: Row(
+        children: [
+          VIconButton(
+            key: const ValueKey('back'),
+            icon: VIcon.back,
+            onTap: () => Navigator.of(context).maybePop(),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: VText.ui(14, weight: 600),
+            ),
+          ),
+          const SizedBox(width: 10),
+          ShareButton(message: share, cards: shareCards, style: VIconButtonStyle.bordered),
+          if (onMenu != null) ...[
+            const SizedBox(width: 4),
+            VIconButton(icon: VIcon.more, onTap: onMenu),
+          ],
+        ],
       ),
     );
   }

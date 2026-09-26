@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../l10n/l10n.dart';
 import '../models/album.dart';
@@ -13,14 +12,22 @@ import '../util/errors.dart';
 import '../util/share_links.dart';
 import '../widgets/album_cover.dart';
 import '../widgets/artist_avatar.dart';
-import '../widgets/histogram.dart';
-import '../widgets/misc.dart';
+import '../widgets/pull_stretch.dart';
+import '../share_cards/share_card_data.dart';
+import '../share_cards/share_specs.dart';
 import '../widgets/share_button.dart';
+import '../widgets/share_sheet.dart';
+import '../widgets/v_buttons.dart';
+import '../widgets/v_icons.dart';
+import '../widgets/v_ruler.dart';
+import '../widgets/v_sections.dart';
 import 'routes.dart';
 
-/// Ficha de un artista: foto, nombre, géneros, su calificación en Vinilo
-/// (promedio ponderado de todas las notas a sus discos) y su discografía,
-/// que se carga por páginas al llegar al final.
+/// Ficha de un artista: volver y compartir, y centrados la foto redonda de
+/// 140, "Artista · N discos", el nombre y su calificación en Vinilo
+/// (promedio ponderado de todas las notas a sus discos) con el histograma;
+/// debajo, la discografía, que se ordena por recientes o por mejor
+/// calificados y se carga por páginas al llegar al final.
 class ArtistScreen extends StatefulWidget {
   const ArtistScreen({super.key, required this.artist});
 
@@ -35,12 +42,19 @@ class ArtistScreen extends StatefulWidget {
 class _ArtistScreenState extends State<ArtistScreen> {
   Services? _services;
   Artist? _detail;
-  Object? _detailError;
-  Color? _glow;
   AlbumPage? _albums;
   Object? _albumsError;
   bool _loadingMore = false;
   Stream<List<AlbumStats>>? _stats;
+
+  /// Mis notas (para la imagen "Historia · artista"; se filtran por
+  /// `artistIds` al compartir).
+  List<RatingEntry>? _myRatings;
+
+  /// "Mejor calificados ↓" en lugar de "Recientes ↓".
+  bool _bestFirst = false;
+
+  final ScrollController _scroll = ScrollController();
 
   Artist get _artist => _detail ?? widget.artist;
 
@@ -52,17 +66,46 @@ class _ArtistScreenState extends State<ArtistScreen> {
     _stats = _services!.ratings.artistAlbumStats(widget.artist.id);
     _loadDetail();
     _loadAlbums();
+    _loadMyRatings();
+  }
+
+  Future<void> _loadMyRatings() async {
+    final me = CurrentUser.maybeOf(context);
+    if (me == null) return;
+    try {
+      final ratings = await _services!.ratings.fetchUserRatings(me.uid);
+      if (mounted) setState(() => _myRatings = ratings);
+    } catch (_) {
+      // Sin mis notas se comparte solo el enlace.
+    }
+  }
+
+  /// La historia del artista, si califiqué algún disco suyo.
+  List<ShareCardSpec> _shareCards(Artist artist, AlbumPage? page) {
+    final person = ShareSpecs.meOf(context);
+    final ratings = _myRatings;
+    if (person == null || ratings == null) return const [];
+    final data = artistCardFrom(
+      artist: artist,
+      myRatings: ratings,
+      totalAlbums: page?.total ?? 0,
+      person: person,
+    );
+    return ShareSpecs.artist(data, accent: ShareSpecs.accentOf(context));
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   Future<void> _loadDetail() async {
     try {
       final detail = await _services!.spotify.artist(widget.artist.id);
-      if (!mounted) return;
-      setState(() => _detail = detail);
-      final color = await _services!.palette.dominant(detail.bestImage);
-      if (color != null && mounted) setState(() => _glow = color);
-    } catch (e) {
-      if (mounted) setState(() => _detailError = e);
+      if (mounted) setState(() => _detail = detail);
+    } catch (_) {
+      // Sin ficha se queda con lo que se sabía al abrir (nombre y foto).
     }
   }
 
@@ -100,189 +143,182 @@ class _ArtistScreenState extends State<ArtistScreen> {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
+    final l10n = context.l10n;
     final artist = _artist;
-    final glow = _glow ?? c.surface3;
-    final topPad = MediaQuery.paddingOf(context).top;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
-    final albums = _albums?.items ?? const <Album>[];
+    final page = _albums;
 
     return Scaffold(
-      body: StreamBuilder<List<AlbumStats>>(
-        stream: _stats,
-        builder: (context, statsSnap) {
-          final stats = statsSnap.data ?? const <AlbumStats>[];
-          final byAlbum = {for (final s in stats) s.album.id: s};
-          final summary = ArtistSummary.from(stats);
-          return Stack(
-            children: [
-              NotificationListener<ScrollNotification>(
-                onNotification: _onScroll,
-                child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Positioned(
-                            top: -AmbientGlow.bleed,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            child: AmbientGlow(color: glow),
-                          ),
-                          // Todo el ancho: dentro del Stack, un Column suelto
-                          // queda arriba a la izquierda con el ancho de su hijo
-                          // más ancho, y con nombres cortos se descentraba.
-                          Padding(
-                            padding: EdgeInsets.only(top: topPad + 66),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: Column(
-                                children: [
-                                  ArtistAvatar(artist: artist, size: 168, shadowColor: glow),
-                                  const SizedBox(height: 22),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                                    child: Column(
-                                      children: [
-                                        Text(
-                                          artist.name,
-                                          textAlign: TextAlign.center,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: VText.display(38, height: 1),
-                                        ),
-                                        if (artist.genres.isNotEmpty) ...[
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            artist.genres.take(4).join(' · '),
-                                            textAlign: TextAlign.center,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: VText.ui(13, color: c.text2),
-                                          ),
-                                        ] else if (_detail != null || _detailError != null) ...[
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            context.l10n.artistLabel,
-                                            style: VText.ui(13, color: c.text3),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.06),
-                                  const SizedBox(height: 26),
-                                ],
-                              ),
+      body: SafeArea(
+        bottom: false,
+        child: StreamBuilder<List<AlbumStats>>(
+          stream: _stats,
+          builder: (context, statsSnap) {
+            final stats = statsSnap.data ?? const <AlbumStats>[];
+            final byAlbum = {for (final s in stats) s.album.id: s};
+            final summary = ArtistSummary.from(stats);
+            final albums = sortDiscography(
+              page?.items ?? const <Album>[],
+              byAlbum,
+              bestFirst: _bestFirst,
+            );
+            return NotificationListener<ScrollNotification>(
+              onNotification: _onScroll,
+              child: CustomScrollView(
+                controller: _scroll,
+                // Rebota arriba: al tirar hacia abajo la foto crece.
+                physics: pullPhysics,
+                slivers: [
+                  SliverToBoxAdapter(
+                    // Volver y compartir no bajan al tirar.
+                    child: PullPinned(
+                      controller: _scroll,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                        child: Row(
+                          children: [
+                            VIconButton(
+                              key: const ValueKey('back'),
+                              icon: VIcon.back,
+                              onTap: () => Navigator.of(context).maybePop(),
                             ),
+                            const Spacer(),
+                            ShareButton(
+                              key: const ValueKey('share-artist'),
+                              style: VIconButtonStyle.bordered,
+                              message: (l) => shareArtistMessage(artist, l),
+                              cards: () => _shareCards(artist, page),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(VSpace.page, 16, VSpace.page, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Crece desde abajo lo que se tira: el círculo no
+                          // se deforma y el resto baja con el contenido.
+                          PullStretch(
+                            controller: _scroll,
+                            height: 140,
+                            child: ArtistAvatar(artist: artist, size: 140),
+                          ),
+                          const SizedBox(height: 14),
+                          VMono(
+                            page == null
+                                ? l10n.artistLabel
+                                : '${l10n.artistLabel} · ${l10n.countAlbums(page.total)}',
+                            key: const ValueKey('artist-overline'),
+                            align: TextAlign.center,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            artist.name,
+                            key: const ValueKey('artist-name'),
+                            textAlign: TextAlign.center,
+                            style: VText.display(64, weight: 800, height: 0.86, tracking: 0),
                           ),
                         ],
                       ),
                     ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-                        child: _ArtistScoreBlock(summary: summary, waiting: !statsSnap.hasData),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(VSpace.page, 20, VSpace.page, 0),
+                      child: _ArtistScoreBlock(summary: summary, waiting: !statsSnap.hasData),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 22),
+                      child: VSectionHeader(
+                        page == null
+                            ? l10n.artistDiscography
+                            : '${l10n.artistDiscography} · ${l10n.countAlbums(page.total)}',
+                        action: '${_bestFirst ? l10n.artistSortBest : l10n.listsSortRecent} ↓',
+                        actionKey: const ValueKey('artist-sort'),
+                        accentAction: false,
+                        onAction: () => setState(() => _bestFirst = !_bestFirst),
                       ),
                     ),
+                  ),
+                  if (page == null && _albumsError == null)
+                    SliverList.builder(
+                      itemCount: 5,
+                      itemBuilder: (_, _) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 8),
+                        decoration: BoxDecoration(border: Border(top: BorderSide(color: c.lineSoft))),
+                        child: const Row(
+                          children: [
+                            VSkeleton(width: 56, height: 56),
+                            SizedBox(width: 12),
+                            Expanded(child: VSkeleton(height: 30)),
+                          ],
+                        ),
+                      ),
+                    )
+                  else if (albums.isEmpty && _albumsError == null)
                     SliverToBoxAdapter(
-                      child: SectionHeader(
-                        context.l10n.artistDiscography,
-                        subtitle: _albums == null
-                            ? null
-                            : context.l10n.countAlbums(_albums!.total),
+                      child: VEmptyState(
+                        title: l10n.artistNoAlbumsTitle,
+                        message: l10n.artistNoAlbumsBody,
+                      ),
+                    )
+                  else
+                    SliverList.builder(
+                      itemCount: albums.length,
+                      itemBuilder: (_, i) => _AlbumRow(
+                        key: ValueKey('artist-album-$i'),
+                        album: albums[i],
+                        stats: byAlbum[albums[i].id],
+                        heroTag: 'artist-${artist.id}-${albums[i].id}',
                       ),
                     ),
-                    if (_albums == null && _albumsError == null)
-                      SliverList.separated(
-                        itemCount: 5,
-                        separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (_, _) => const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: VSpace.page),
-                          child: Skeleton(height: 72, radius: 16),
-                        ),
-                      )
-                    else if (albums.isEmpty && _albumsError == null)
-                      SliverToBoxAdapter(
-                        child: EmptyState(
-                          title: context.l10n.artistNoAlbumsTitle,
-                          message: context.l10n.artistNoAlbumsBody,
-                        ),
-                      )
-                    else
-                      SliverList.separated(
-                        itemCount: albums.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
-                        itemBuilder: (_, i) => _AlbumRow(
-                          key: ValueKey('artist-album-$i'),
-                          album: albums[i],
-                          stats: byAlbum[albums[i].id],
-                          heroTag: 'artist-${artist.id}-${albums[i].id}',
-                        ).animate().fadeIn(delay: (30 * (i % 10)).ms),
-                      ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(VSpace.page, 20, VSpace.page, 0),
-                        child: Center(
-                          child: _albumsError != null
-                              ? Column(
-                                  children: [
-                                    Text(
-                                      context.l10n.artistAlbumsError(describeError(_albumsError, context.l10n)),
-                                      textAlign: TextAlign.center,
-                                      style: VText.ui(13, color: c.danger),
-                                    ),
-                                    TextButton(
-                                      onPressed: _loadAlbums,
-                                      child: Text(context.l10n.retry),
-                                    ),
-                                  ],
+                  SliverToBoxAdapter(
+                    child: Container(
+                      padding: EdgeInsets.fromLTRB(VSpace.page, 16, VSpace.page, bottomPad + 30),
+                      decoration: BoxDecoration(border: Border(top: BorderSide(color: c.lineSoft))),
+                      child: _albumsError != null
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.artistAlbumsError(describeError(_albumsError, l10n)),
+                                  style: VText.ui(13, color: c.danger, height: 1.35),
+                                ),
+                                const SizedBox(height: 10),
+                                VTextLink(l10n.retry, key: const ValueKey('artist-retry'), onTap: _loadAlbums),
+                              ],
+                            )
+                          : _loadingMore && page != null
+                              ? Center(
+                                  child: SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 1.6, color: c.ink3),
+                                  ),
                                 )
-                              : _loadingMore && _albums != null
-                                  ? const SizedBox(
-                                      width: 22,
-                                      height: 22,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : _albums != null && _albums!.nextOffset == null
-                                      ? Text(
-                                          context.l10n.spotifyCredit,
-                                          style: VText.ui(11, color: c.text3),
-                                        )
-                                      : const SizedBox.shrink(),
-                        ),
-                      ),
+                              : page != null && page.nextOffset == null
+                                  ? VMono(l10n.spotifyCredit, size: 10, tracking: 0.04, color: c.ink4, uppercase: false)
+                                  : const SizedBox.shrink(),
                     ),
-                    SliverToBoxAdapter(child: SizedBox(height: bottomPad + 30)),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Positioned(
-                top: topPad + 8,
-                left: 16,
-                child: GlassIconButton(
-                  key: const ValueKey('back'),
-                  icon: Icons.arrow_back_ios_new_rounded,
-                  onTap: () => Navigator.of(context).maybePop(),
-                ),
-              ),
-              Positioned(
-                top: topPad + 8,
-                right: 16,
-                child: ShareButton(
-                  key: const ValueKey('share-artist'),
-                  message: (l) => shareArtistMessage(artist, l),
-                ),
-              ),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 }
 
+/// "Calificación", centrado: el promedio en 72 en énfasis con " /10", "N
+/// notas · M discos" y, debajo, el histograma de 60 a lo ancho (como la
+/// regla del disco) con "1" y "10" en las puntas.
 class _ArtistScoreBlock extends StatelessWidget {
   const _ArtistScoreBlock({required this.summary, required this.waiting});
 
@@ -292,64 +328,56 @@ class _ArtistScoreBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    if (waiting) return const Skeleton(height: 110, radius: 24);
+    final l10n = context.l10n;
     final average = summary.average;
-    if (average == null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Text(
-          context.l10n.artistUnrated,
-          key: const ValueKey('artist-unrated'),
-          textAlign: TextAlign.center,
-          style: VText.ui(14, color: c.text2),
-        ),
-      );
-    }
-    final color = c.score(average);
+    final big = VText.display(72, weight: 700, height: 0.85, tracking: 0);
     return Container(
-      key: const ValueKey('artist-score'),
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-      decoration: BoxDecoration(
-        color: c.surface.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: c.line),
-      ),
-      child: Row(
+      key: ValueKey(average == null && !waiting ? 'artist-unrated' : 'artist-score'),
+      padding: const EdgeInsets.only(top: 12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(context.l10n.ratingLabel, style: VText.label(11, color: c.text3)),
-              const SizedBox(height: 4),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+          VMono(l10n.ratingLabel, align: TextAlign.center),
+          const SizedBox(height: 4),
+          if (waiting)
+            const Center(child: VSkeleton(width: 96, height: 61))
+          else
+            Text.rich(
+              TextSpan(
                 children: [
-                  Text(
-                    Score.formatAverage(average, context.l10n.localeName),
-                    style: VText.display(56, color: color, height: 0.95),
+                  TextSpan(
+                    text: average == null ? '—' : Score.formatAverage(average, l10n.localeName),
+                    style: TextStyle(color: average == null ? c.inkA(0.28) : c.accentText),
                   ),
-                  const SizedBox(width: 6),
-                  Text('/10', style: VText.ui(14, color: c.text3)),
+                  if (average != null)
+                    TextSpan(text: ' /10', style: VText.ui(14, weight: 500, color: c.ink4)),
                 ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                '${context.l10n.countRatings(summary.count)} · ${context.l10n.countAlbums(summary.ratedAlbums)}',
-                style: VText.ui(13, color: c.text2),
-              ),
-            ],
+              textAlign: TextAlign.center,
+              style: big,
+            ),
+          const SizedBox(height: 4),
+          Text(
+            average == null
+                ? l10n.artistNoRatings
+                : '${l10n.countRatings(summary.count)} · ${l10n.countAlbums(summary.ratedAlbums)}',
+            textAlign: TextAlign.center,
+            style: VText.ui(12.5, color: c.ink3),
           ),
-          const SizedBox(width: 22),
-          Expanded(child: ScoreHistogram(hist: summary.hist)),
+          const SizedBox(height: 16),
+          Histogram10(counts: summary.hist, height: 60, barMargin: 1),
+          const SizedBox(height: 5),
+          const RulerNumbers(onlyEnds: true, fontSize: 9.5),
         ],
       ),
     );
   }
 }
 
-/// Un disco de la discografía con su promedio en Vinilo (si lo tiene).
-class _AlbumRow extends StatelessWidget {
+/// Un disco de la discografía: portada de 56, título, "2025 · Álbum · 1
+/// nota" (o "Sin notas") y su promedio en el tono de su portada, o "—".
+class _AlbumRow extends StatefulWidget {
   const _AlbumRow({
     super.key,
     required this.album,
@@ -362,62 +390,109 @@ class _AlbumRow extends StatelessWidget {
   final String heroTag;
 
   @override
+  State<_AlbumRow> createState() => _AlbumRowState();
+}
+
+class _AlbumRowState extends State<_AlbumRow> {
+  Color? _coverColor;
+  String? _askedFor;
+
+  bool get _rated => (widget.stats?.count ?? 0) > 0;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _askPalette();
+  }
+
+  @override
+  void didUpdateWidget(_AlbumRow old) {
+    super.didUpdateWidget(old);
+    if (old.album.id != widget.album.id) _coverColor = null;
+    _askPalette();
+  }
+
+  /// El tono solo hace falta si el disco tiene nota; sale de la portada
+  /// pequeña, con la caché de `PaletteService`.
+  void _askPalette() {
+    final url = widget.album.smallCover;
+    if (!_rated || url == null || _askedFor == url) return;
+    _askedFor = url;
+    final palette = ServicesScope.of(context).palette;
+    // Si ya se sacó (al cambiar el orden, por ejemplo), sin esperar.
+    final known = palette.cached(url);
+    if (known != null) {
+      _coverColor = known;
+      return;
+    }
+    palette.dominant(url).then((color) {
+      if (color != null && mounted && _askedFor == url) setState(() => _coverColor = color);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    final s = stats;
-    final rated = s != null && s.count > 0;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
-      child: Material(
-        color: c.surface.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(18),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => openAlbum(context, album, heroTag: heroTag),
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Row(
-              children: [
-                AlbumCover(url: album.smallCover, size: 60, radius: 10, heroTag: heroTag),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        album.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: VText.ui(15, weight: 700),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        [
-                          if (album.year != null) '${album.year}',
-                          album.typeLabel(context.l10n),
-                          if (rated) context.l10n.countRatings(s.count),
-                        ].join(' · '),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: VText.ui(12, color: c.text2),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                if (rated)
+    final l10n = context.l10n;
+    final album = widget.album;
+    final s = widget.stats;
+    final rated = _rated;
+    final cover = _coverColor;
+    return Pressable(
+      onTap: () => openAlbum(context, album, heroTag: widget.heroTag),
+      builder: (context, pressed) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 8),
+        decoration: BoxDecoration(
+          color: pressed ? c.inkA(0.04) : null,
+          border: Border(top: BorderSide(color: c.lineSoft)),
+        ),
+        child: Row(
+          children: [
+            AlbumCover(url: album.smallCover, size: 56, heroTag: widget.heroTag),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    Score.formatAverage(s.average, context.l10n.localeName),
-                    style: VText.display(30, color: c.score(s.average), height: 1),
-                  )
-                else
-                  Text('–', style: VText.display(30, color: c.text3, height: 1)),
-              ],
+                    album.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: VText.ui(15, weight: 600),
+                  ),
+                  const SizedBox(height: 4),
+                  VMono(
+                    [
+                      if (album.year != null) '${album.year}',
+                      album.typeLabel(l10n),
+                      rated ? l10n.countRatings(s!.count) : l10n.artistNoRatings,
+                    ].join(' · '),
+                    size: 10,
+                    tracking: 0.06,
+                    color: c.inactive,
+                    maxLines: 1,
+                  ),
+                ],
+              ),
             ),
-          ),
+            const SizedBox(width: 12),
+            Text(
+              rated ? Score.formatAverage(s!.average, l10n.localeName) : '—',
+              style: VText.display(
+                34,
+                weight: 700,
+                height: 1,
+                tracking: 0,
+                color: !rated
+                    ? c.inkA(0.25)
+                    : cover == null
+                        ? c.accentText
+                        : c.coverTone(cover),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
-

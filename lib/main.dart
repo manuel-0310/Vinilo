@@ -35,12 +35,12 @@ class _ViniloAppState extends State<ViniloApp> {
   // alguien elige ese color y se reutilizan.
   final Map<int, (ThemeData, ThemeData)> _themes = {};
 
-  (ThemeData, ThemeData) _themesFor(Color seed) {
+  (ThemeData, ThemeData) _themesFor(Color accent) {
     return _themes.putIfAbsent(
-      seed.toARGB32(),
+      accent.toARGB32(),
       () => (
-        buildViniloTheme(ViniloPalette.light.withSeed(seed)),
-        buildViniloTheme(ViniloPalette.dark.withSeed(seed)),
+        buildViniloTheme(ViniloPalette.light.withAccent(accent)),
+        buildViniloTheme(ViniloPalette.dark.withAccent(accent)),
       ),
     );
   }
@@ -57,7 +57,11 @@ class _ViniloAppState extends State<ViniloApp> {
   }
 
   Widget _app({UserProfile? profile, required Widget home}) {
-    final (light, dark) = _themesFor(profile?.color ?? ViniloPalette.defaultSeed);
+    // El color guardado puede ser de la paleta de antes del rediseño: se
+    // muestra con el más cercano de la nueva.
+    final (light, dark) = _themesFor(
+      profile == null ? ViniloPalette.defaultAccent : VColors.nearest(profile.color),
+    );
     return CurrentUser(
       profile: profile,
       child: MaterialApp(
@@ -78,10 +82,16 @@ class _ViniloAppState extends State<ViniloApp> {
           orElse: () => const Locale('es'),
         ),
         // La barra de estado sigue al tema; las pantallas con foto de fondo
-        // la sobrescriben con su propia AnnotatedRegion.
+        // la sobrescriben con su propia AnnotatedRegion. El texto se queda
+        // en el tamaño estándar: el diseño tiene títulos de hasta 128 px y
+        // tiene que verse como el prototipo.
         builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
           value: overlayStyleFor(Theme.of(context).brightness),
-          child: child ?? const SizedBox.shrink(),
+          child: MediaQuery.withClampedTextScaling(
+            minScaleFactor: 1,
+            maxScaleFactor: 1,
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
         home: _HomeSwitcher(child: home),
       ),

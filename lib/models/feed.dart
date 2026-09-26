@@ -32,6 +32,15 @@ class FollowingFeed {
   final List<RatingEntry> entries;
 }
 
+/// Cuánto cuenta como "nueva" una nota de la actividad.
+const Duration freshWindow = Duration(hours: 24);
+
+/// "N nuevas" en la actividad: las notas de amigos de las últimas 24 h.
+int freshCount(Iterable<RatingEntry> entries, DateTime now) {
+  final since = now.subtract(freshWindow);
+  return entries.where((e) => e.updatedAt.isAfter(since)).length;
+}
+
 /// "Calificado por": las notas de mis amigos sobre un disco, de mayor a menor
 /// nota y, a igual nota, la más reciente primero. Sin repetidos.
 List<RatingEntry> friendsByScore(Iterable<List<RatingEntry>> pages) {

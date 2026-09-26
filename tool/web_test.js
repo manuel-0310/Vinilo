@@ -13,11 +13,13 @@ const data = {
     owner: { name: "Vale \"Ríos\"", color: 4284186600, avatarUrl: null },
     items: [{ id: "a1", name: "OK Computer", artist: "Radiohead", coverSmall: "https://i.scdn.co/image/x", year: 1997 },
             { id: "a2", name: "Kid A", artist: "Radiohead", coverSmall: "https://i.scdn.co/image/y", year: 2000 }] },
-  "albums/a1": { id: "a1", name: "OK Computer", artist: "Radiohead", cover: "https://i.scdn.co/image/x", coverSmall: "https://i.scdn.co/image/x", year: 1997, type: "album", totalTracks: 12, ratingsCount: 2, ratingsSum: 19, hist: { "9": 1, "10": 1 }, artistIds: ["r1"] },
+  "albums/a1": { id: "a1", name: "OK Computer", artist: "Radiohead", cover: "https://i.scdn.co/image/x", coverSmall: "https://i.scdn.co/image/x", year: 1997, type: "album", totalTracks: 12, ratingsCount: 2, ratingsSum: 19, hist: { "9": 1, "10": 1 }, artistIds: ["4Z8W4fKeB5YxbusRsdQVPb"] },
   "ratings/u1_a1": { uid: "u1", albumId: "a1", score: 10, note: "Perfecto <script>alert(1)</script>", album: { id: "a1", name: "OK Computer", artist: "Radiohead", coverSmall: "https://i.scdn.co/image/x" }, user: { name: "Vale", color: 4284186600 }, likedBy: ["u2"], repliesCount: 1, updatedAt: ts(2) },
   "ratings/u2_a1": { uid: "u2", albumId: "a1", score: 9, note: "", album: { id: "a1", name: "OK Computer" }, user: { name: "Santi", color: 4291058646 }, likedBy: [], updatedAt: ts(1) },
   "users/u1": { name: "Vale Ríos", username: "vale.rios", bio: "Rock y lluvia", color: 4284186600, ratingsCount: 1, ratingsSum: 10, followersCount: 3, followingCount: 1,
-    bannerUrl: "https://x.test/b.jpg');background:red;('", favorites: [{ id: "a1", name: "OK Computer", coverSmall: "https://i.scdn.co/image/x" }], favoriteArtists: [{ id: "r1", name: "Radiohead", image: "https://i.scdn.co/image/r" }] },
+    bannerUrl: "https://x.test/b.jpg');background:red;('", favorites: [{ id: "a1", name: "OK Computer", coverSmall: "https://i.scdn.co/image/x" }], favoriteArtists: [{ id: "4Z8W4fKeB5YxbusRsdQVPb", name: "Radiohead", image: "https://i.scdn.co/image/r" }] },
+  "albums/a3": { id: "a3", name: "Sin portada", ratingsCount: 5 },
+  "albums/a4": { id: "a4", name: "Sin notas", cover: "https://i.scdn.co/image/z", ratingsCount: 0 },
   "usernames/vale.rios": { uid: "u1" },
   "ratings/u1_a1/replies/r1": { uid: "u2", user: { name: "Santi", username: "santimejia", color: 4291058646 }, text: "¡De acuerdo, @vale.rios!", createdAt: ts(3) },
 };
@@ -80,24 +82,40 @@ async function run(p, lang = "es-CO,es;q=0.9") {
   ok("disco 200 con promedio 9,5", album.status === 200 && album.body.includes(">9,5<"));
   ok("disco comentario escapado", album.body.includes("&lt;script&gt;") && !album.body.includes("<script>alert"));
   const albumEn = await run("/d/a1", "en-US,en;q=0.9");
-  ok("inglés: 9.5 y RATING", albumEn.body.includes(">9.5<") && albumEn.body.includes("RATING") && albumEn.body.includes('lang="en"'));
+  ok("inglés: 9.5 y 2 ratings", albumEn.body.includes(">9.5<") && albumEn.body.includes("2 ratings") && albumEn.body.includes('lang="en"'));
+  ok("disco con franja, tono de portada y artista enlazado", album.body.includes('class="stripe"') && album.body.includes("data-tone-src=") && album.body.includes('href="/a/4Z8W4fKeB5YxbusRsdQVPb"'));
+  ok("disco con Archivo, Plex Mono y Newsreader", album.body.includes("family=Archivo:wdth,wght") && album.body.includes("IBM+Plex+Mono") && album.body.includes("Newsreader"));
+  ok("disco comentario con comillas", album.body.includes("“Perfecto &lt;script&gt;"));
   const rating = await run("/n/u1_a1");
   ok("nota 200 con respuesta", rating.status === 200 && rating.body.includes("¡De acuerdo, @vale.rios!") && rating.body.includes("Obra maestra"));
   ok("nota enlaza al perfil", rating.body.includes('href="/u/vale.rios"'));
-  const artist = await run("/a/r1");
-  ok("artista 200 con su disco", artist.status === 200 && artist.body.includes("OK Computer") && artist.body.includes("art rock"));
+  const artist = await run("/a/4Z8W4fKeB5YxbusRsdQVPb");
+  ok("artista 200 con su disco", artist.status === 200 && artist.body.includes("OK Computer") && artist.body.includes("Artista · 1 disco calificado"));
+  ok("artista sin géneros", !artist.body.includes("art rock"));
   const profile = await run("/u/vale.rios");
   ok("perfil 200 con bio", profile.status === 200 && profile.body.includes("Rock y lluvia") && profile.body.includes("@vale.rios"));
   ok("perfil banner sin inyección CSS", !profile.body.includes("background:red;('") && profile.body.includes("%27%29"));
   const byUid = await run("/u/u1");
   ok("perfil por uid", byUid.status === 200);
-  ok("404 lista", (await run("/l/nada")).status === 404);
+  const missing = await run("/l/nada");
+  ok("404 lista", missing.status === 404);
+  ok("404 lado C con portadas", missing.body.includes("Error 404 · lado C") && missing.body.includes("No encontramos esto") && missing.body.includes("https://i.scdn.co/image/x"));
+  ok("404 en inglés", (await run("/x/1", "en")).body.includes("Error 404 · side C"));
   ok("404 disco sin Spotify", (await run("/d/zzz")).status === 404);
+  ok("404 con un id que no es de Spotify", (await run("/d/nada")).status === 404 && (await run("/a/nada")).status === 404);
   ok("404 ruta rara", (await run("/x/1")).status === 404);
   ok("404 id inválido", (await run("/l/..%2F..")).status === 404);
   ok("sin correos ni uids en la página", !profile.body.includes("u1\"") && !profile.body.includes("@vinilo"));
   ok("caché privada", list.headers["Cache-Control"] === "private, max-age=300");
+  const { nearestAccent } = require(path.join(FN, "web.js"));
+  ok("énfasis: el color más parecido de la paleta", nearestAccent("#fd6a3a") === "#fd6a3a" && nearestAccent("#e8a04b") === "#e3ae28");
+  ok("lista con el énfasis de su autora", list.body.includes("--accent:#"));
   ok("pickLang", pickLang({ query: {}, get: () => "fr-FR,en;q=0.8,es;q=0.5" }) === "en" && pickLang({ query: { lang: "es" }, get: () => "en" }) === "es");
+  const covers = await run("/portadas");
+  const coverList = JSON.parse(covers.body).covers;
+  ok("portadas 200 en JSON", covers.status === 200 && covers.headers["Content-Type"].startsWith("application/json"));
+  ok("portadas solo con portada y notas", coverList.length === 1 && coverList[0] === "https://i.scdn.co/image/x");
+  ok("portadas con caché pública", covers.headers["Cache-Control"] === "public, max-age=3600");
   for (const [name, pass] of checks) console.log(pass ? "ok  " : "FALLA", name);
   const passed = checks.every(([, p]) => p);
   console.log(passed ? "TODO BIEN" : "HAY FALLAS");

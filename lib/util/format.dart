@@ -25,3 +25,17 @@ String monthYear(DateTime date, AppLocalizations l) =>
 /// "SEPT" / "SEP": el mes abreviado de una fecha.
 String monthShort(DateTime date, AppLocalizations l) =>
     DateFormat('MMM', l.localeName).format(date).replaceAll('.', '');
+
+/// Grupo de las notificaciones: "Hoy", "Ayer", "Esta semana" (lo de los
+/// últimos 7 días) y, antes, el mes y el año ("Septiembre 2026"). Se cuenta
+/// por días del calendario, no por horas.
+String dayGroup(DateTime date, AppLocalizations l, {DateTime? now}) {
+  final n = now ?? DateTime.now();
+  final today = DateTime(n.year, n.month, n.day);
+  final day = DateTime(date.year, date.month, date.day);
+  final days = today.difference(day).inHours ~/ 24;
+  if (days <= 0) return l.groupToday;
+  if (days == 1) return l.groupYesterday;
+  if (days < 7) return l.groupThisWeek;
+  return monthYear(date, l);
+}

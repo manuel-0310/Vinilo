@@ -14,8 +14,10 @@ import 'diary_screen.dart';
 import 'follow_list_screen.dart';
 import 'list_screen.dart';
 import 'notifications_screen.dart';
+import 'popular_screen.dart';
 import 'profile_screen.dart';
 import 'rating_thread_screen.dart';
+import 'search_all_screen.dart';
 import 'settings_screen.dart';
 
 Future<void> openAlbum(
@@ -156,5 +158,20 @@ Future<void> openList(
 Future<void> openNotifications(BuildContext context) {
   return Navigator.of(context).push(
     CupertinoPageRoute(builder: (_) => const NotificationsScreen()),
+  );
+}
+
+/// "Ver todo" de Popular esta semana.
+Future<void> openPopular(BuildContext context) {
+  return Navigator.of(context).push(
+    CupertinoPageRoute(builder: (_) => const PopularScreen()),
+  );
+}
+
+/// "Ver todos" de los resultados: artistas o álbumes de `query`, por
+/// páginas.
+Future<void> openSearchAll(BuildContext context, {required String query, required SearchAllKind kind}) {
+  return Navigator.of(context).push(
+    CupertinoPageRoute(builder: (_) => SearchAllScreen(query: query, kind: kind)),
   );
 }

@@ -75,11 +75,22 @@ flutter:
     - assets/fonts/
 
   fonts:
-    - family: InstrumentSerif
+    # Rediseño: Archivo variable (ejes wdth 62–125 y wght 100–900) para
+    # títulos, notas e interfaz; IBM Plex Mono para etiquetas y datos, y
+    # Newsreader itálica (ejes opsz y wght) para las citas de las reseñas.
+    # Licencias OFL en assets/fonts/OFL-*.txt.
+    - family: Archivo
       fonts:
-        - asset: assets/fonts/InstrumentSerif-Regular.ttf
-        - asset: assets/fonts/InstrumentSerif-Italic.ttf
+        - asset: assets/fonts/Archivo-Variable.ttf
+    - family: PlexMono
+      fonts:
+        - asset: assets/fonts/IBMPlexMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexMono-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexMono-Bold.ttf
+          weight: 700
+    - family: Newsreader
+      fonts:
+        - asset: assets/fonts/Newsreader-Italic-Variable.ttf
           style: italic
-    - family: Manrope
-      fonts:
-        - asset: assets/fonts/Manrope-Variable.ttf

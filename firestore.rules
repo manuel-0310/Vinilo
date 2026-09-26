@@ -99,7 +99,10 @@ service cloud.firestore {
 
     // Reserva de cada @usuario: el documento es el nombre, el dato el uid.
     match /usernames/{username} {
-      allow read: if signedIn();
+      // "✓ Disponible" se revisa en Crear cuenta, antes de que haya sesión:
+      // se puede leer uno a la vez sin cuenta, pero listarlos exige sesión.
+      allow get: if true;
+      allow list: if signedIn();
       allow create: if isOwner(request.resource.data.uid)
         && validUsername(username)
         && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username

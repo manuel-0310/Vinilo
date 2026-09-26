@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../l10n/l10n.dart';
 import '../models/album.dart';
@@ -7,12 +6,11 @@ import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/ranking.dart';
-import '../widgets/album_cover.dart';
 import '../widgets/comment_card.dart';
-import '../widgets/misc.dart';
+import '../widgets/v_sections.dart';
 
 /// Todos los comentarios de un disco (las notas con texto), con más "me
-/// gusta" primero.
+/// gusta" primero, en las mismas filas que "Comentarios destacados".
 class CommentsScreen extends StatefulWidget {
   const CommentsScreen({super.key, required this.album, required this.initial});
 
@@ -26,100 +24,80 @@ class CommentsScreen extends StatefulWidget {
 class _CommentsScreenState extends State<CommentsScreen> {
   Stream<List<RatingEntry>>? _stream;
 
+  /// El color de la portada (ya está en la caché si se viene del disco).
+  Color? _coverColor;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _stream ??= ServicesScope.of(context).ratings.albumRatings(widget.album.id);
+    if (_stream != null) return;
+    final services = ServicesScope.of(context);
+    _stream = services.ratings.albumRatings(widget.album.id);
+    services.palette
+        .dominant(widget.album.smallCover ?? widget.album.bestCover)
+        .then((color) {
+      if (color != null && mounted) setState(() => _coverColor = color);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    final topPad = MediaQuery.paddingOf(context).top;
+    final l10n = context.l10n;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
+    final cover = _coverColor;
+    final tone = cover == null ? c.accentText : c.coverTone(cover);
     return Scaffold(
-      body: Stack(
-        children: [
-          StreamBuilder<List<RatingEntry>>(
-            stream: _stream,
-            initialData: widget.initial,
-            builder: (context, snap) {
-              final comments = topComments(snap.data ?? widget.initial);
-              return CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
+      body: SafeArea(
+        bottom: false,
+        child: StreamBuilder<List<RatingEntry>>(
+          stream: _stream,
+          initialData: widget.initial,
+          builder: (context, snap) {
+            final comments = topComments(snap.data ?? widget.initial);
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: VPageHeader(
+                    title: l10n.commentsTitle,
+                    subtitle: '${widget.album.name} · ${l10n.countComments(comments.length)}',
+                  ),
+                ),
+                if (comments.isEmpty)
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        VSpace.page,
-                        topPad + 62,
-                        VSpace.page,
-                        0,
+                    child: Container(
+                      decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
+                      child: VEmptyState(
+                        title: l10n.commentsEmptyTitle,
+                        message: l10n.commentsEmptyBody,
                       ),
-                      child: Row(
-                        children: [
-                          AlbumCover(
-                            url: widget.album.smallCover,
-                            size: 64,
-                            radius: 12,
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+                    sliver: SliverMainAxisGroup(
+                      slivers: [
+                        SliverToBoxAdapter(child: Container(height: 1, color: c.line)),
+                        SliverList.builder(
+                          itemCount: comments.length,
+                          itemBuilder: (_, i) => CommentCard(
+                            key: ValueKey('comment-$i'),
+                            entry: comments[i],
+                            maxLines: null,
+                            index: i,
+                            tone: tone,
+                            last: i == comments.length - 1,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  context.l10n.commentsTitle,
-                                  style: VText.display(34, height: 1),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${widget.album.name} · ${context.l10n.countComments(comments.length)}',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: VText.ui(13, color: c.text2),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 22)),
-                  if (comments.isEmpty)
-                    SliverToBoxAdapter(
-                      child: EmptyState(
-                        title: context.l10n.commentsEmptyTitle,
-                        message: context.l10n.commentsEmptyBody,
-                      ),
-                    )
-                  else
-                    SliverList.separated(
-                      itemCount: comments.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) => CommentCard(
-                        key: ValueKey('comment-$i'),
-                        entry: comments[i],
-                        maxLines: null,
-                        index: i,
-                      ).animate().fadeIn(delay: (40 * (i % 8)).ms),
-                    ),
-                  SliverToBoxAdapter(child: SizedBox(height: bottomPad + 30)),
-                ],
-              );
-            },
-          ),
-          Positioned(
-            top: topPad + 8,
-            left: 16,
-            child: GlassIconButton(
-              key: const ValueKey('back'),
-              icon: Icons.arrow_back_ios_new_rounded,
-              onTap: () => Navigator.of(context).maybePop(),
-            ),
-          ),
-        ],
+                SliverToBoxAdapter(child: SizedBox(height: bottomPad + 30)),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

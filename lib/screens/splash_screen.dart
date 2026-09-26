@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../l10n/l10n.dart';
 import '../theme/vinilo_theme.dart';
-import '../widgets/vinyl_disc.dart';
+import '../widgets/v_buttons.dart';
+import 'welcome_screen.dart';
 
+/// Carga inicial: el fondo y "VINILO" en el mismo sitio que en la
+/// bienvenida, así el paso de una a otra no mueve nada. Si falla, el error y
+/// "Reintentar".
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key, this.error, this.onRetry});
 
@@ -15,29 +18,28 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = VColors.of(context);
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SpinningVinyl(size: 76),
-            const SizedBox(height: 20),
-            Text('Vinilo', style: VText.display(44, italic: true))
-                .animate()
-                .fadeIn(duration: 600.ms),
-            if (error != null) ...[
-              const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: Text(
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const WelcomeMasthead(showOverline: false),
+              if (error != null) ...[
+                const SizedBox(height: 10),
+                Text(
                   context.l10n.splashError('$error'),
-                  textAlign: TextAlign.center,
-                  style: VText.ui(13, color: c.text2),
+                  style: VText.ui(14, color: c.ink2, height: 1.45),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(onPressed: onRetry, child: Text(context.l10n.retry)),
+                const SizedBox(height: 20),
+                VSecondaryButton(
+                  label: context.l10n.retry,
+                  onPressed: onRetry,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

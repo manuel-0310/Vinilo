@@ -44,6 +44,11 @@
 //                   abre mi lista más reciente (o una por id).
 //   "notifications" abre la pantalla de notificaciones.
 //   "open-user:UID" abre el perfil de esa persona.
+//   "copy-ratings:UID:N" / "uncopy-ratings:UID"
+//                   (solo cuentas @vinilo.test) califica los primeros N discos
+//                   de esa persona con notas parecidas a las suyas, para ver
+//                   los discos en común; "uncopy" borra mis notas de todos sus
+//                   discos (no dejar notas de prueba en los promedios).
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -57,6 +62,7 @@ import 'package:no_retiene/screens/shell_screen.dart';
 import 'package:no_retiene/services/follow_repo.dart';
 import 'package:no_retiene/services/lists_repo.dart';
 import 'package:no_retiene/services/notifications_repo.dart';
+import 'package:no_retiene/services/ratings_repo.dart';
 import 'package:no_retiene/services/user_repo.dart';
 import 'package:no_retiene/widgets/image_cropper.dart';
 
@@ -121,6 +127,37 @@ Future<String> _setFollow(String otherUid, {required bool follow}) async {
   } catch (e) {
     return 'error $e';
   }
+}
+
+/// Diferencias con la nota de la otra persona, para que la afinidad no sea
+/// 100 %.
+const List<int> _copyOffsets = [0, 0, -1, 1, 0, -2, 1, -3, 2, 0, -1, 1];
+
+Future<String> _copyRatings(String rest, {required bool undo}) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return 'no-user';
+  if (!_isTestEmail(user.email ?? '')) return 'refused: solo cuentas @vinilo.test';
+  final parts = rest.split(':');
+  final otherUid = parts.first;
+  final db = FirebaseFirestore.instance;
+  final ratings = RatingsRepo(db, NotificationsRepo(db));
+  final theirs = await ratings.fetchUserRatings(otherUid);
+  if (undo) {
+    for (final r in theirs) {
+      await ratings.remove(uid: user.uid, albumId: r.albumId);
+    }
+    return 'removed ${theirs.length}';
+  }
+  final n = parts.length > 1 ? int.tryParse(parts[1]) ?? theirs.length : theirs.length;
+  final me = await UserRepo(db, FirebaseStorage.instance).fetch(user.uid);
+  if (me == null) return 'no-profile';
+  var done = 0;
+  for (final (i, r) in theirs.take(n).indexed) {
+    final score = (r.score + _copyOffsets[i % _copyOffsets.length]).clamp(1, 10);
+    await ratings.rate(user: me, album: r.album, score: score, note: '');
+    done++;
+  }
+  return 'rated $done';
 }
 
 Future<String> _cropListCover(String url) async {
@@ -345,6 +382,12 @@ void main() {
       final target = id;
       ShellScreen.actionRequests.value = (context) => openList(context, listId: target);
       return 'ok $id';
+    }
+    if (message != null && message.startsWith('copy-ratings:')) {
+      return _copyRatings(message.substring(13), undo: false);
+    }
+    if (message != null && message.startsWith('uncopy-ratings:')) {
+      return _copyRatings(message.substring(15), undo: true);
     }
     if (message == 'notifications') {
       ShellScreen.actionRequests.value = (context) => openNotifications(context);

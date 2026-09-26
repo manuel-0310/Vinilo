@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../l10n/l10n.dart';
@@ -242,13 +244,27 @@ class MusicList {
         (ListKind.ranking, ListItemType.albums) => l.listFullTypeAlbumRanking,
       };
 
-  /// Hasta cuatro portadas distintas para el mosaico.
+  /// Hasta cuatro portadas distintas, para las portadas apiladas.
+  ///
+  /// En las de canciones, las del mismo disco comparten portada, así que se
+  /// toma una por disco y, si salen menos de 3, se repiten en orden hasta
+  /// `min(3, canciones con portada)`: con 2 canciones o más siempre se ve la
+  /// pila. Las de discos dan solo las distintas.
   List<String> get covers {
     final out = <String>[];
+    final seen = <String>{};
+    var withCover = 0;
     for (final i in items) {
       final c = i.smallCover;
-      if (c != null && !out.contains(c)) out.add(c);
-      if (out.length == 4) break;
+      if (c == null) continue;
+      withCover++;
+      if (out.length < 4 && seen.add(i.albumId ?? c) && !out.contains(c)) out.add(c);
+    }
+    if (itemType == ListItemType.tracks && out.isNotEmpty) {
+      final target = math.min(3, withCover);
+      for (var k = 0; out.length < target; k++) {
+        out.add(out[k]);
+      }
     }
     return out;
   }
@@ -398,6 +414,15 @@ List<ListItem> insertItemAt(List<ListItem> items, ListItem item, int index) {
 /// Cómo se ordenan las listas del perfil.
 enum ListSort { recent, name, size, likes }
 
+/// El orden siguiente al tocar "recientes ↓" (vuelve al primero al final).
+ListSort nextListSort(ListSort sort) =>
+    ListSort.values[(sort.index + 1) % ListSort.values.length];
+
+/// Los filtros de la pestaña Listas del perfil, en una sola fila y con una
+/// opción a la vez: "Listas" y "Rankings" fijan el tipo, "Canciones" y
+/// "Discos" el contenido, y "Todas" quita los dos.
+enum ListFilter { all, lists, rankings, tracks, albums }
+
 /// Búsqueda, filtros y orden de las listas del perfil. `kind` e `itemType`
 /// null = todas.
 class ListQuery {
@@ -431,6 +456,34 @@ class ListQuery {
 
   /// Quita búsqueda y filtros; conserva el orden.
   ListQuery cleared() => ListQuery(sort: sort);
+
+  /// El filtro único que corresponde a esta consulta (si vienen tipo y
+  /// contenido a la vez, manda el tipo).
+  ListFilter get filter => switch (kind) {
+        ListKind.list => ListFilter.lists,
+        ListKind.ranking => ListFilter.rankings,
+        null => switch (itemType) {
+            ListItemType.tracks => ListFilter.tracks,
+            ListItemType.albums => ListFilter.albums,
+            null => ListFilter.all,
+          },
+      };
+
+  /// La misma búsqueda y el mismo orden con otro filtro (solo uno a la vez).
+  ListQuery withFilter(ListFilter filter) => ListQuery(
+        text: text,
+        sort: sort,
+        kind: switch (filter) {
+          ListFilter.lists => ListKind.list,
+          ListFilter.rankings => ListKind.ranking,
+          _ => null,
+        },
+        itemType: switch (filter) {
+          ListFilter.tracks => ListItemType.tracks,
+          ListFilter.albums => ListItemType.albums,
+          _ => null,
+        },
+      );
 }
 
 /// Si la lista coincide con el texto: por su nombre, su descripción o el

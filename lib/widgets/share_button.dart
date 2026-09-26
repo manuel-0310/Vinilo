@@ -1,25 +1,57 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
 import '../services/share_service.dart';
 import '../util/share_links.dart';
-import 'misc.dart';
+import 'share_sheet.dart';
+import 'v_buttons.dart';
+import 'v_icons.dart';
 
-/// Botón redondo de vidrio para compartir, como los demás de las cabeceras.
-/// `message` arma el texto y el enlace en el idioma de la app al tocarlo.
+/// Botón cuadrado de 40 para compartir, como los demás de las cabeceras:
+/// relleno translúcido sobre una foto (`filled`, el de siempre) o con borde
+/// sobre el fondo liso. `message` arma el texto y el enlace en el idioma de
+/// la app al tocarlo. Con `cards` (y alguna tarjeta), abre la hoja
+/// "Compartir" con las imágenes; sin ellas, la hoja del sistema.
 class ShareButton extends StatelessWidget {
-  const ShareButton({super.key, required this.message});
+  const ShareButton({
+    super.key,
+    required this.message,
+    this.cards,
+    this.style = VIconButtonStyle.filled,
+    this.fill,
+  });
 
   final ShareMessage Function(AppLocalizations l) message;
 
+  /// Las tarjetas para compartir como imagen (se arman al tocar).
+  final FutureOr<List<ShareCardSpec>> Function()? cards;
+  final VIconButtonStyle style;
+
+  /// Otro relleno para `filled`.
+  final Color? fill;
+
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: context.l10n.shareAction,
-      child: GlassIconButton(
-        icon: Icons.ios_share_rounded,
-        onTap: () => shareMessage(context, message(context.l10n)),
+    return Builder(
+      // El `context` de dentro es el del botón: la hoja del sistema se ancla
+      // a él en el iPad.
+      builder: (context) => VIconButton(
+        icon: VIcon.share,
+        style: style,
+        fill: fill,
+        tooltip: context.l10n.shareAction,
+        onTap: () async {
+          final specs = await cards?.call() ?? const <ShareCardSpec>[];
+          if (!context.mounted) return;
+          if (specs.isEmpty) {
+            shareMessage(context, message(context.l10n));
+          } else {
+            openShare(context, cards: specs, message: message);
+          }
+        },
       ),
     );
   }

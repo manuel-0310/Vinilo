@@ -30,6 +30,13 @@
 	<string>Para tomar tu foto de perfil, tu foto de fondo o la portada de una lista.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Para grabar el audio de los videos que publiques.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Para guardar en tus fotos las imágenes que compartes desde Vinilo.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>instagram-stories</string>
+		<string>whatsapp</string>
+	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Para elegir tu foto de perfil, tu foto de fondo o la portada de una lista.</string>
 	<key>UIApplicationSceneManifest</key>

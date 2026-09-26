@@ -6,7 +6,10 @@ import '../services/account_service.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
+import '../widgets/line_field.dart';
 import '../widgets/sheet.dart';
+import '../widgets/v_buttons.dart';
+import '../widgets/v_sections.dart';
 
 /// "Eliminar cuenta": explica qué se borra, avisa que no se puede deshacer y
 /// pide la contraseña otra vez (Firebase exige un inicio de sesión reciente).
@@ -79,15 +82,18 @@ class _DeleteAccountState extends State<_DeleteAccount> {
   Widget build(BuildContext context) {
     final c = VColors.of(context);
     final l10n = context.l10n;
-    Widget item(IconData icon, String text) => Padding(
-          padding: const EdgeInsets.only(bottom: 9),
+    Widget item(String text) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, size: 17, color: c.text3),
+              Padding(
+                padding: const EdgeInsets.only(top: 7),
+                child: Container(width: 4, height: 4, color: c.ink4),
+              ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(text, style: VText.ui(13, color: c.text2, height: 1.35)),
+                child: Text(text, style: VText.ui(13.5, color: c.ink2, height: 1.4)),
               ),
             ],
           ),
@@ -97,90 +103,53 @@ class _DeleteAccountState extends State<_DeleteAccount> {
       canPop: !_busy,
       child: SheetScaffold(
         title: l10n.deleteAccount,
-        subtitle: l10n.deleteCannotUndo,
+        overline: l10n.deleteCannotUndo,
+        titleSize: 40,
         // La hoja ya se desplaza, deja márgenes y sube con el teclado.
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              l10n.deleteIntro,
-              style: VText.ui(14, weight: 700),
-            ),
+            Text(l10n.deleteIntro, style: VText.ui(14, weight: 600)),
             const SizedBox(height: 12),
-            item(Icons.person_outline_rounded, l10n.deleteItemProfile),
-            item(Icons.album_outlined, l10n.deleteItemRatings),
-            item(Icons.queue_music_rounded, l10n.deleteItemLists),
-            item(Icons.group_outlined, l10n.deleteItemFollows),
-            item(Icons.notifications_none_rounded, l10n.deleteItemNotifications),
-            const SizedBox(height: 10),
-            Text(
-              l10n.deleteConfirmPrompt,
-              style: VText.ui(13, color: c.text2),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              key: const ValueKey('delete-password'),
+            item(l10n.deleteItemProfile),
+            item(l10n.deleteItemRatings),
+            item(l10n.deleteItemLists),
+            item(l10n.deleteItemFollows),
+            item(l10n.deleteItemNotifications),
+            const SizedBox(height: 18),
+            LineField(
+              label: l10n.deleteConfirmPrompt,
+              fieldKey: const ValueKey('delete-password'),
               controller: _password,
               enabled: !_busy,
-              obscureText: _obscure,
+              obscure: _obscure,
               autofillHints: const [AutofillHints.password],
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _delete(),
-              style: VText.ui(16, weight: 600),
-              decoration: InputDecoration(
-                hintText: l10n.authPasswordHint,
-                prefixIcon: Icon(Icons.lock_outline_rounded, color: c.text3),
-                suffixIcon: IconButton(
-                  tooltip: _obscure ? l10n.authShowPassword : l10n.authHidePassword,
-                  onPressed: () => setState(() => _obscure = !_obscure),
-                  icon: Icon(
-                    _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                    color: c.text3,
-                  ),
+              error: _error,
+              errorKey: const ValueKey('delete-error'),
+              trailing: Pressable(
+                onTap: () => setState(() => _obscure = !_obscure),
+                builder: (context, pressed) => Opacity(
+                  opacity: pressed ? 0.6 : 1,
+                  child: VMono(_obscure ? l10n.authShow : l10n.authHide),
                 ),
               ),
             ),
-            if (_error != null) ...[
-              const SizedBox(height: 10),
-              Text(
-                _error!,
-                key: const ValueKey('delete-error'),
-                style: VText.ui(13, weight: 600, color: c.danger, height: 1.35),
-              ),
-            ],
-            const SizedBox(height: 18),
-            FilledButton(
+            const SizedBox(height: 24),
+            VPrimaryButton.tone(
               key: const ValueKey('delete-confirm'),
-              onPressed: _busy ? null : _delete,
-              style: FilledButton.styleFrom(
-                backgroundColor: c.danger,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: c.danger.withValues(alpha: 0.5),
-                disabledForegroundColor: Colors.white,
-              ),
-              child: _busy
-                  ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(l10n.deleteInProgress, style: VText.ui(16, weight: 700, color: Colors.white)),
-                      ],
-                    )
-                  : Text(l10n.deleteConfirm),
+              label: _busy ? l10n.deleteInProgress : l10n.deleteConfirm,
+              color: c.danger,
+              busy: _busy,
+              onPressed: _delete,
             ),
-            const SizedBox(height: 6),
-            TextButton(
+            const SizedBox(height: 8),
+            VSecondaryButton(
               key: const ValueKey('delete-cancel'),
+              label: l10n.cancel,
+              center: true,
               onPressed: _busy ? null : () => Navigator.of(context).maybePop(),
-              child: Text(l10n.cancel, style: VText.ui(15, weight: 700, color: c.text)),
             ),
           ],
         ),

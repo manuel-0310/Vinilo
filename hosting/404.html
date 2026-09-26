@@ -5,28 +5,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>No encontramos esto · Vinilo</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#0F0E0C">
+<meta name="theme-color" content="#0f0e0d">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0F0E0C;--text:#F4EFE6;--text2:#A9A296;--accent:#E8A04B;--serif:'Instrument Serif',Georgia,serif;--sans:'Manrope',system-ui,-apple-system,sans-serif}
+:root{--bg:#0f0e0d;--surface:#2a2826;--ink:#efebe4;--ink2:rgba(239,235,228,.62);--ink3:rgba(239,235,228,.58);--ink4:rgba(239,235,228,.5);--line:rgba(239,235,228,.14);--line-strong:rgba(239,235,228,.28);--accent:#fd6a3a;--sans:'Archivo',system-ui,-apple-system,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:grid;place-items:center;padding:24px 16px;text-align:center}
-.vinyl{width:120px;height:120px;border-radius:50%;margin:0 auto;background:radial-gradient(circle,var(--bg) 0 3%,var(--accent) 3.5% 17%,#0b0a09 17.5% 19%,transparent 19.5%),repeating-radial-gradient(circle,#1b1916 0 2px,#0c0b0a 2px 4px)}
-h1{font-family:var(--serif);font-weight:400;font-size:38px;line-height:1.04;margin-top:26px}
-p{color:var(--text2);margin-top:10px;max-width:360px}
-a{display:inline-block;margin-top:18px;color:var(--accent);font-weight:700;text-decoration:none}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.page{max-width:1200px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 48px;border-bottom:1px solid var(--line)}
+.brand{font-stretch:62%;font-weight:900;font-size:32px;line-height:1;text-transform:uppercase}
+.mono{font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.accent{color:var(--accent)}
+.nf{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:56px;padding:48px}
+h1{font-stretch:62%;font-weight:800;font-size:132px;line-height:.84;letter-spacing:-.015em;margin-top:16px}
+.desc{font-size:19px;color:var(--ink2);margin-top:20px}
+.btn-ink{display:inline-flex;gap:10px;align-items:center;height:52px;padding:0 22px;margin-top:28px;background:var(--ink);color:var(--bg);font-weight:600;font-size:15px}
+.btn-ink:hover{background:var(--accent)}
+.side{border-left:1px solid var(--line);padding-left:32px;display:flex;flex-direction:column;justify-content:flex-end}
+.covers{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-bottom:24px}
+.covers span{aspect-ratio:1}
+h3{font-stretch:70%;font-weight:700;font-size:32px;line-height:1}
+.side p{font-size:15px;line-height:1.45;color:var(--ink2);margin-top:10px}
+.btn-line{display:flex;align-items:center;height:52px;margin-top:20px;padding:0 18px;border:1px solid var(--line-strong);font-weight:500;font-size:15px;color:rgba(239,235,228,.75)}
+footer{padding:18px 48px;border-top:1px solid var(--line)}
+@media (max-width:819px){
+.top{padding:16px 20px}
+.brand{font-size:26px}
+.top .mono{font-size:9.5px;text-align:right}
+.nf{grid-template-columns:minmax(0,1fr);gap:40px;padding:28px 20px}
+h1{font-size:clamp(60px,18vw,110px)}
+.desc{font-size:16px}
+.side{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:28px}
+footer{padding:20px}
+}
 </style>
 </head>
 <body>
-<main>
-  <div class="vinyl" aria-hidden="true"></div>
-  <h1 data-es="No encontramos esto" data-en="We couldn't find this">No encontramos esto</h1>
-  <p data-es="Puede que lo hayan borrado o que el enlace esté incompleto." data-en="It may have been deleted, or the link is incomplete.">Puede que lo hayan borrado o que el enlace esté incompleto.</p>
-  <a href="/" data-es="Ir al inicio" data-en="Go home">Ir al inicio</a>
-</main>
+<div class="page">
+  <header class="top"><a class="brand" href="/">Vinilo</a><span class="mono" data-es="Califica tus discos del 1 al 10" data-en="Rate your albums from 1 to 10">Califica tus discos del 1 al 10</span></header>
+  <main class="nf">
+    <div>
+      <p class="mono accent" data-es="Error 404 · lado C" data-en="Error 404 · side C">Error 404 · lado C</p>
+      <h1 data-es="No encontramos esto" data-en="We couldn't find this">No encontramos esto</h1>
+      <p class="desc" data-es="Puede que lo hayan borrado o que el enlace esté incompleto." data-en="It may have been deleted, or the link is incomplete.">Puede que lo hayan borrado o que el enlace esté incompleto.</p>
+      <a class="btn-ink" href="/"><span data-es="Ir al inicio" data-en="Go home">Ir al inicio</span> <span>→</span></a>
+    </div>
+    <aside class="side">
+      <div class="covers" aria-hidden="true"><span style="background:oklch(0.62 0.21 38)"></span><span style="background:oklch(0.42 0.14 255)"></span><span style="background:oklch(0.52 0.13 150)"></span></div>
+      <h3 data-es="¿Todavía no tienes Vinilo?" data-en="Don't have Vinilo yet?">¿Todavía no tienes Vinilo?</h3>
+      <p data-es="Califica tus discos del 1 al 10, lleva el diario de lo que escuchas y mira qué califican tus amigos." data-en="Rate your albums from 1 to 10, keep a diary of what you listen to and see what your friends are rating.">Califica tus discos del 1 al 10, lleva el diario de lo que escuchas y mira qué califican tus amigos.</p>
+      <span class="btn-line" data-es="Muy pronto en el App Store" data-en="Coming soon to the App Store">Muy pronto en el App Store</span>
+    </aside>
+  </main>
+  <footer class="mono" data-es="Datos de discos y artistas: Spotify." data-en="Album and artist data: Spotify.">Datos de discos y artistas: Spotify.</footer>
+</div>
 <script>
+// Inglés si el navegador lo prefiere antes que el español.
 (function(){
   var langs = navigator.languages || [navigator.language || 'es'];
   for (var i = 0; i < langs.length; i++) {
@@ -34,6 +72,7 @@ a{display:inline-block;margin-top:18px;color:var(--accent);font-weight:700;text-
     if (code === 'es') return;
     if (code === 'en') {
       document.documentElement.lang = 'en';
+      document.title = "We couldn't find this · Vinilo";
       document.querySelectorAll('[data-en]').forEach(function (el) { el.textContent = el.getAttribute('data-en'); });
       return;
     }

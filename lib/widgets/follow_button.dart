@@ -6,9 +6,13 @@ import '../models/follow.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
+import 'v_buttons.dart';
+import 'v_icons.dart';
 
-/// "Seguir" / "Siguiendo" para otra persona. Escucha el seguimiento en vivo
-/// y no se muestra para uno mismo. `compact` es la versión de las filas.
+/// "+ Seguir" (fondo de énfasis) o "✓ Siguiendo" (borde y texto en énfasis)
+/// para otra persona. Escucha el seguimiento en vivo y no se muestra para
+/// uno mismo. En el perfil va a lo ancho con 48 de alto; `compact` es la
+/// versión de las filas de personas.
 class FollowButton extends StatefulWidget {
   const FollowButton({
     super.key,
@@ -65,6 +69,7 @@ class _FollowButtonState extends State<FollowButton> {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
+    final l = context.l10n;
     final me = CurrentUser.maybeOf(context);
     if (me == null || me.uid == widget.person.uid) return const SizedBox.shrink();
     return StreamBuilder<bool>(
@@ -72,44 +77,40 @@ class _FollowButtonState extends State<FollowButton> {
       builder: (context, snap) {
         final known = snap.hasData;
         final following = snap.data ?? false;
-        final label = following ? context.l10n.following : context.l10n.follow;
-        final bg = following ? c.surface2 : c.accent;
-        final fg = following ? c.text : c.onAccent;
+        final onTap = known && !_busy ? () => _toggle(following) : null;
+        final label = Text(
+          following ? l.following : l.followAction,
+          key: ValueKey(following ? 'following' : 'not-following'),
+          maxLines: 1,
+          style: VText.ui(
+            widget.compact ? 13 : 15,
+            weight: 600,
+            color: following ? c.accentText : c.onAccent,
+          ),
+        );
         return AnimatedOpacity(
+          key: ValueKey(widget.testKey ?? 'follow-${widget.person.uid}'),
           duration: const Duration(milliseconds: 200),
           opacity: known ? 1 : 0.4,
-          child: Material(
-            key: ValueKey(widget.testKey ?? 'follow-${widget.person.uid}'),
-            color: bg,
-            borderRadius: BorderRadius.circular(999),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: known && !_busy ? () => _toggle(following) : null,
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: widget.compact ? 14 : 18,
-                  vertical: widget.compact ? 7 : 10,
-                ),
-                decoration: following
-                    ? BoxDecoration(
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: c.line),
-                      )
-                    : null,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (following) ...[
-                      Icon(Icons.check_rounded, size: 15, color: fg),
-                      const SizedBox(width: 5),
-                    ],
-                    Text(
-                      label,
-                      key: ValueKey(following ? 'following' : 'not-following'),
-                      style: VText.ui(widget.compact ? 13 : 14, weight: 700, color: fg),
-                    ),
+          child: Pressable(
+            onTap: onTap,
+            builder: (context, pressed) => Container(
+              height: widget.compact ? 32 : 48,
+              padding: EdgeInsets.symmetric(horizontal: widget.compact ? 12 : 20),
+              decoration: BoxDecoration(
+                color: following ? null : (pressed ? c.ink : c.accent),
+                border: following ? Border.all(color: pressed ? c.ink : c.accentText) : null,
+              ),
+              child: Row(
+                mainAxisSize: widget.compact ? MainAxisSize.min : MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (following) ...[
+                    VIconView(VIcon.check, size: widget.compact ? 11 : 13, color: c.accentText),
+                    const SizedBox(width: 8),
                   ],
-                ),
+                  Flexible(child: label),
+                ],
               ),
             ),
           ),

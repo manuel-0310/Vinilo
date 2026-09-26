@@ -13,6 +13,7 @@ import 'ratings_repo.dart';
 import 'replies_repo.dart';
 import 'spotify_api.dart';
 import 'user_repo.dart';
+import 'web_service.dart';
 
 class Services {
   Services._({
@@ -26,6 +27,7 @@ class Services {
     required this.lists,
     required this.replies,
     required this.account,
+    required this.web,
   });
 
   factory Services.create() {
@@ -55,6 +57,7 @@ class Services {
       lists: lists,
       replies: replies,
       account: AccountService(auth: auth, spotifyUrl: SpotifyApi.configuredUrl),
+      web: WebService(spotifyUrl: SpotifyApi.configuredUrl),
     );
   }
 
@@ -68,6 +71,7 @@ class Services {
   final ListsRepo lists;
   final RepliesRepo replies;
   final AccountService account;
+  final WebService web;
 }
 
 class ServicesScope extends InheritedWidget {

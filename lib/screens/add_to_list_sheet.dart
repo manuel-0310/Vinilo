@@ -10,8 +10,11 @@ import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
 import '../widgets/album_cover.dart';
-import '../widgets/misc.dart';
+import '../widgets/line_field.dart';
 import '../widgets/sheet.dart';
+import '../widgets/v_buttons.dart';
+import '../widgets/v_icons.dart';
+import '../widgets/v_sections.dart';
 
 /// Buscar un disco en Spotify y agregarlo a la lista (si es de discos) o
 /// elegir sus canciones (si es de canciones). Se pueden agregar varias
@@ -160,177 +163,184 @@ class _AddToListState extends State<_AddToList> {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
+    final l10n = context.l10n;
     final picked = _picked;
     return SheetScaffold(
-      title: picked == null ? context.l10n.addToListTitle : picked.name,
-      subtitle: picked == null
-          ? widget.list.name
-          : context.l10n.addPickTracksSubtitle(picked.artist),
+      overline: widget.list.name,
+      title: picked == null ? l10n.addToListTitle : picked.name,
+      subtitle: picked == null ? null : l10n.addPickTracksSubtitle(picked.artist),
+      titleSize: 40,
       height: 0.9,
       scrollable: false,
       trailing: picked == null
           ? null
-          : IconButton(
+          : VIconButton(
               key: const ValueKey('add-back'),
-              tooltip: context.l10n.addBackToResults,
-              onPressed: () => setState(() {
+              icon: VIcon.back,
+              tooltip: l10n.addBackToResults,
+              onTap: () => setState(() {
                 _picked = null;
                 _detail = null;
                 _selected.clear();
               }),
-              icon: Icon(Icons.arrow_back_rounded, color: c.text),
+            ),
+      footer: picked == null || !_tracks
+          ? VSecondaryButton(
+              key: const ValueKey('add-done'),
+              label: l10n.done,
+              center: true,
+              onPressed: () => Navigator.of(context).pop(_totalAdded),
+            )
+          : VPrimaryButton.accent(
+              key: const ValueKey('add-selected-tracks'),
+              label: _selected.isEmpty
+                  ? l10n.addChooseTracks
+                  : l10n.addSelected(ListItemType.tracks.count(_selected.length, l10n)),
+              busy: _adding,
+              onPressed: _selected.isEmpty ? null : _addSelected,
             ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (_notice != null)
             Padding(
-              padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
-              child: Container(
+              padding: const EdgeInsets.fromLTRB(VSpace.page, 12, VSpace.page, 0),
+              child: VMono(
+                _notice!,
                 key: const ValueKey('add-notice'),
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: c.accent.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  _notice!,
-                  style: VText.ui(13, weight: 700, color: c.accent),
-                ),
+                color: c.accentText,
+                maxLines: 2,
               ),
             ),
           Expanded(
             child: picked == null ? _searchStep(c) : _tracksStep(c, picked),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 8, 22, 20),
-            child: picked == null || !_tracks
-                ? SecondaryDone(
-                    onTap: () => Navigator.of(context).pop(_totalAdded),
-                  )
-                : FilledButton(
-                    key: const ValueKey('add-selected-tracks'),
-                    onPressed: _selected.isEmpty || _adding ? null : _addSelected,
-                    child: Text(
-                      _selected.isEmpty
-                          ? context.l10n.addChooseTracks
-                          : context.l10n.addSelected(ListItemType.tracks.count(_selected.length, context.l10n)),
-                    ),
-                  ),
-          ),
+          const SizedBox(height: 12),
         ],
       ),
     );
   }
 
   Widget _searchStep(ViniloPalette c) {
+    final l10n = context.l10n;
     final page = _page;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
-          child: TextField(
-            key: const ValueKey('add-search'),
+          padding: const EdgeInsets.fromLTRB(VSpace.page, 16, VSpace.page, 0),
+          child: LineField(
+            fieldKey: const ValueKey('add-search'),
             controller: _controller,
             autofocus: true,
+            hint: _tracks ? l10n.addSearchTrackAlbum : l10n.addSearchAlbum,
+            leading: VIconView(VIcon.search, size: 20, color: c.ink),
             textInputAction: TextInputAction.search,
             onChanged: _onChanged,
             onSubmitted: (q) => _search(q.trim()),
-            style: VText.ui(16, weight: 600),
-            decoration: InputDecoration(
-              hintText: _tracks ? context.l10n.addSearchTrackAlbum : context.l10n.addSearchAlbum,
-              prefixIcon: Icon(Icons.search_rounded, color: c.text3),
-            ),
           ),
         ),
         Expanded(
           child: _error != null
-              ? EmptyState(
-                  title: context.l10n.spotifyNoResponse,
-                  message: describeError(_error, context.l10n),
-                  labelColor: c.danger,
-                  action: TextButton(
-                    onPressed: () => _search(_controller.text.trim()),
-                    child: Text(context.l10n.retry),
+              ? SingleChildScrollView(
+                  child: VEmptyState(
+                    title: l10n.spotifyNoResponse,
+                    message: describeError(_error, l10n),
+                    action: VTextLink(
+                      l10n.retry,
+                      onTap: () => _search(_controller.text.trim()),
+                    ),
                   ),
                 )
               : _loading && page == null
-                  ? ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+                  ? ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(VSpace.page, 12, VSpace.page, 0),
                       itemCount: 5,
-                      separatorBuilder: (_, _) => const SizedBox(height: 10),
-                      itemBuilder: (_, _) => const Skeleton(height: 66, radius: 16),
+                      itemBuilder: (_, _) => const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        child: Row(
+                          children: [
+                            VSkeleton(width: 48, height: 48),
+                            SizedBox(width: 12),
+                            Expanded(child: VSkeleton(height: 30)),
+                          ],
+                        ),
+                      ),
                     )
                   : page == null
                       ? Padding(
-                          padding: const EdgeInsets.fromLTRB(22, 28, 22, 0),
+                          padding: const EdgeInsets.fromLTRB(VSpace.page, 22, VSpace.page, 0),
                           child: Text(
-                            _tracks
-                                ? context.l10n.addPromptTracks
-                                : context.l10n.addPromptAlbums,
-                            textAlign: TextAlign.center,
-                            style: VText.ui(14, color: c.text3, height: 1.4),
+                            _tracks ? l10n.addPromptTracks : l10n.addPromptAlbums,
+                            style: VText.ui(14, color: c.ink2, height: 1.45),
                           ),
                         )
                       : page.items.isEmpty
-                          ? EmptyState(
-                              title: context.l10n.searchNothingTitle,
-                              message: context.l10n.addNothingBody,
+                          ? SingleChildScrollView(
+                              child: VEmptyState(
+                                title: l10n.searchNothingTitle,
+                                message: l10n.addNothingBody,
+                              ),
                             )
                           : ListView.builder(
-                              padding: const EdgeInsets.fromLTRB(22, 10, 22, 12),
-                              physics: const BouncingScrollPhysics(),
+                              padding: const EdgeInsets.fromLTRB(VSpace.page, 12, VSpace.page, 12),
                               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                               itemCount: page.items.length,
                               itemBuilder: (context, i) {
                                 final album = page.items[i];
                                 final present = !_tracks && _present.contains(album.id);
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Material(
-                                    color: c.surface2,
-                                    borderRadius: BorderRadius.circular(18),
-                                    clipBehavior: Clip.antiAlias,
-                                    child: InkWell(
-                                      key: ValueKey('add-result-$i'),
-                                      onTap: _adding ? null : () => _pickAlbum(album),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: Row(
-                                          children: [
-                                            AlbumCover(url: album.smallCover, size: 50, radius: 10),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    album.name,
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: VText.ui(15, weight: 700),
-                                                  ),
-                                                  Text(
-                                                    album.subtitle,
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: VText.ui(12, color: c.text2),
-                                                  ),
-                                                ],
+                                return Pressable(
+                                  key: ValueKey('add-result-$i'),
+                                  onTap: _adding ? null : () => _pickAlbum(album),
+                                  builder: (context, pressed) => Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: pressed ? c.inkA(0.04) : null,
+                                      border: Border(bottom: BorderSide(color: c.lineSoft)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        AlbumCover(url: album.smallCover, size: 48),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                album.name,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: VText.ui(15, weight: 600),
                                               ),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Icon(
-                                              _tracks
-                                                  ? Icons.chevron_right_rounded
-                                                  : present
-                                                      ? Icons.check_circle_rounded
-                                                      : Icons.add_circle_outline_rounded,
-                                              color: present ? c.accent : c.text3,
-                                            ),
-                                          ],
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                album.subtitle,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: VText.ui(13, color: c.ink3),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
+                                        const SizedBox(width: 12),
+                                        if (_tracks)
+                                          VIconView(VIcon.chevronRight, size: 16, color: c.ink4)
+                                        else
+                                          Container(
+                                            width: 36,
+                                            height: 36,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: present ? c.accent : null,
+                                              border: present ? null : Border.all(color: c.lineStrong),
+                                            ),
+                                            child: VIconView(
+                                              present ? VIcon.check : VIcon.plus,
+                                              size: present ? 12 : 14,
+                                              color: present ? c.onAccent : c.ink,
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                   ),
                                 );
@@ -342,104 +352,101 @@ class _AddToListState extends State<_AddToList> {
   }
 
   Widget _tracksStep(ViniloPalette c, Album album) {
+    final l10n = context.l10n;
     final detail = _detail;
     if (_detailError != null) {
-      return EmptyState(
-        title: context.l10n.albumLoadFailed,
-        message: describeError(_detailError, context.l10n),
-        labelColor: c.danger,
-        action: TextButton(
-          onPressed: () => _pickAlbum(album),
-          child: Text(context.l10n.retry),
+      return SingleChildScrollView(
+        child: VEmptyState(
+          title: l10n.albumLoadFailed,
+          message: describeError(_detailError, l10n),
+          action: VTextLink(l10n.retry, onTap: () => _pickAlbum(album)),
         ),
       );
     }
     if (detail == null) {
-      return ListView.separated(
-        padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+      return ListView.builder(
+        padding: const EdgeInsets.fromLTRB(VSpace.page, 16, VSpace.page, 0),
         itemCount: 8,
-        separatorBuilder: (_, _) => const SizedBox(height: 14),
-        itemBuilder: (_, _) => const Skeleton(height: 18, radius: 6),
+        itemBuilder: (_, _) => const Padding(
+          padding: EdgeInsets.symmetric(vertical: 12),
+          child: VSkeleton(height: 14),
+        ),
       );
     }
     final all = detail.tracks.every((t) => _selected.contains(t.id));
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(22, 8, 14, 0),
-          child: Row(
-            children: [
-              AlbumCover(url: album.smallCover, size: 44, radius: 9),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  context.l10n.countTracks(detail.tracks.length),
-                  style: VText.ui(13, color: c.text2),
-                ),
-              ),
-              TextButton(
-                key: const ValueKey('select-all-tracks'),
-                onPressed: () => setState(() {
-                  if (all) {
-                    _selected.clear();
-                  } else {
-                    _selected.addAll(detail.tracks.map((t) => t.id));
-                  }
-                }),
-                child: Text(
-                  all ? context.l10n.selectNone : context.l10n.filterAll,
-                  style: VText.ui(13, weight: 700, color: c.accent),
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.fromLTRB(VSpace.page, 16, VSpace.page, 0),
+          child: VSectionHeader(
+            l10n.countTracks(detail.tracks.length),
+            action: all ? l10n.selectNone : l10n.filterAll,
+            actionKey: const ValueKey('select-all-tracks'),
+            onAction: () => setState(() {
+              if (all) {
+                _selected.clear();
+              } else {
+                _selected.addAll(detail.tracks.map((t) => t.id));
+              }
+            }),
+            padding: const EdgeInsets.symmetric(vertical: 10),
           ),
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(22, 4, 22, 12),
-            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(VSpace.page, 0, VSpace.page, 12),
             itemCount: detail.tracks.length,
             itemBuilder: (context, i) {
               final t = detail.tracks[i];
               final present = _present.contains(t.id);
               final selected = _selected.contains(t.id);
-              return InkWell(
+              return Pressable(
                 key: ValueKey('add-track-$i'),
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => setState(() {
-                  if (selected) {
-                    _selected.remove(t.id);
-                  } else {
-                    _selected.add(t.id);
-                  }
-                }),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() {
+                    if (selected) {
+                      _selected.remove(t.id);
+                    } else {
+                      _selected.add(t.id);
+                    }
+                  });
+                },
+                builder: (context, pressed) => Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: pressed ? c.inkA(0.04) : null,
+                    border: Border(top: BorderSide(color: c.lineSoft)),
+                  ),
                   child: Row(
                     children: [
-                      Icon(
-                        selected
-                            ? Icons.check_circle_rounded
-                            : Icons.radio_button_unchecked_rounded,
-                        size: 22,
-                        color: selected ? c.accent : c.text3,
+                      Container(
+                        width: 14,
+                        height: 14,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: selected ? c.accentText : null,
+                          border: selected ? null : Border.all(color: c.lineStrong),
+                        ),
+                        child: selected ? VIconView(VIcon.check, size: 9, color: c.onAccent) : null,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: Text(
                           t.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: VText.ui(15, weight: 600),
+                          style: VText.ui(15),
                         ),
                       ),
                       if (present)
                         Padding(
                           padding: const EdgeInsets.only(left: 8),
-                          child: Text(context.l10n.addAlreadyHere, style: VText.label(9, color: c.text3)),
+                          child: VMono(l10n.addAlreadyHere, size: 9.5, color: c.ink4),
                         ),
-                      const SizedBox(width: 10),
-                      Text(t.duration, style: VText.ui(13, color: c.text3)),
+                      const SizedBox(width: 12),
+                      Text(t.duration, style: VText.mono(12, tracking: 0, color: c.ink3)),
                     ],
                   ),
                 ),
@@ -448,33 +455,6 @@ class _AddToListState extends State<_AddToList> {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Botón "Listo" sobre la segunda superficie, para cerrar la hoja.
-class SecondaryDone extends StatelessWidget {
-  const SecondaryDone({super.key, required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    return Material(
-      key: const ValueKey('add-done'),
-      color: c.surface2,
-      borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          height: 52,
-          child: Center(
-            child: Text(context.l10n.done, style: VText.ui(16, weight: 700, color: c.text)),
-          ),
-        ),
-      ),
     );
   }
 }

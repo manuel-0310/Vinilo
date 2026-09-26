@@ -42,4 +42,28 @@ void main() {
     expect(s.hist[5], 0);
     expect(s.ratedAlbums, 2);
   });
+
+  group('orden de la discografía', () {
+    final albums = [
+      for (final id in ['nuevo', 'medio', 'viejo', 'sin-notas', 'otro'])
+        Album(id: id, name: id, artist: 'X'),
+    ];
+    final byAlbum = {
+      'nuevo': stats('nuevo', count: 1, sum: 8),
+      'medio': stats('medio', count: 3, sum: 26.1), // 8,7
+      'viejo': stats('viejo', count: 4, sum: 32), // 8,0 con más notas
+      'sin-notas': stats('sin-notas', count: 0, sum: 0),
+    };
+    List<String> ids(List<Album> list) => [for (final a in list) a.id];
+
+    test('recientes: el orden de Spotify, sin tocar', () {
+      expect(ids(sortDiscography(albums, byAlbum, bestFirst: false)),
+          ['nuevo', 'medio', 'viejo', 'sin-notas', 'otro']);
+    });
+
+    test('mejor calificados: por promedio, a igual promedio más notas, y sin notas al final', () {
+      expect(ids(sortDiscography(albums, byAlbum, bestFirst: true)),
+          ['medio', 'viejo', 'nuevo', 'sin-notas', 'otro']);
+    });
+  });
 }

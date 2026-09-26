@@ -5,10 +5,17 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-/// Saca un color dominante y agradable de una portada para teñir la pantalla.
-/// No usa paquetes nativos: reutiliza la imagen ya decodificada por Flutter.
+/// Saca el color dominante de una portada, tal cual (sin aclararlo ni
+/// saturarlo): el disco lo pasa por `coverTone` para la nota y el artista, y
+/// por su cuenta para las celdas de la regla. Una portada gris devuelve un
+/// gris. No usa paquetes nativos: reutiliza la imagen ya decodificada por
+/// Flutter.
 class PaletteService {
   final Map<String, Color> _cache = {};
+
+  /// El color ya calculado de esa portada, sin esperar (null si todavía no
+  /// se sacó): así la nota no pasa un cuadro por el énfasis antes del tono.
+  Color? cached(String? url) => url == null ? null : _cache[url];
 
   Future<Color?> dominant(String? url) async {
     if (url == null || url.isEmpty) return null;
@@ -21,7 +28,7 @@ class PaletteService {
       final height = image.height;
       image.dispose();
       if (bytes == null) return null;
-      final color = _pick(bytes, width, height);
+      final color = pick(bytes, width, height);
       if (color != null) _cache[url] = color;
       return color;
     } catch (_) {
@@ -47,8 +54,13 @@ class PaletteService {
     return completer.future.timeout(const Duration(seconds: 12));
   }
 
-  Color? _pick(ByteData data, int width, int height) {
-    const bucketCount = 24;
+  /// El color dominante de unos píxeles RGBA (público para las pruebas).
+  @visibleForTesting
+  static Color? pick(ByteData data, int width, int height) {
+    // 24 tonalidades más un grupo aparte para los grises, que si no se
+    // mezclarían con los rojos (su tonalidad es 0).
+    const hueBuckets = 24;
+    const bucketCount = hueBuckets + 1;
     final weights = List<double>.filled(bucketCount, 0);
     final reds = List<double>.filled(bucketCount, 0);
     final greens = List<double>.filled(bucketCount, 0);
@@ -64,8 +76,9 @@ class PaletteService {
         final b = data.getUint8(i + 2);
         final hsl = HSLColor.fromColor(Color.fromARGB(255, r, g, b));
         if (hsl.lightness < 0.08 || hsl.lightness > 0.94) continue;
-        final weight = 0.12 + hsl.saturation * (1 - (hsl.lightness - 0.5).abs());
-        final bucket = (hsl.hue / 360 * bucketCount).floor() % bucketCount;
+        final gray = hsl.saturation < 0.12;
+        final weight = 0.12 + (gray ? 0 : hsl.saturation * (1 - (hsl.lightness - 0.5).abs()));
+        final bucket = gray ? hueBuckets : (hsl.hue / 360 * hueBuckets).floor() % hueBuckets;
         weights[bucket] += weight;
         reds[bucket] += r * weight;
         greens[bucket] += g * weight;
@@ -83,16 +96,11 @@ class PaletteService {
     }
     if (best < 0) return null;
 
-    final mean = Color.fromARGB(
+    return Color.fromARGB(
       255,
       (reds[best] / bestWeight).round().clamp(0, 255),
       (greens[best] / bestWeight).round().clamp(0, 255),
       (blues[best] / bestWeight).round().clamp(0, 255),
     );
-    final hsl = HSLColor.fromColor(mean);
-    return hsl
-        .withSaturation(hsl.saturation.clamp(0.35, 0.85))
-        .withLightness(hsl.lightness.clamp(0.32, 0.52))
-        .toColor();
   }
 }

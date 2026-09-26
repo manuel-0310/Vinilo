@@ -3,96 +3,65 @@ import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 import '../models/user_profile.dart';
 import '../services/services.dart';
-import '../theme/vinilo_theme.dart';
 import '../widgets/auth_page.dart';
 import '../widgets/email_password_form.dart';
-import '../widgets/user_avatar.dart';
+import '../widgets/sheet.dart';
 import 'welcome_screen.dart';
 
 /// Quien venía usando Vinilo con la sesión anónima de antes guarda aquí su
 /// cuenta: se vincula un correo y una contraseña a la misma sesión
 /// (`linkWithCredential`), así el uid, las notas, los favoritos y el perfil
-/// siguen siendo los suyos. Después elige su @usuario.
+/// siguen siendo los suyos. Después elige su @usuario. Sin diseño propio: el
+/// mismo andamio que Crear cuenta.
 class LinkAccountScreen extends StatelessWidget {
   const LinkAccountScreen({super.key, required this.profile});
 
   final UserProfile profile;
 
   Future<void> _signInInstead(BuildContext context) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        final c = VColors.of(ctx);
-        return AlertDialog(
-          title: Text(ctx.l10n.linkOtherTitle, style: VText.display(28)),
-          content: Text(
-            ctx.l10n.linkOtherBody(profile.ratingsCount),
-            style: VText.ui(14, color: c.text2, height: 1.4),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(ctx.l10n.back),
-            ),
-            TextButton(
-              key: const ValueKey('link-signin-confirm'),
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(
-                ctx.l10n.linkOtherConfirm,
-                style: VText.ui(14, weight: 700, color: c.danger),
-              ),
-            ),
-          ],
-        );
-      },
+    final l = context.l10n;
+    final ok = await showConfirmSheet(
+      context,
+      title: l.linkOtherTitle,
+      message: l.linkOtherBody(profile.ratingsCount),
+      confirmLabel: l.linkOtherConfirm,
+      danger: true,
+      confirmKey: const ValueKey('link-signin-confirm'),
     );
-    if (ok == true && context.mounted) WelcomeScreen.openSignIn(context);
+    if (ok && context.mounted) WelcomeScreen.openSignIn(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final c = VColors.of(context);
+    final l = context.l10n;
     final services = ServicesScope.of(context);
-    return AuthPage(
-      leading: UserAvatar(
-        name: profile.name,
-        color: profile.color,
-        url: profile.avatarUrl,
-        size: 56,
-        ring: true,
-      ),
-      title: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(text: context.l10n.linkTitleStart),
-            TextSpan(
-              text: context.l10n.linkTitleAccent,
-              style: VText.display(42, italic: true, color: c.accent),
-            ),
-            TextSpan(text: context.l10n.linkTitleEnd(profile.name)),
-          ],
-        ),
-      ),
-      subtitle: context.l10n.linkSubtitle(profile.ratingsCount),
-      footer: Center(
-        child: TextButton(
-          key: const ValueKey('link-signin'),
-          onPressed: () => _signInInstead(context),
-          child: Text(
-            context.l10n.linkHaveAccount,
-            style: VText.ui(14, weight: 700, color: c.text2),
+    return AuthScaffold(
+      showBack: false,
+      title: l.linkTitle,
+      bodyTop: 16,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AuthParagraph(l.linkSubtitle(profile.ratingsCount)),
+          const SizedBox(height: 28),
+          EmailPasswordForm(
+            submitLabel: l.linkSubmit,
+            newPassword: true,
+            onSubmit: (email, password) async {
+              // El uid se conserva; `userChanges` avisa y main pasa a elegir
+              // el @usuario.
+              await services.auth.linkEmail(email: email, password: password);
+            },
           ),
-        ),
+        ],
       ),
-      child: EmailPasswordForm(
-        submitLabel: context.l10n.linkSubmit,
-        newPassword: true,
-        autofocus: false,
-        onSubmit: (email, password) async {
-          // El uid se conserva; `userChanges` avisa y main pasa a elegir el
-          // @usuario.
-          await services.auth.linkEmail(email: email, password: password);
-        },
+      bottom: Center(
+        child: AuthSwitchLine(
+          key: const ValueKey('link-signin'),
+          question: '',
+          action: l.linkHaveAccount,
+          onTap: () => _signInInstead(context),
+        ),
       ),
     );
   }

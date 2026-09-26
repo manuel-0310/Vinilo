@@ -4,9 +4,13 @@ import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/auth_errors.dart';
+import '../widgets/line_field.dart';
 import '../widgets/photo_picker.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/username_field.dart';
+import '../widgets/v_buttons.dart';
+import '../widgets/v_icons.dart';
+import '../widgets/v_sections.dart';
 
 /// Lo que devuelve el formulario al guardar.
 class ProfileEdit {
@@ -195,8 +199,19 @@ class _ProfileFormState extends State<ProfileForm> {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
+    final l = context.l10n;
     final color = Color(_color);
     final name = _name.text.trim();
+
+    Widget action(String key, String label, VoidCallback onTap) => Pressable(
+          key: ValueKey(key),
+          onTap: onTap,
+          builder: (context, pressed) => Opacity(
+            opacity: pressed ? 0.6 : 1,
+            child: VMono(label, color: c.accentText),
+          ),
+        );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -208,192 +223,164 @@ class _ProfileFormState extends State<ProfileForm> {
             url: _removedBanner ? null : widget.initialBannerUrl,
             onTap: _pickBanner,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: _pickBanner,
-              child: Text(_hasBanner ? context.l10n.bannerChange : context.l10n.bannerChoose),
-            ),
+            child: action('banner-change', _hasBanner ? l.bannerChange : l.bannerChoose, _pickBanner),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 18),
         ],
-        Center(
-          child: GestureDetector(
-            onTap: _pick,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                UserAvatar(
-                  name: name.isEmpty ? '?' : name,
-                  color: color,
-                  bytes: _picked,
-                  url: _removed ? null : widget.initialAvatarUrl,
-                  size: 104,
-                  ring: true,
-                ),
-                Positioned(
-                  right: -2,
-                  bottom: -2,
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: c.accent,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: c.bg, width: 3),
-                    ),
-                    child: Icon(
-                      Icons.photo_camera_rounded,
-                      size: 16,
-                      color: c.onAccent,
-                    ),
-                  ),
-                ),
-              ],
+        Row(
+          children: [
+            GestureDetector(
+              onTap: _pick,
+              child: UserAvatar(
+                name: name.isEmpty ? '?' : name,
+                color: color,
+                bytes: _picked,
+                url: _removed ? null : widget.initialAvatarUrl,
+                size: 72,
+              ),
             ),
-          ),
+            const SizedBox(width: 16),
+            action('photo-change', _hasAvatar ? l.photoChange : l.photoChoose, _pick),
+          ],
         ),
-        const SizedBox(height: 6),
-        Center(
-          child: TextButton(
-            onPressed: _pick,
-            child: Text(_hasAvatar ? context.l10n.photoChange : context.l10n.photoChoose),
-          ),
-        ),
-        const SizedBox(height: 18),
-        TextField(
-          key: const ValueKey('name-field'),
+        const SizedBox(height: 24),
+        LineField(
+          label: l.authNameLabel,
+          hint: l.nameHint,
+          fieldKey: const ValueKey('name-field'),
           controller: _name,
           autofocus: widget.autofocus,
           maxLength: 24,
           textCapitalization: TextCapitalization.words,
-          textInputAction: TextInputAction.done,
+          textInputAction: TextInputAction.next,
           onChanged: (_) => setState(() {}),
-          onSubmitted: (_) => _submit(),
-          style: VText.ui(17, weight: 600),
-          decoration: InputDecoration(
-            hintText: context.l10n.nameHint,
-            counterStyle: VText.label(10, color: c.text3),
-          ),
         ),
         if (widget.showBio) ...[
           const SizedBox(height: 14),
-          Text(context.l10n.bioLabel, style: VText.label(11, color: c.text3)),
-          const SizedBox(height: 10),
-          TextField(
-            key: const ValueKey('bio-field'),
+          LineField(
+            label: l.bioLabel,
+            hint: l.bioHint,
+            fieldKey: const ValueKey('bio-field'),
             controller: _bio,
             maxLength: bioMaxLength,
             minLines: 2,
             maxLines: 4,
+            fontSize: 15,
             textCapitalization: TextCapitalization.sentences,
-            style: VText.ui(15, height: 1.4),
-            decoration: InputDecoration(
-              hintText: context.l10n.bioHint,
-              counterStyle: VText.label(10, color: c.text3),
-            ),
           ),
         ],
         if (widget.showUsername) ...[
           const SizedBox(height: 14),
-          Text(context.l10n.yourUsernameLabel, style: VText.label(11, color: c.text3)),
-          const SizedBox(height: 10),
           UsernameField(
+            label: l.authUsernameLabel,
             initial: widget.initialUsername ?? '',
             forUid: widget.forUid,
             onChanged: (v) => setState(() => _username = v),
           ),
         ],
         if (widget.showColor) ...[
-          const SizedBox(height: 14),
-          Text(context.l10n.yourColorLabel, style: VText.label(11, color: c.text3)),
+          const SizedBox(height: 20),
+          VMono(l.yourColorLabel),
           const SizedBox(height: 12),
           ColorSwatches(
             selected: _color,
             onChanged: (v) => setState(() => _color = v),
           ),
         ],
-        const SizedBox(height: 30),
-        FilledButton(
+        const SizedBox(height: 28),
+        VPrimaryButton.accent(
           key: const ValueKey('profile-submit'),
-          onPressed: name.length < 2 || _busy || !_usernameReady ? null : _submit,
-          child: _busy
-              ? SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: c.onAccent,
-                  ),
-                )
-              : Text(widget.submitLabel),
+          label: widget.submitLabel,
+          busy: _busy,
+          onPressed: name.length < 2 || !_usernameReady ? null : _submit,
         ),
       ],
     );
   }
 }
 
-/// Los colores que puede elegir la persona, en círculos; el elegido lleva
-/// un anillo y una sombra de su propio color.
+/// Los 14 colores de énfasis en cuadros, en filas de 7 con separación 6.
+/// El elegido (el más parecido de la paleta al color guardado) lleva un
+/// contorno de tinta de 2 px separado 2, que no ocupa sitio.
 class ColorSwatches extends StatelessWidget {
   const ColorSwatches({
     super.key,
     required this.selected,
     required this.onChanged,
-    this.size = 34,
+    this.columns = 7,
+    this.gap = 6,
   });
 
   final int selected;
   final ValueChanged<int> onChanged;
-  final double size;
+  final int columns;
+  final double gap;
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        for (final swatch in VColors.accentPalette)
-          GestureDetector(
-            key: ValueKey('color-${swatch.toARGB32()}'),
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onChanged(swatch.toARGB32());
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                color: swatch,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: swatch.toARGB32() == selected ? c.text : Colors.transparent,
-                  width: 3,
-                ),
-                // Siempre una sombra (aunque invisible) para que la
-                // interpolación nunca produzca un radio negativo.
-                boxShadow: [
-                  BoxShadow(
-                    color: swatch.withValues(
-                      alpha: swatch.toARGB32() == selected ? 0.5 : 0,
-                    ),
-                    blurRadius: swatch.toARGB32() == selected ? 14 : 0,
+    final chosen = VColors.nearest(Color(selected)).toARGB32();
+    const palette = VColors.accentPalette;
+    final rows = (palette.length + columns - 1) ~/ columns;
+
+    Widget swatch(Color color) {
+      final isChosen = color.toARGB32() == chosen;
+      return GestureDetector(
+        key: ValueKey('color-${color.toARGB32()}'),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onChanged(color.toARGB32());
+        },
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Stack(
+            clipBehavior: Clip.none,
+            fit: StackFit.expand,
+            children: [
+              ColoredBox(color: c.swatch(color)),
+              if (isChosen)
+                Positioned(
+                  left: -4,
+                  top: -4,
+                  right: -4,
+                  bottom: -4,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(border: Border.all(color: c.ink, width: 2)),
                   ),
-                ],
-              ),
-            ),
+                ),
+            ],
           ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        for (var r = 0; r < rows; r++) ...[
+          if (r > 0) SizedBox(height: gap),
+          Row(
+            children: [
+              for (var i = 0; i < columns; i++) ...[
+                if (i > 0) SizedBox(width: gap),
+                Expanded(
+                  child: r * columns + i < palette.length
+                      ? swatch(palette[r * columns + i])
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ],
+          ),
+        ],
       ],
     );
   }
 }
 
-/// Vista previa de la foto de fondo (2:1, como en el perfil); sin foto muestra el degradado
-/// del color del perfil, igual que el encabezado.
+/// Vista previa de la foto de fondo (2:1, como el banner del perfil); sin
+/// foto, la franja del color de la persona con "Foto de fondo" en mono.
 class _BannerField extends StatelessWidget {
   const _BannerField({
     super.key,
@@ -410,28 +397,17 @@ class _BannerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = VColors.of(context);
     final hasImage = bytes != null || url != null;
     return GestureDetector(
       onTap: onTap,
       child: AspectRatio(
         aspectRatio: bannerAspect,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
+        child: ColoredBox(
+          color: c.coverShade(color, lightness: 0.35),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      color.withValues(alpha: 0.55),
-                      color.withValues(alpha: 0.15),
-                    ],
-                  ),
-                ),
-              ),
               if (bytes != null)
                 Image.memory(bytes!, fit: BoxFit.cover)
               else if (url != null)
@@ -441,9 +417,9 @@ class _BannerField extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.add_photo_alternate_outlined, size: 20),
+                      VIconView(VIcon.image, size: 18, color: c.ink),
                       const SizedBox(width: 8),
-                      Text(context.l10n.bannerPlaceholder, style: VText.ui(14, weight: 700)),
+                      VMono(context.l10n.bannerPlaceholder, color: c.ink),
                     ],
                   ),
                 ),

@@ -163,6 +163,65 @@ void main() {
     expect(list.count, 6);
   });
 
+  group('portadas apiladas', () {
+    MusicList listOf(ListItemType type, List<ListItem> items) => MusicList(
+          id: 'l',
+          ownerUid: 'u',
+          owner: const PersonInfoStub().info,
+          name: 'L',
+          description: '',
+          kind: ListKind.list,
+          itemType: type,
+          items: items,
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+        );
+    ListItem song(String id, String album) => ListItem(
+          id: id,
+          name: id,
+          artist: 'A',
+          albumId: album,
+          albumName: album,
+          coverSmall: 'cover-$album',
+        );
+    ListItem record(String id) => ListItem(id: id, name: id, artist: 'A', year: 2020, coverSmall: 'cover-$id');
+
+    test('canciones de un solo disco: 3 portadas', () {
+      final list = listOf(ListItemType.tracks, [song('t1', 'a'), song('t2', 'a'), song('t3', 'a')]);
+      expect(list.covers, ['cover-a', 'cover-a', 'cover-a']);
+    });
+
+    test('canciones de dos discos: 3 portadas, repitiendo la primera', () {
+      final list = listOf(ListItemType.tracks, [song('t1', 'a'), song('t2', 'a'), song('t3', 'b')]);
+      expect(list.covers, ['cover-a', 'cover-b', 'cover-a']);
+    });
+
+    test('dos canciones del mismo disco: 2 portadas', () {
+      final list = listOf(ListItemType.tracks, [song('t1', 'a'), song('t2', 'a')]);
+      expect(list.covers, ['cover-a', 'cover-a']);
+    });
+
+    test('una canción: 1 portada', () {
+      expect(listOf(ListItemType.tracks, [song('t1', 'a')]).covers, ['cover-a']);
+    });
+
+    test('canciones de muchos discos: una por disco, hasta 4', () {
+      final list = listOf(ListItemType.tracks, [
+        for (final (i, a) in ['a', 'a', 'b', 'c', 'd', 'e'].indexed) song('t$i', a),
+      ]);
+      expect(list.covers, ['cover-a', 'cover-b', 'cover-c', 'cover-d']);
+    });
+
+    test('las de discos no cambian: solo las distintas', () {
+      expect(listOf(ListItemType.albums, [record('a')]).covers, ['cover-a']);
+      expect(listOf(ListItemType.albums, [record('a'), record('b')]).covers, ['cover-a', 'cover-b']);
+    });
+
+    test('sin portadas no inventa ninguna', () {
+      expect(listOf(ListItemType.tracks, [track('x'), track('y')]).covers, isEmpty);
+    });
+  });
+
   group('insertItemAt', () {
     ListItem it(String id) => ListItem(id: id, name: id, artist: 'A');
     List<String> ids(List<ListItem> l) => l.map((i) => i.id).toList();
@@ -277,6 +336,36 @@ void main() {
       expect(q.cleared().filtering, isFalse);
       expect(q.cleared().sort, ListSort.name);
       expect(q.copyWith(kind: () => null).kind, isNull);
+    });
+  });
+
+  group('filtro único de listas', () {
+    test('cada filtro fija solo una cosa y conserva búsqueda y orden', () {
+      const base = ListQuery(text: 'lluvia', sort: ListSort.likes);
+      final lists = base.withFilter(ListFilter.lists);
+      expect(lists.kind, ListKind.list);
+      expect(lists.itemType, isNull);
+      expect(lists.text, 'lluvia');
+      expect(lists.sort, ListSort.likes);
+      final albums = lists.withFilter(ListFilter.albums);
+      expect(albums.kind, isNull);
+      expect(albums.itemType, ListItemType.albums);
+      final all = albums.withFilter(ListFilter.all);
+      expect(all.kind, isNull);
+      expect(all.itemType, isNull);
+    });
+
+    test('el filtro se lee de vuelta de la consulta', () {
+      for (final f in ListFilter.values) {
+        expect(const ListQuery().withFilter(f).filter, f);
+      }
+      // Con tipo y contenido a la vez (consultas de antes), manda el tipo.
+      expect(const ListQuery(kind: ListKind.ranking, itemType: ListItemType.tracks).filter, ListFilter.rankings);
+    });
+
+    test('el orden rota y vuelve al principio', () {
+      expect(nextListSort(ListSort.recent), ListSort.name);
+      expect(nextListSort(ListSort.likes), ListSort.recent);
     });
   });
 }
