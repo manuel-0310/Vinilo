@@ -24,6 +24,13 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>instagram-stories</string>
+		<string>whatsapp</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -32,11 +39,6 @@
 	<string>Para grabar el audio de los videos que publiques.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Para guardar en tus fotos las imágenes que compartes desde Vinilo.</string>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>instagram-stories</string>
-		<string>whatsapp</string>
-	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Para elegir tu foto de perfil, tu foto de fondo o la portada de una lista.</string>
 	<key>UIApplicationSceneManifest</key>
