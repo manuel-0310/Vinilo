@@ -403,12 +403,11 @@ class _AlbumScreenState extends State<AlbumScreen> {
     final detail = _detail;
     final topPad = MediaQuery.paddingOf(context).top;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
-    _collapseAt = MediaQuery.sizeOf(context).width - (topPad + 54);
-    // El color de la portada tal cual (las celdas de la regla) y su tono
-    // claro (la nota, el artista, el botón); sin color, el énfasis.
+    _collapseAt = MediaQuery.sizeOf(context).width - 8;
+    // El tono claro de la portada (la nota, el artista, el botón y la barra
+    // de mi nota); sin color, el énfasis.
     final cover = _coverColor;
     final tone = cover == null ? c.accentText : c.coverTone(cover);
-    final fill = cover ?? c.accent;
 
     return Scaffold(
       body: StreamBuilder<RatingEntry?>(
@@ -429,7 +428,28 @@ class _AlbumScreenState extends State<AlbumScreen> {
             return ShareSpecs.album(mine, person: person, accent: ShareSpecs.accentOf(context));
           }
 
-          return Stack(
+          return Column(
+            children: [
+              // Volver, compartir y listas en una barra fija arriba; al pasar
+              // la portada muestra además la portada en miniatura y el nombre.
+              ValueListenableBuilder<bool>(
+                valueListenable: _collapsed,
+                builder: (context, collapsed, _) => _TopBar(
+                  key: const ValueKey('album-bar'),
+                  album: album,
+                  topPad: topPad,
+                  collapsed: collapsed,
+                  share: share,
+                  shareCards: shareCards,
+                  onLists: _listActions,
+                  onTitleTap: _scrollToTop,
+                ),
+              ),
+              Expanded(
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeTop: true,
+                  child: Stack(
             children: [
               CustomScrollView(
                 controller: _scroll,
@@ -458,7 +478,6 @@ class _AlbumScreenState extends State<AlbumScreen> {
                               mine: mine,
                               waiting: waitingMine,
                               tone: tone,
-                              fill: fill,
                               onRate: () => _rate(mine),
                             ),
                           ),
@@ -476,7 +495,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                         return const SliverToBoxAdapter(child: SizedBox.shrink());
                       }
                       return SliverToBoxAdapter(
-                        child: _RatedBy(friends: friends, tone: tone),
+                        child: _RatedBy(friends: friends),
                       );
                     },
                   ),
@@ -571,43 +590,6 @@ class _AlbumScreenState extends State<AlbumScreen> {
                   ),
                 ],
               ),
-              // Volver, compartir y listas sobre la portada o, al pasarla, la
-              // barra fija con la portada en miniatura.
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: _collapsed,
-                  builder: (context, collapsed, _) => AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 160),
-                    layoutBuilder: (current, previous) => Stack(
-                      alignment: Alignment.topCenter,
-                      children: [...previous, ?current],
-                    ),
-                    child: collapsed
-                        ? _StickyBar(
-                            key: const ValueKey('album-bar'),
-                            album: album,
-                            topPad: topPad,
-                            share: share,
-                            shareCards: shareCards,
-                            onLists: _listActions,
-                            onTitleTap: _scrollToTop,
-                          )
-                        : Padding(
-                            key: const ValueKey('album-buttons'),
-                            padding: EdgeInsets.fromLTRB(16, topPad + 4, 16, 0),
-                            child: _TopButtons(
-                              style: VIconButtonStyle.filled,
-                              share: share,
-                              shareCards: shareCards,
-                              onLists: _listActions,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
               // Barra fija abajo mientras se eligen canciones para una lista.
               Positioned(
                 left: 0,
@@ -628,6 +610,10 @@ class _AlbumScreenState extends State<AlbumScreen> {
                           onCancel: _stopSelecting,
                         )
                       : const SizedBox(key: ValueKey('no-selection-bar'), width: double.infinity),
+                ),
+              ),
+            ],
+                  ),
                 ),
               ),
             ],
@@ -740,47 +726,15 @@ class _AlbumScreenState extends State<AlbumScreen> {
   }
 }
 
-/// Volver a la izquierda; compartir y listas a la derecha, separados 4.
-class _TopButtons extends StatelessWidget {
-  const _TopButtons({required this.style, required this.share, required this.shareCards, required this.onLists});
-
-  final VIconButtonStyle style;
-  final ShareMessage Function(AppLocalizations l) share;
-  final List<ShareCardSpec> Function() shareCards;
-  final VoidCallback onLists;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        VIconButton(
-          key: const ValueKey('back'),
-          icon: VIcon.back,
-          style: style,
-          onTap: () => Navigator.of(context).maybePop(),
-        ),
-        const Spacer(),
-        // Con nota, se comparte la mía; sin nota, el disco.
-        ShareButton(key: const ValueKey('share-album'), message: share, cards: shareCards, style: style),
-        const SizedBox(width: 4),
-        VIconButton(
-          key: const ValueKey('list-actions'),
-          icon: VIcon.addToList,
-          style: style,
-          onTap: onLists,
-        ),
-      ],
-    );
-  }
-}
-
-/// La barra fija que aparece al pasar la portada: volver, la portada en
-/// miniatura con el nombre, compartir y listas, con una línea debajo.
-class _StickyBar extends StatelessWidget {
-  const _StickyBar({
+/// La barra fija de arriba: volver, compartir y listas, con una línea
+/// debajo. Al pasar la portada aparecen en medio la portada en miniatura y
+/// el nombre (tocarlos vuelve arriba).
+class _TopBar extends StatelessWidget {
+  const _TopBar({
     super.key,
     required this.album,
     required this.topPad,
+    required this.collapsed,
     required this.share,
     required this.shareCards,
     required this.onLists,
@@ -789,11 +743,10 @@ class _StickyBar extends StatelessWidget {
 
   final Album album;
   final double topPad;
+  final bool collapsed;
   final ShareMessage Function(AppLocalizations l) share;
   final List<ShareCardSpec> Function() shareCards;
   final VoidCallback onLists;
-
-  /// Tocar la portada o el nombre vuelve arriba.
   final VoidCallback onTitleTap;
 
   @override
@@ -814,26 +767,34 @@ class _StickyBar extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onTitleTap,
-              child: Row(
-                children: [
-                  AlbumCover(url: album.smallCover, size: 24),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      album.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: VText.ui(14, weight: 600),
-                    ),
+            child: IgnorePointer(
+              ignoring: !collapsed,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 160),
+                opacity: collapsed ? 1 : 0,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onTitleTap,
+                  child: Row(
+                    children: [
+                      AlbumCover(url: album.smallCover, size: 24),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          album.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: VText.ui(14, weight: 600),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
           const SizedBox(width: 10),
+          // Con nota, se comparte la mía; sin nota, el disco.
           ShareButton(
             key: const ValueKey('share-album'),
             message: share,
@@ -915,7 +876,6 @@ class _Scores extends StatelessWidget {
     required this.mine,
     required this.waiting,
     required this.tone,
-    required this.fill,
     required this.onRate,
   });
 
@@ -923,7 +883,6 @@ class _Scores extends StatelessWidget {
   final RatingEntry? mine;
   final bool waiting;
   final Color tone;
-  final Color fill;
   final VoidCallback onRate;
 
   @override
@@ -995,15 +954,13 @@ class _Scores extends StatelessWidget {
 
     final Widget below;
     if (waiting) {
-      // Mientras llega mi nota, el hueco de los números y el botón.
-      below = const SizedBox(key: ValueKey('mine-waiting'), height: 6 + 13 + 16 + 56);
+      // Mientras llega mi nota, el hueco del botón.
+      below = const SizedBox(key: ValueKey('mine-waiting'), height: 16 + 56);
     } else if (mineScore == null) {
       below = Column(
         key: const ValueKey('album-rate'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 6),
-          const RulerNumbers(),
           const SizedBox(height: 16),
           VPrimaryButton.tone(
             key: const ValueKey('rate-button'),
@@ -1015,23 +972,7 @@ class _Scores extends StatelessWidget {
         ],
       );
     } else {
-      below = Column(
-        key: const ValueKey('album-ruler'),
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          RulerCells(
-            selected: mineScore,
-            selectedColor: tone,
-            fill: fill,
-            afterNumberColor: c.ink4,
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: VMono(l10n.albumBarsCommunity, size: 10, tracking: 0.06, color: c.ink4),
-          ),
-        ],
-      );
+      below = const SizedBox(key: ValueKey('album-rated'), width: double.infinity);
     }
 
     return Container(
@@ -1049,9 +990,15 @@ class _Scores extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          // Las barras de la comunidad van en tinta al 35 % (como el
-          // prototipo) para no competir con la regla del tono de la portada.
-          Histogram10(counts: s?.hist ?? const {}, height: 44, color: c.inkA(0.35)),
+          // Las barras de la comunidad van en tinta al 35 %; la de mi nota,
+          // en el tono de la portada.
+          Histogram10(
+            counts: s?.hist ?? const {},
+            height: 44,
+            color: c.inkA(0.35),
+            highlight: mineScore,
+            highlightColor: tone,
+          ),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 220),
             layoutBuilder: (current, previous) => Stack(
@@ -1168,19 +1115,17 @@ class _CheckSquare extends StatelessWidget {
   }
 }
 
-/// "Calificado por": cuántos amigos, su promedio en el tono de la portada y
-/// sus fotos de 56 con la nota debajo. Tocar una foto abre esa calificación.
+/// "Calificado por": cuántos amigos y sus fotos de 56 con la nota debajo.
+/// Tocar una foto abre esa calificación.
 class _RatedBy extends StatelessWidget {
-  const _RatedBy({required this.friends, required this.tone});
+  const _RatedBy({required this.friends});
 
   final List<RatingEntry> friends;
-  final Color tone;
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
     final l10n = context.l10n;
-    final average = friends.fold<int>(0, (sum, e) => sum + e.score) / friends.length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1188,17 +1133,6 @@ class _RatedBy extends StatelessWidget {
           l10n.ratedBy,
           subtitle: l10n.countFriends(friends.length),
           padding: const EdgeInsets.fromLTRB(VSpace.page, 34, VSpace.page, 0),
-          trailing: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              VMono(l10n.albumFriendsAverage, size: 10),
-              Text(
-                Score.formatAverage(average, l10n.localeName),
-                key: const ValueKey('friends-average'),
-                style: VText.display(34, weight: 700, height: 1, tracking: 0, color: tone),
-              ),
-            ],
-          ),
         ),
         Container(
           margin: const EdgeInsets.fromLTRB(VSpace.page, 16, VSpace.page, 0),
@@ -1239,10 +1173,6 @@ class _RatedBy extends StatelessWidget {
               );
             },
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(VSpace.page, 12, VSpace.page, 0),
-          child: VMono(l10n.albumTapPhoto, size: 10, tracking: 0.06, color: c.ink4),
         ),
       ],
     );

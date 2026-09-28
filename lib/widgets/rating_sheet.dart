@@ -11,6 +11,7 @@ import '../util/errors.dart';
 import 'album_cover.dart';
 import 'line_field.dart';
 import 'rating_bars.dart';
+import 'same_score_sheet.dart';
 import 'sheet.dart';
 import 'v_buttons.dart';
 import 'v_icons.dart';
@@ -44,7 +45,8 @@ Future<RatingSheetResult?> showRatingSheet(
 /// Calificar: el disco arriba (portada de 48, título y "Artista · año", ×),
 /// el número grande en énfasis con "Tu nota" y el veredicto, las 10 barras
 /// (se tocan o se desliza el dedo), el comentario opcional, "Guardar mi
-/// nota" y, si ya había nota, "Borrar nota". La primera vez no hay barra
+/// nota", "Otros discos calificados con N" (abre la lista de mis discos
+/// con esa nota) y, si ya había nota, "Borrar nota". La primera vez no hay barra
 /// elegida: el número es "—" y guardar se activa al elegir una.
 class RatingSheet extends StatefulWidget {
   const RatingSheet({
@@ -74,6 +76,24 @@ class _RatingSheetState extends State<RatingSheet> {
   int? _score;
   late final TextEditingController _note;
   bool _busy = false;
+
+  /// Mis notas, para "Otros discos calificados con N" (null mientras
+  /// cargan o si fallan).
+  List<RatingEntry>? _mine;
+  bool _mineAsked = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_mineAsked) return;
+    _mineAsked = true;
+    final me = CurrentUser.maybeOf(context);
+    final services = ServicesScope.maybeOf(context);
+    if (me == null || services == null) return;
+    services.ratings.fetchUserRatings(me.uid).then((list) {
+      if (mounted) setState(() => _mine = list);
+    }, onError: (_) {});
+  }
 
   @override
   void initState() {
@@ -262,6 +282,15 @@ class _RatingSheetState extends State<RatingSheet> {
                   busy: _busy,
                   onPressed: score == null ? null : _save,
                 ),
+              if (score != null) ...[
+                const SizedBox(height: 8),
+                SameScoreButton(
+                  score: score,
+                  mine: _mine,
+                  except: album.id,
+                  tone: widget.tone,
+                ),
+              ],
               if (widget.existing != null) ...[
                 const SizedBox(height: 4),
                 Pressable(

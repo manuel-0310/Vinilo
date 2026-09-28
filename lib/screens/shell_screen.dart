@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
 import '../services/services.dart';
+import '../util/tab_reselect.dart';
 import '../widgets/v_bottom_bar.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
@@ -29,6 +30,10 @@ class ShellScreen extends StatefulWidget {
 class _ShellScreenState extends State<ShellScreen> {
   int _index = 0;
 
+  /// Volver a tocar la pestaña activa: Inicio y Perfil suben hasta arriba;
+  /// Buscar sube, limpia la búsqueda o abre el teclado.
+  final List<TabReselect> _reselect = List.generate(3, (_) => TabReselect());
+
   bool _checkedSearchFields = false;
 
   @override
@@ -53,6 +58,9 @@ class _ShellScreenState extends State<ShellScreen> {
   void dispose() {
     ShellScreen.tabRequests.removeListener(_onTabRequest);
     ShellScreen.actionRequests.removeListener(_onActionRequest);
+    for (final r in _reselect) {
+      r.dispose();
+    }
     super.dispose();
   }
 
@@ -73,7 +81,10 @@ class _ShellScreenState extends State<ShellScreen> {
   }
 
   void _select(int i) {
-    if (i == _index) return;
+    if (i == _index) {
+      _reselect[i].fire();
+      return;
+    }
     HapticFeedback.selectionClick();
     setState(() => _index = i);
   }
@@ -86,9 +97,9 @@ class _ShellScreenState extends State<ShellScreen> {
       body: IndexedStack(
         index: _index,
         children: [
-          const HomeScreen(),
-          const SearchScreen(),
-          ProfileScreen(uid: me.uid, isMe: true),
+          HomeScreen(reselect: _reselect[0]),
+          SearchScreen(reselect: _reselect[1]),
+          ProfileScreen(uid: me.uid, isMe: true, reselect: _reselect[2]),
         ],
       ),
       // La barra del rediseño: texto con una raya de énfasis sobre la

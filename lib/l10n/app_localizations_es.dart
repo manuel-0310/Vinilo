@@ -1254,6 +1254,48 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get affinityAll => 'Todos';
+
+  @override
+  String get affinityMatch => 'Coinciden';
+
+  @override
+  String get affinityDiffer => 'Discrepan';
+
+  @override
+  String get affinityMostSimilar => 'Más parecidos primero';
+
+  @override
+  String get affinityMostDifferent => 'Más distintos primero';
+
+  @override
+  String get affinityYou => 'Tú';
+
+  @override
+  String get affinitySameScore => 'Misma nota';
+
+  @override
+  String affinityPointsApart(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'A $n puntos',
+      one: 'A 1 punto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get affinityEmptyTitle => 'Nada por aquí';
+
+  @override
+  String get affinityEmptyMatch => 'No coinciden en ningún disco todavía.';
+
+  @override
+  String get affinityEmptyDiffer =>
+      'No discrepan en ningún disco: sus notas siempre están a 1 punto o menos.';
+
+  @override
   String get favoritesPickerTitle => 'Tus discos';
 
   @override
@@ -1383,6 +1425,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get threadTitle => 'Respuestas';
+
+  @override
+  String threadRatedWhen(String when) {
+    return 'Calificó $when';
+  }
+
+  @override
+  String threadScoreOutOf(String label) {
+    return '$label · de 10';
+  }
+
+  @override
+  String threadRepliesCount(int n) {
+    return 'Respuestas · $n';
+  }
 
   @override
   String countReplies(int n) {
@@ -1721,16 +1778,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get albumBarsCommunity => 'Barras: comunidad';
-
-  @override
   String get albumHoldToAdd => 'Mantén pulsada para agregar';
-
-  @override
-  String get albumFriendsAverage => 'Promedio amigos';
-
-  @override
-  String get albumTapPhoto => 'Toca una foto para ver su calificación';
 
   @override
   String get albumFeaturedComments => 'Comentarios destacados';
@@ -1754,6 +1802,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get rateSheetSaveMine => 'Guardar mi nota';
+
+  @override
+  String rateCompare(int n) {
+    return 'Otros discos calificados con $n';
+  }
+
+  @override
+  String get rateCompareNone => 'ninguno';
+
+  @override
+  String get rateCompareTitle => 'Tus discos con';
+
+  @override
+  String rateCompareEmpty(int n) {
+    return 'Aún no has calificado ningún disco con $n.';
+  }
 
   @override
   String pickerOverlineTrack(String name) {

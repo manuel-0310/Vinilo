@@ -42,11 +42,21 @@ La app quedó rediseñada para ser **idéntica al prototipo del diseñador** (`V
 - **Barra inferior:** `VBottomBar` (84 de alto, línea arriba, activa en tinta 600 con una raya de énfasis de 32×2). La barra nativa con Liquid Glass ya no se usa (ver más abajo).
 - **Calificar:**
   - `RatingSheet` usa `RatingBars` con las fórmulas de la especificación (220 ms ease-out, se toca o se arrastra, un háptico por columna). La primera vez arranca sin barra elegida.
-  - En el disco con nota, la regla (`RulerCells` sin `onTap`) solo muestra la nota: se cambia únicamente con "Tu nota · editar", que abre la hoja (desde el 2026-09-25).
+  - En el disco ya no hay regla ni números bajo la gráfica (desde el 2026-09-28): `Histogram10` pinta las barras de la comunidad en tinta al 35 % y la de mi nota en el tono de la portada (`highlight`/`highlightColor`). La nota se cambia únicamente con "Tu nota · editar", que abre la hoja.
+  - La hoja tiene, bajo "Guardar mi nota", "Otros discos calificados con N" (`SameScoreButton`, `rating-compare`): abre "Tus discos con N" (`same_score_sheet.dart`, `ratedWith` en `models/same_score.dart`).
   - "Borrar nota" oculta la nota y ofrece "Deshacer" 4 s; solo se borra de Firestore si el aviso se cierra sin deshacer.
   - Nada de estrellas.
-- **Barras fijas:** en el disco y en la lista, una barra (volver, nombre, compartir) aparece al pasar la portada o la franja. En el perfil, el nombre con "N discos · promedio" y las pestañas quedan fijos al bajar, en las dos pestañas.
+- **Barras fijas:** en el disco, la barra de arriba (volver, compartir, listas; `_TopBar`, `album-bar`) está siempre y la portada empieza debajo; al pasar la portada suma la miniatura con el nombre. En la lista, la barra (volver, nombre, compartir) aparece al pasar la franja. En el perfil, el nombre con "N discos · promedio" y las pestañas quedan fijos al bajar, en las dos pestañas.
 - **Web** (`functions/web.js`, `hosting/`): el mismo sistema, a 1200 de ancho con márgenes de 48, una franja de 6 px del color de la portada (calculado en el navegador con la misma cuenta que la app) y todo apilado por debajo de 820 px.
+
+## Ronda 7 (2026-09-28)
+
+- Inicio: "Popular esta semana" y "Actividad de tus amigos" son subtítulos grandes (`VSectionHeader(big: true)`). Tocar una actividad abre el detalle de esa nota (`openThread`), no el disco.
+- Volver a tocar la pestaña activa (`TabReselect` en `util/tab_reselect.dart`, uno por pestaña en `ShellScreen`): Inicio y Perfil suben hasta arriba; Buscar sube, luego borra la búsqueda y, con el campo vacío, abre el teclado (`searchReselect`).
+- "Calificado por" del disco: solo el título, "N amigos" y las fotos (se quitaron "Promedio amigos" y "Toca una foto…").
+- Detalle de una nota (`rating_thread_screen.dart`, prototipo "Respuestas v2 portada" de `Vinilo Nuevas.dc.html`): portada arriba con el título y "Artista · año →" (abren el disco), quién calificó con "Calificó hace N", la nota en 112 con "Veredicto · de 10", el comentario en cita, "Me gusta · N" y "Responder"; luego "Respuestas · N".
+- Afinidad musical (`affinity_screen.dart`, `openAffinity`): se abre tocando el bloque de afinidad o el "+N" en el perfil ajeno. Pestañas Todos / Coinciden (≤1 punto) / Discrepan (≥2) y orden que se alterna (`affinityView` en `models/affinity.dart`).
+- Llaves nuevas: `rating-compare`, `rating-compare-count`, `compare-sheet`, `compare-N`, `compare-empty`, `compare-close`, `affinity-open`, `affinity-percent`, `affinity-all|match|differ`, `affinity-sort`, `affinity-row-N`, `affinity-empty`, `thread-score-N`. Ya no existen `album-buttons`, `album-ruler` ni `friends-average`.
 
 ## Estado técnico (probado el 2026-09-21; rondas 3, 4 y 5 el 2026-09-22; ronda 6 el 2026-09-24)
 

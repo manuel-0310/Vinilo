@@ -53,7 +53,8 @@ class VMono extends StatelessWidget {
 }
 
 /// Encabezado de sección: etiqueta mono a la izquierda, acción a la derecha
-/// (en énfasis si `accentAction`), línea arriba y relleno de 10.
+/// (en énfasis si `accentAction`), línea arriba y relleno de 10. Con `big`,
+/// la etiqueta es un subtítulo condensado de 28 (las secciones del inicio).
 class VSectionHeader extends StatelessWidget {
   const VSectionHeader(
     this.label, {
@@ -64,9 +65,11 @@ class VSectionHeader extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 10),
     this.line = true,
     this.actionKey,
+    this.big = false,
   });
 
   final String label;
+  final bool big;
 
   /// Texto de la derecha: "Ver todo" (acción) o un dato ("2 nuevas").
   final String? action;
@@ -85,17 +88,30 @@ class VSectionHeader extends StatelessWidget {
           ? BoxDecoration(border: Border(top: BorderSide(color: c.line)))
           : null,
       child: Row(
+        crossAxisAlignment: big ? CrossAxisAlignment.end : CrossAxisAlignment.center,
         children: [
-          Expanded(child: VMono(label, maxLines: 1)),
+          Expanded(
+            child: big
+                ? Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: VText.display(28, weight: 700, stretch: 70, height: 1),
+                  )
+                : VMono(label, maxLines: 1),
+          ),
           if (action != null)
             Pressable(
               key: actionKey,
               onTap: onAction,
               builder: (context, pressed) => Opacity(
                 opacity: pressed ? 0.6 : 1,
-                child: VMono(
-                  action!,
-                  color: onAction != null && accentAction ? c.accentText : c.ink3,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 12, bottom: big ? 3 : 0),
+                  child: VMono(
+                    action!,
+                    color: onAction != null && accentAction ? c.accentText : c.ink3,
+                  ),
                 ),
               ),
             ),

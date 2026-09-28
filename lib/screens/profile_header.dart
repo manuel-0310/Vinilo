@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 import '../models/affinity.dart';
+import '../models/follow.dart';
 import '../models/rating.dart';
 import '../models/user_profile.dart';
 import '../theme/score.dart';
@@ -208,7 +209,7 @@ class ProfileHeader extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(VSpace.page, isMe ? 16 : 18, VSpace.page, 0),
           child: _Stats(profile: profile, ratings: ratings),
         ),
-        if (!isMe) _Affinity(theirs: ratings, mine: mine),
+        if (!isMe) _Affinity(person: profile.person, theirs: ratings, mine: mine),
       ],
     );
   }
@@ -328,10 +329,12 @@ class _Stats extends StatelessWidget {
   }
 }
 
-/// "95 %" en 80 con "Afinidad musical" y "Según N discos en común".
+/// "95 %" en 80 con "Afinidad musical" y "Según N discos en común". Tocarlo
+/// (o el "+N" de las miniaturas) abre la pantalla de afinidad.
 class _Affinity extends StatelessWidget {
-  const _Affinity({required this.theirs, required this.mine});
+  const _Affinity({required this.person, required this.theirs, required this.mine});
 
+  final PersonInfo person;
   final List<RatingEntry>? theirs;
   final Future<List<RatingEntry>>? mine;
 
@@ -349,48 +352,56 @@ class _Affinity extends StatelessWidget {
             : affinityBetween(mineList, theirList);
         final percent = result?.percent;
         final albums = result?.albums ?? const <CommonAlbum>[];
+        final VoidCallback? openDetail = percent == null
+            ? null
+            : () => openAffinity(context, person: person, percent: percent, albums: albums);
         return Padding(
           key: const ValueKey('affinity'),
           padding: const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    percent == null ? '—' : '$percent%',
-                    style: VText.display(
-                      80,
-                      weight: 800,
-                      height: 0.8,
-                      tracking: 0,
-                      color: percent == null ? c.inkA(0.28) : c.accentText,
+              GestureDetector(
+                key: const ValueKey('affinity-open'),
+                behavior: HitTestBehavior.opaque,
+                onTap: openDetail,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      percent == null ? '—' : '$percent%',
+                      style: VText.display(
+                        80,
+                        weight: 800,
+                        height: 0.8,
+                        tracking: 0,
+                        color: percent == null ? c.inkA(0.28) : c.accentText,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        VMono(l.affinity, color: c.accentText),
-                        const SizedBox(height: 4),
-                        Text(
-                          result == null
-                              ? ''
-                              : percent == null
-                                  ? l.affinityNone
-                                  : l.affinityBasis(result.common),
-                          style: VText.ui(13.5, color: c.ink2),
-                        ),
-                      ],
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          VMono(l.affinity, color: c.accentText),
+                          const SizedBox(height: 4),
+                          Text(
+                            result == null
+                                ? ''
+                                : percent == null
+                                    ? l.affinityNone
+                                    : '${l.affinityBasis(result.common)} →',
+                            style: VText.ui(13.5, color: c.ink2),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               if (albums.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                CommonAlbumsRow(albums: albums),
+                CommonAlbumsRow(albums: albums, onMore: openDetail),
               ],
             ],
           ),
@@ -404,9 +415,12 @@ class _Affinity extends StatelessWidget {
 /// separación de 2, hasta 6; si hay más, una última celda "+N". Tocar una
 /// abre el disco. Si no caben todas a lo ancho, se muestran las que caben.
 class CommonAlbumsRow extends StatelessWidget {
-  const CommonAlbumsRow({super.key, required this.albums});
+  const CommonAlbumsRow({super.key, required this.albums, this.onMore});
 
   final List<CommonAlbum> albums;
+
+  /// Tocar "+N" (la afinidad completa).
+  final VoidCallback? onMore;
 
   static const double size = 40;
   static const double gap = 2;
@@ -435,13 +449,17 @@ class CommonAlbumsRow extends StatelessWidget {
             ],
             if (more > 0) ...[
               if (shown > 0) const SizedBox(width: gap),
-              Container(
-                key: const ValueKey('common-more'),
-                width: size,
-                height: size,
-                alignment: Alignment.center,
-                color: c.surface,
-                child: VMono('+$more', size: 10, tracking: 0.04, color: c.ink2, maxLines: 1),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onMore,
+                child: Container(
+                  key: const ValueKey('common-more'),
+                  width: size,
+                  height: size,
+                  alignment: Alignment.center,
+                  color: c.surface,
+                  child: VMono('+$more', size: 10, tracking: 0.04, color: c.ink2, maxLines: 1),
+                ),
               ),
             ],
           ],

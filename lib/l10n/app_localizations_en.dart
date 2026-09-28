@@ -1253,6 +1253,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get affinityAll => 'All';
+
+  @override
+  String get affinityMatch => 'Agree';
+
+  @override
+  String get affinityDiffer => 'Differ';
+
+  @override
+  String get affinityMostSimilar => 'Most similar first';
+
+  @override
+  String get affinityMostDifferent => 'Most different first';
+
+  @override
+  String get affinityYou => 'You';
+
+  @override
+  String get affinitySameScore => 'Same score';
+
+  @override
+  String affinityPointsApart(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n points apart',
+      one: '1 point apart',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get affinityEmptyTitle => 'Nothing here';
+
+  @override
+  String get affinityEmptyMatch => 'You don\'t agree on any album yet.';
+
+  @override
+  String get affinityEmptyDiffer =>
+      'You don\'t differ on any album: your scores are always within 1 point.';
+
+  @override
   String get favoritesPickerTitle => 'Your albums';
 
   @override
@@ -1379,6 +1421,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get threadTitle => 'Replies';
+
+  @override
+  String threadRatedWhen(String when) {
+    return 'Rated $when';
+  }
+
+  @override
+  String threadScoreOutOf(String label) {
+    return '$label · out of 10';
+  }
+
+  @override
+  String threadRepliesCount(int n) {
+    return 'Replies · $n';
+  }
 
   @override
   String countReplies(int n) {
@@ -1716,16 +1773,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get albumBarsCommunity => 'Bars: community';
-
-  @override
   String get albumHoldToAdd => 'Press and hold to add';
-
-  @override
-  String get albumFriendsAverage => 'Friends\' average';
-
-  @override
-  String get albumTapPhoto => 'Tap a photo to see their rating';
 
   @override
   String get albumFeaturedComments => 'Featured comments';
@@ -1749,6 +1797,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rateSheetSaveMine => 'Save my rating';
+
+  @override
+  String rateCompare(int n) {
+    return 'Other albums you gave a $n';
+  }
+
+  @override
+  String get rateCompareNone => 'none';
+
+  @override
+  String get rateCompareTitle => 'Your albums with';
+
+  @override
+  String rateCompareEmpty(int n) {
+    return 'You haven\'t given any album a $n yet.';
+  }
 
   @override
   String pickerOverlineTrack(String name) {

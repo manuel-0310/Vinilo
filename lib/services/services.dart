@@ -79,8 +79,10 @@ class ServicesScope extends InheritedWidget {
 
   final Services services;
 
-  static Services of(BuildContext context) =>
-      context.getInheritedWidgetOfExactType<ServicesScope>()!.services;
+  static Services of(BuildContext context) => maybeOf(context)!;
+
+  static Services? maybeOf(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<ServicesScope>()?.services;
 
   @override
   bool updateShouldNotify(ServicesScope oldWidget) =>

@@ -8,6 +8,7 @@ import '../services/services.dart';
 import '../services/user_repo.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
+import '../util/tab_reselect.dart';
 import '../widgets/pull_stretch.dart';
 import '../widgets/v_buttons.dart';
 import '../widgets/v_icons.dart';
@@ -30,10 +31,14 @@ class ProfileScreen extends StatefulWidget {
     required this.uid,
     required this.isMe,
     this.standalone = false,
+    this.reselect,
   });
 
   final String uid;
   final bool isMe;
+
+  /// Volver a tocar "Perfil" en la barra sube hasta arriba.
+  final TabReselect? reselect;
 
   /// True cuando se abre como ruta propia (perfil de otra persona).
   final bool standalone;
@@ -71,7 +76,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _scroll.addListener(_onScroll);
+    widget.reselect?.addListener(_toTop);
   }
+
+  @override
+  void didUpdateWidget(ProfileScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.reselect != widget.reselect) {
+      oldWidget.reselect?.removeListener(_toTop);
+      widget.reselect?.addListener(_toTop);
+    }
+  }
+
+  void _toTop() => scrollToTop(_scroll);
 
   @override
   void didChangeDependencies() {
@@ -93,6 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
+    widget.reselect?.removeListener(_toTop);
     _listSearch.dispose();
     _scroll.dispose();
     _collapsed.dispose();

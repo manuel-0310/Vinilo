@@ -777,6 +777,24 @@
       }
     }
   },
+  "affinityAll": "Todos",
+  "affinityMatch": "Coinciden",
+  "affinityDiffer": "Discrepan",
+  "affinityMostSimilar": "Más parecidos primero",
+  "affinityMostDifferent": "Más distintos primero",
+  "affinityYou": "Tú",
+  "affinitySameScore": "Misma nota",
+  "affinityPointsApart": "{n, plural, =1{A 1 punto} other{A {n} puntos}}",
+  "@affinityPointsApart": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "affinityEmptyTitle": "Nada por aquí",
+  "affinityEmptyMatch": "No coinciden en ningún disco todavía.",
+  "affinityEmptyDiffer": "No discrepan en ningún disco: sus notas siempre están a 1 punto o menos.",
   "favoritesPickerTitle": "Tus discos",
   "favoritesPickerHint": "Elige hasta tres, en el orden que quieras.",
   "favoritesSearchHint": "Buscar en tus discos",
@@ -873,6 +891,30 @@
     }
   },
   "threadTitle": "Respuestas",
+  "threadRatedWhen": "Calificó {when}",
+  "@threadRatedWhen": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "threadScoreOutOf": "{label} · de 10",
+  "@threadScoreOutOf": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "threadRepliesCount": "Respuestas · {n}",
+  "@threadRepliesCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "countReplies": "{n, plural, =0{Sin respuestas} =1{1 respuesta} other{{n} respuestas}}",
   "@countReplies": {
     "placeholders": {
@@ -1142,10 +1184,7 @@
       }
     }
   },
-  "albumBarsCommunity": "Barras: comunidad",
   "albumHoldToAdd": "Mantén pulsada para agregar",
-  "albumFriendsAverage": "Promedio amigos",
-  "albumTapPhoto": "Toca una foto para ver su calificación",
   "albumFeaturedComments": "Comentarios destacados",
   "albumCommentsShown": "{shown} de {total, plural, =1{1 comentario} other{{total} comentarios}}",
   "@albumCommentsShown": {
@@ -1161,6 +1200,24 @@
   "albumSeeArtist": "Ver artista",
   "rateSheetHint": "Toca o desliza",
   "rateSheetSaveMine": "Guardar mi nota",
+  "rateCompare": "Otros discos calificados con {n}",
+  "@rateCompare": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rateCompareNone": "ninguno",
+  "rateCompareTitle": "Tus discos con",
+  "rateCompareEmpty": "Aún no has calificado ningún disco con {n}.",
+  "@rateCompareEmpty": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pickerOverlineTrack": "Canción · {name}",
   "@pickerOverlineTrack": {
     "placeholders": {

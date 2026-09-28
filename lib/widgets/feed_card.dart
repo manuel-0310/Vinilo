@@ -46,7 +46,8 @@ class FeedCard extends StatelessWidget {
     void openProfile() => openUser(context, entry.user.uid);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => openAlbum(context, entry.album, heroTag: heroTag),
+      // Tocar una actividad abre esa calificación (su hilo), no el disco.
+      onTap: () => openThread(context, ratingId: entry.id, initial: entry),
       child: Container(
         // Abajo 16 menos los 8 que la fila de acciones reparte arriba y
         // abajo para agrandar el toque.
@@ -214,10 +215,14 @@ class RepliesButton extends StatelessWidget {
 /// `showLabel` dice "Te gusta" o "Me gusta" (la actividad); si no, cuántos
 /// "me gusta" tiene (los comentarios).
 class LikeButton extends StatelessWidget {
-  const LikeButton({super.key, required this.entry, this.showLabel = false});
+  const LikeButton({super.key, required this.entry, this.showLabel = false, this.showCount = false});
 
   final RatingEntry entry;
   final bool showLabel;
+
+  /// Con `showLabel`, suma cuántos hay: "Me gusta · 3" (el detalle de la
+  /// nota).
+  final bool showCount;
 
   @override
   Widget build(BuildContext context) {
@@ -226,8 +231,9 @@ class LikeButton extends StatelessWidget {
     final me = CurrentUser.maybeOf(context);
     final liked = me != null && entry.likedByMe(me.uid);
     final color = liked ? c.accentText : c.ink3;
+    final label = liked ? l.feedLiked : l.feedLike;
     final text = showLabel
-        ? (liked ? l.feedLiked : l.feedLike)
+        ? (showCount && entry.likes > 0 ? '$label · ${entry.likes}' : label)
         : (entry.likes > 0 ? '${entry.likes}' : null);
     return _MonoAction(
       onTap: me == null

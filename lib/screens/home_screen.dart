@@ -8,6 +8,7 @@ import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
 import '../util/streams.dart';
+import '../util/tab_reselect.dart';
 import '../widgets/album_strip.dart';
 import '../widgets/bell_button.dart';
 import '../widgets/feed_card.dart';
@@ -18,13 +19,42 @@ import 'routes.dart';
 /// "Ver todo") y "Actividad de tus amigos" (con cuántas notas nuevas hay de
 /// las últimas 24 h).
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.reselect});
+
+  /// Volver a tocar "Inicio" en la barra sube hasta arriba.
+  final TabReselect? reselect;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final ScrollController _scroll = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.reselect?.addListener(_toTop);
+  }
+
+  @override
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.reselect != widget.reselect) {
+      oldWidget.reselect?.removeListener(_toTop);
+      widget.reselect?.addListener(_toTop);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.reselect?.removeListener(_toTop);
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _toTop() => scrollToTop(_scroll);
+
   Stream<List<AlbumStats>>? _popular;
 
   // La actividad depende de a quién sigo. Es un solo stream que se escucha
@@ -55,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final l = context.l10n;
     return Scaffold(
       body: CustomScrollView(
+        controller: _scroll,
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
@@ -92,6 +123,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       VSectionHeader(
                         l.homePopularWeek,
+                        big: true,
+                        padding: const EdgeInsets.fromLTRB(VSpace.page, 18, VSpace.page, 12),
                         action: l.seeAll,
                         onAction: () => openPopular(context),
                         actionKey: const ValueKey('popular-all'),
@@ -125,6 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   SliverToBoxAdapter(
                     child: VSectionHeader(
                       l.homeFriendsActivity,
+                      big: true,
+                      padding: const EdgeInsets.fromLTRB(VSpace.page, 18, VSpace.page, 12),
                       action: fresh > 0 ? l.homeActivityNew(fresh) : null,
                       actionKey: const ValueKey('feed-new'),
                     ),

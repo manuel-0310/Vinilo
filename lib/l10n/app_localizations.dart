@@ -2036,6 +2036,72 @@ abstract class AppLocalizations {
   /// **'{n, plural, =1{Según 1 disco en común} other{Según {n} discos en común}}'**
   String affinityBasis(int n);
 
+  /// No description provided for @affinityAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos'**
+  String get affinityAll;
+
+  /// No description provided for @affinityMatch.
+  ///
+  /// In es, this message translates to:
+  /// **'Coinciden'**
+  String get affinityMatch;
+
+  /// No description provided for @affinityDiffer.
+  ///
+  /// In es, this message translates to:
+  /// **'Discrepan'**
+  String get affinityDiffer;
+
+  /// No description provided for @affinityMostSimilar.
+  ///
+  /// In es, this message translates to:
+  /// **'Más parecidos primero'**
+  String get affinityMostSimilar;
+
+  /// No description provided for @affinityMostDifferent.
+  ///
+  /// In es, this message translates to:
+  /// **'Más distintos primero'**
+  String get affinityMostDifferent;
+
+  /// No description provided for @affinityYou.
+  ///
+  /// In es, this message translates to:
+  /// **'Tú'**
+  String get affinityYou;
+
+  /// No description provided for @affinitySameScore.
+  ///
+  /// In es, this message translates to:
+  /// **'Misma nota'**
+  String get affinitySameScore;
+
+  /// No description provided for @affinityPointsApart.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{A 1 punto} other{A {n} puntos}}'**
+  String affinityPointsApart(int n);
+
+  /// No description provided for @affinityEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nada por aquí'**
+  String get affinityEmptyTitle;
+
+  /// No description provided for @affinityEmptyMatch.
+  ///
+  /// In es, this message translates to:
+  /// **'No coinciden en ningún disco todavía.'**
+  String get affinityEmptyMatch;
+
+  /// No description provided for @affinityEmptyDiffer.
+  ///
+  /// In es, this message translates to:
+  /// **'No discrepan en ningún disco: sus notas siempre están a 1 punto o menos.'**
+  String get affinityEmptyDiffer;
+
   /// No description provided for @favoritesPickerTitle.
   ///
   /// In es, this message translates to:
@@ -2227,6 +2293,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Respuestas'**
   String get threadTitle;
+
+  /// No description provided for @threadRatedWhen.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificó {when}'**
+  String threadRatedWhen(String when);
+
+  /// No description provided for @threadScoreOutOf.
+  ///
+  /// In es, this message translates to:
+  /// **'{label} · de 10'**
+  String threadScoreOutOf(String label);
+
+  /// No description provided for @threadRepliesCount.
+  ///
+  /// In es, this message translates to:
+  /// **'Respuestas · {n}'**
+  String threadRepliesCount(int n);
 
   /// No description provided for @countReplies.
   ///
@@ -2750,29 +2834,11 @@ abstract class AppLocalizations {
   /// **'Comunidad · {n, plural, =1{1 nota} other{{n} notas}}'**
   String albumCommunity(int n);
 
-  /// No description provided for @albumBarsCommunity.
-  ///
-  /// In es, this message translates to:
-  /// **'Barras: comunidad'**
-  String get albumBarsCommunity;
-
   /// No description provided for @albumHoldToAdd.
   ///
   /// In es, this message translates to:
   /// **'Mantén pulsada para agregar'**
   String get albumHoldToAdd;
-
-  /// No description provided for @albumFriendsAverage.
-  ///
-  /// In es, this message translates to:
-  /// **'Promedio amigos'**
-  String get albumFriendsAverage;
-
-  /// No description provided for @albumTapPhoto.
-  ///
-  /// In es, this message translates to:
-  /// **'Toca una foto para ver su calificación'**
-  String get albumTapPhoto;
 
   /// No description provided for @albumFeaturedComments.
   ///
@@ -2803,6 +2869,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Guardar mi nota'**
   String get rateSheetSaveMine;
+
+  /// No description provided for @rateCompare.
+  ///
+  /// In es, this message translates to:
+  /// **'Otros discos calificados con {n}'**
+  String rateCompare(int n);
+
+  /// No description provided for @rateCompareNone.
+  ///
+  /// In es, this message translates to:
+  /// **'ninguno'**
+  String get rateCompareNone;
+
+  /// No description provided for @rateCompareTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus discos con'**
+  String get rateCompareTitle;
+
+  /// No description provided for @rateCompareEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no has calificado ningún disco con {n}.'**
+  String rateCompareEmpty(int n);
 
   /// No description provided for @pickerOverlineTrack.
   ///

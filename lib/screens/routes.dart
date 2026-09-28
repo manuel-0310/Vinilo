@@ -1,12 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show ScaffoldMessenger, SnackBar, Text;
 
+import '../models/affinity.dart';
 import '../models/album.dart';
 import '../models/artist.dart';
+import '../models/follow.dart';
 import '../models/music_list.dart';
 import '../models/rating.dart';
 import '../l10n/l10n.dart';
 import '../services/services.dart';
+import 'affinity_screen.dart';
 import 'album_screen.dart';
 import 'artist_screen.dart';
 import 'comments_screen.dart';
@@ -112,6 +115,20 @@ Future<void> openComments(
 Future<void> openSettings(BuildContext context) {
   return Navigator.of(context).push(
     CupertinoPageRoute(builder: (_) => const SettingsScreen()),
+  );
+}
+
+/// Afinidad musical con otra persona: los discos en común con las dos notas.
+Future<void> openAffinity(
+  BuildContext context, {
+  required PersonInfo person,
+  required int percent,
+  required List<CommonAlbum> albums,
+}) {
+  return Navigator.of(context).push(
+    CupertinoPageRoute(
+      builder: (_) => AffinityScreen(person: person, percent: percent, albums: albums),
+    ),
   );
 }
 

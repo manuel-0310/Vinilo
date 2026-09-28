@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,12 +11,13 @@ import '../models/user_profile.dart';
 import '../services/services.dart';
 import '../share_cards/share_card_data.dart';
 import '../share_cards/share_specs.dart';
+import '../theme/score.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
 import '../util/format.dart';
 import '../util/share_links.dart';
 import '../widgets/album_cover.dart';
-import '../widgets/comment_card.dart';
+import '../widgets/feed_card.dart';
 import '../widgets/line_field.dart';
 import '../widgets/mention_text.dart';
 import '../widgets/share_button.dart';
@@ -26,8 +29,10 @@ import '../widgets/v_icons.dart';
 import '../widgets/v_sections.dart';
 import 'routes.dart';
 
-/// El hilo de una nota: el disco y la nota arriba, las respuestas debajo y
-/// el campo para responder fijo abajo. Las respuestas son de un solo nivel:
+/// El detalle de una nota: la portada del disco arriba (con su título y
+/// "Artista · año →", que abren el disco), quién calificó con la nota en
+/// grande y su comentario, "Respuestas · N" debajo y el campo para
+/// responder fijo abajo. Las respuestas son de un solo nivel:
 /// "Responder" en una respuesta se la dirige a su autora con su @ al
 /// principio. Mantener pulsada una respuesta propia (o cualquiera, si la
 /// nota es mía) ofrece borrarla.
@@ -252,9 +257,10 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
           return Column(
             children: [
               Expanded(
-                child: SafeArea(
-                  bottom: false,
-                  child: StreamBuilder<List<Reply>>(
+                // Sin SafeArea arriba: la portada llega al borde y sus botones
+                // se apartan de la barra de estado por su cuenta.
+                child: Builder(
+                  builder: (context) => StreamBuilder<List<Reply>>(
                     stream: _replies,
                     builder: (context, repliesSnap) {
                       final replies = repliesSnap.data;
@@ -264,47 +270,62 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
                         physics: const AlwaysScrollableScrollPhysics(),
                         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                         slivers: [
-                          SliverToBoxAdapter(
-                            child: VPageHeader(
-                              title: l10n.threadTitle,
-                              titleKey: const ValueKey('thread-title'),
-                              subtitle: replies == null ? l10n.loading : l10n.countReplies(replies.length),
-                              subtitleKey: const ValueKey('thread-count'),
-                              topTrailing: entry == null
-                                  ? null
-                                  : ShareButton(
-                                      key: const ValueKey('share-rating'),
-                                      style: VIconButtonStyle.bordered,
-                                      message: (l) => shareRatingMessage(entry, l, mine: entry.uid == me.uid),
-                                      cards: () => _shareCards(entry, me),
-                                    ),
+                          if (entry != null) ...[
+                            SliverToBoxAdapter(
+                              child: _ThreadCover(
+                                entry: entry,
+                                share: ShareButton(
+                                  key: const ValueKey('share-rating'),
+                                  style: VIconButtonStyle.filled,
+                                  message: (l) => shareRatingMessage(entry, l, mine: entry.uid == me.uid),
+                                  cards: () => _shareCards(entry, me),
+                                ),
+                              ),
                             ),
-                          ),
-                          if (entry != null)
                             SliverToBoxAdapter(
                               child: _ThreadNote(
                                 entry: entry,
                                 tone: tone,
                                 onReply: () => _replyTo(null),
                               ),
-                            )
-                          else if (gone)
+                            ),
                             SliverToBoxAdapter(
-                              child: _Lined(
-                                child: VEmptyState(
-                                  key: const ValueKey('thread-gone'),
-                                  title: l10n.threadRatingGoneTitle,
-                                  message: l10n.threadRatingGoneBody,
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(VSpace.page, 12, VSpace.page, 8),
+                                child: VMono(
+                                  replies == null ? l10n.loading : l10n.threadRepliesCount(replies.length),
+                                  key: const ValueKey('thread-count'),
                                 ),
                               ),
-                            )
-                          else
-                            const SliverToBoxAdapter(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: VSpace.page),
-                                child: VSkeleton(height: 170),
+                            ),
+                          ] else ...[
+                            SliverToBoxAdapter(
+                              child: SafeArea(
+                                bottom: false,
+                                child: VPageHeader(
+                                  title: l10n.threadTitle,
+                                  titleKey: const ValueKey('thread-title'),
+                                ),
                               ),
                             ),
+                            if (gone)
+                              SliverToBoxAdapter(
+                                child: _Lined(
+                                  child: VEmptyState(
+                                    key: const ValueKey('thread-gone'),
+                                    title: l10n.threadRatingGoneTitle,
+                                    message: l10n.threadRatingGoneBody,
+                                  ),
+                                ),
+                              )
+                            else
+                              const SliverToBoxAdapter(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: VSpace.page),
+                                  child: VSkeleton(height: 170),
+                                ),
+                              ),
+                          ],
                           if (entry != null) ...[
                             if (replies == null)
                               SliverPadding(
@@ -316,7 +337,7 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        VSkeleton(width: 36, height: 36, circle: true),
+                                        VSkeleton(width: 32, height: 32, circle: true),
                                         SizedBox(width: 12),
                                         Expanded(child: VSkeleton(height: 40)),
                                       ],
@@ -396,9 +417,93 @@ class _Lined extends StatelessWidget {
   }
 }
 
-/// La nota del hilo: el disco (portada de 48, título y "Artista · año"; abre
-/// su pantalla) y la nota como un comentario destacado, con "♥" y
-/// "Responder", que escribe aquí mismo.
+/// Arriba del detalle: la portada a todo lo ancho (300 con la barra de
+/// estado), volver y compartir encima y, abajo, una franja con el título en
+/// 40 y "Artista · año →". Tocarla abre el disco.
+class _ThreadCover extends StatelessWidget {
+  const _ThreadCover({required this.entry, required this.share});
+
+  final RatingEntry entry;
+  final Widget share;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final topPad = MediaQuery.paddingOf(context).top;
+    final heroTag = 'thread-${entry.id}';
+    final album = entry.album;
+    void open() => openAlbum(context, album, heroTag: heroTag);
+    return SizedBox(
+      height: math.max(300, topPad + 246),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          GestureDetector(
+            key: const ValueKey('thread-album'),
+            onTap: open,
+            child: AlbumCover(url: album.bestCover, heroTag: heroTag),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: open,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 120),
+                color: c.overButton,
+                padding: const EdgeInsets.fromLTRB(VSpace.page, 18, VSpace.page, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      album.name,
+                      key: const ValueKey('thread-title'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: VText.display(40, weight: 800, stretch: 65, height: 0.9, tracking: 0),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${album.subtitle} →',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: VText.ui(15, weight: 500, color: c.inkA(0.8)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: topPad + 4,
+            left: 16,
+            right: 16,
+            child: Row(
+              children: [
+                VIconButton(
+                  key: const ValueKey('back'),
+                  icon: VIcon.back,
+                  style: VIconButtonStyle.filled,
+                  onTap: () => Navigator.of(context).maybePop(),
+                ),
+                const Spacer(),
+                share,
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// La nota: quién calificó (foto de 28 y nombre, abren su perfil) y
+/// "Calificó hace N" a la izquierda; la nota en 112 con "Bueno · de 10" a la
+/// derecha, en el tono de la portada; el comentario en cita y "♡ Me gusta ·
+/// N" y "Responder", que escribe aquí mismo.
 class _ThreadNote extends StatelessWidget {
   const _ThreadNote({required this.entry, required this.tone, required this.onReply});
 
@@ -409,68 +514,113 @@ class _ThreadNote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    final heroTag = 'thread-${entry.id}';
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+    final l10n = context.l10n;
+    final user = entry.user;
+    void openProfile() => openUser(context, user.uid);
+    final note = entry.note.trim();
+    return Container(
+      key: const ValueKey('thread-note'),
+      margin: const EdgeInsets.symmetric(horizontal: VSpace.page),
+      padding: const EdgeInsets.only(top: 18, bottom: 8),
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: c.line))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Pressable(
-            key: const ValueKey('thread-album'),
-            onTap: () => openAlbum(context, entry.album, heroTag: heroTag),
-            builder: (context, pressed) => Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: pressed ? c.inkA(0.04) : null,
-                border: Border.symmetric(horizontal: BorderSide(color: c.line)),
-              ),
-              child: Row(
-                children: [
-                  AlbumCover(url: entry.album.smallCover, size: 48, heroTag: heroTag),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          entry.album.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: VText.ui(16, weight: 600),
-                        ),
-                        Text(
-                          entry.album.subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: VText.ui(13, color: c.ink3),
-                        ),
-                      ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: openProfile,
+                      child: Row(
+                        children: [
+                          UserAvatar(
+                            name: user.name,
+                            color: user.color,
+                            url: user.avatarUrl,
+                            size: 28,
+                            initialSize: 12,
+                          ),
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              user.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: VText.ui(16, weight: 600),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(height: 10),
+                    VMono(
+                      l10n.threadRatedWhen(timeAgo(entry.updatedAt, l10n)),
+                      color: c.inkA(0.55),
+                      tracking: 0.06,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${entry.score}',
+                    key: ValueKey('thread-score-${entry.score}'),
+                    style: VText.display(112, weight: 800, height: 0.78, tracking: 0, color: tone),
                   ),
-                  const SizedBox(width: 12),
-                  VIconView(VIcon.chevronRight, size: 16, color: c.ink4),
+                  const SizedBox(height: 8),
+                  VMono(
+                    l10n.threadScoreOutOf(Score.label(entry.score, l10n)),
+                    size: 9.5,
+                    tracking: 0.1,
+                    color: tone,
+                  ),
                 ],
               ),
+            ],
+          ),
+          if (note.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: '“', style: TextStyle(color: tone)),
+                  TextSpan(text: note),
+                  TextSpan(text: '”', style: TextStyle(color: tone)),
+                ],
+              ),
+              style: VText.quote(21, height: 1.3, color: c.ink),
             ),
+          ],
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              LikeButton(entry: entry, showLabel: true, showCount: true),
+              const SizedBox(width: 18),
+              Pressable(
+                key: const ValueKey('thread-reply-note'),
+                onTap: onReply,
+                builder: (context, pressed) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: VMono(l10n.replyAction, tracking: 0.06, color: pressed ? c.ink : c.ink3),
+                ),
+              ),
+            ],
           ),
-          CommentCard(
-            key: const ValueKey('thread-note'),
-            entry: entry,
-            maxLines: null,
-            tone: tone,
-            // Tocar la nota es responderle (ya se está en su hilo).
-            onTap: onReply,
-            onReply: onReply,
-            replyKey: const ValueKey('thread-reply-note'),
-          ),
-          Container(height: 1, color: c.line),
         ],
       ),
     );
   }
 }
 
-/// Una respuesta: foto de 36, nombre, @usuario y hora en mono, el texto
+/// Una respuesta: foto de 32, nombre, @usuario y hora en mono, el texto
 /// (con las menciones en énfasis) y "Responder". Mantenerla pulsada ofrece
 /// borrarla, si se puede.
 class _ReplyTile extends StatelessWidget {
@@ -512,7 +662,7 @@ class _ReplyTile extends StatelessWidget {
                 name: user.name,
                 color: Color(user.colorValue),
                 url: user.avatarUrl,
-                size: 36,
+                size: 32,
               ),
             ),
             const SizedBox(width: 12),

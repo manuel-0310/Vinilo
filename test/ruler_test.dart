@@ -32,4 +32,26 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('ruler-3')));
     expect(tapped, 3);
   });
+
+  testWidgets('Histogram10 resalta la columna de mi nota con su color', (tester) async {
+    const mine = Color(0xFFFF0000);
+    const others = Color(0xFF00FF00);
+    await tester.pumpWidget(_app(const SizedBox(
+      width: 300,
+      child: Histogram10(
+        counts: {5: 2, 7: 4, 9: 1},
+        height: 44,
+        color: others,
+        highlight: 7,
+        highlightColor: mine,
+      ),
+    )));
+    final colors = tester
+        .widgetList<Container>(find.descendant(of: find.byType(Histogram10), matching: find.byType(Container)))
+        .map((c) => c.color)
+        .whereType<Color>()
+        .toList();
+    expect(colors.where((c) => c == mine), hasLength(1));
+    expect(colors.where((c) => c == others), hasLength(2));
+  });
 }

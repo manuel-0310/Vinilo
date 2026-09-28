@@ -9,6 +9,7 @@ import '../models/follow.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
+import '../util/tab_reselect.dart';
 import '../widgets/album_grid.dart';
 import '../widgets/artist_avatar.dart';
 import '../widgets/line_field.dart';
@@ -37,7 +38,11 @@ const _recentShown = 4;
 /// (tocar una la vuelve a buscar) y "Para empezar". Con texto, Personas (si
 /// alguien coincide), Artistas y Álbumes, cada uno con "Ver todos".
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({super.key, this.reselect});
+
+  /// Volver a tocar "Buscar" en la barra: sube hasta arriba; ya arriba,
+  /// borra la búsqueda y, con el campo vacío, abre el teclado.
+  final TabReselect? reselect;
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -46,6 +51,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final _controller = TextEditingController();
   final _focus = FocusNode();
+  final _scroll = ScrollController();
   Timer? _debounce;
   int _requestId = 0;
 
@@ -57,11 +63,42 @@ class _SearchScreenState extends State<SearchScreen> {
   Object? _error;
 
   @override
+  void initState() {
+    super.initState();
+    widget.reselect?.addListener(_onReselect);
+  }
+
+  @override
+  void didUpdateWidget(SearchScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.reselect != widget.reselect) {
+      oldWidget.reselect?.removeListener(_onReselect);
+      widget.reselect?.addListener(_onReselect);
+    }
+  }
+
+  @override
   void dispose() {
+    widget.reselect?.removeListener(_onReselect);
     _debounce?.cancel();
     _controller.dispose();
     _focus.dispose();
+    _scroll.dispose();
     super.dispose();
+  }
+
+  void _onReselect() {
+    switch (searchReselect(atTop: isAtTop(_scroll), hasText: _controller.text.isNotEmpty)) {
+      case SearchReselect.scrollTop:
+        scrollToTop(_scroll);
+      case SearchReselect.clear:
+        _debounce?.cancel();
+        _controller.clear();
+        _onChanged('');
+        _focus.unfocus();
+      case SearchReselect.focus:
+        _focus.requestFocus();
+    }
   }
 
   void _onChanged(String text) {
@@ -167,6 +204,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     return Scaffold(
       body: CustomScrollView(
+        controller: _scroll,
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         slivers: [
           SliverToBoxAdapter(

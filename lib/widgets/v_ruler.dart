@@ -9,13 +9,16 @@ import '../theme/vinilo_theme.dart';
 
 /// Distribución de notas: una barra por columna, proporcional a la más
 /// votada (que llega a `height − 4`). Las columnas sin votos son una raya
-/// de 2 px. Lleva la línea de base debajo.
+/// de 2 px. Lleva la línea de base debajo. Con `highlight`, esa columna va
+/// en `highlightColor` (la nota que puse yo en el disco).
 class Histogram10 extends StatelessWidget {
   const Histogram10({
     super.key,
     required this.counts,
     required this.height,
     this.color,
+    this.highlight,
+    this.highlightColor,
     this.barMargin = 2,
     this.line = true,
   });
@@ -26,6 +29,10 @@ class Histogram10 extends StatelessWidget {
 
   /// Color de las barras (por defecto, el énfasis).
   final Color? color;
+
+  /// La columna resaltada (1 a 10) y su color (por defecto, el énfasis).
+  final int? highlight;
+  final Color? highlightColor;
 
   /// Margen a cada lado de cada barra.
   final double barMargin;
@@ -50,9 +57,11 @@ class Histogram10 extends StatelessWidget {
                 height: (counts[k] ?? 0) == 0 || most == 0
                     ? 2
                     : math.max(2, (height - 4) * counts[k]! / most),
-                color: (counts[k] ?? 0) == 0 || most == 0
-                    ? c.ink.withValues(alpha: 0.2)
-                    : (color ?? c.accent),
+                color: k == highlight
+                    ? (highlightColor ?? c.accent)
+                    : (counts[k] ?? 0) == 0 || most == 0
+                        ? c.ink.withValues(alpha: 0.2)
+                        : (color ?? c.accent),
               ),
             ),
         ],

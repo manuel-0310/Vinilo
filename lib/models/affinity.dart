@@ -57,3 +57,36 @@ class CommonAlbum {
   final percent = (100 - diff / albums.length * 10).round().clamp(0, 100);
   return (percent: percent, common: albums.length, albums: albums);
 }
+
+/// Las pestañas de la pantalla de afinidad: todos los discos en común, los
+/// que coinciden (a 1 punto o menos) y en los que discrepamos (a 2 o más).
+enum AffinityFilter { all, match, differ }
+
+/// Si un disco entra en la pestaña `filter`.
+bool affinityIn(CommonAlbum album, AffinityFilter filter) => switch (filter) {
+      AffinityFilter.all => true,
+      AffinityFilter.match => album.difference <= 1,
+      AffinityFilter.differ => album.difference >= 2,
+    };
+
+/// El orden por defecto de cada pestaña: en "Discrepan", los más distintos
+/// primero; en las otras, los más parecidos.
+bool affinityDefaultDesc(AffinityFilter filter) => filter == AffinityFilter.differ;
+
+/// Los discos de la pestaña, ordenados por diferencia (creciente, o
+/// decreciente con `mostDifferentFirst`) y, a igual diferencia, el más
+/// reciente primero.
+List<CommonAlbum> affinityView(
+  Iterable<CommonAlbum> albums,
+  AffinityFilter filter, {
+  required bool mostDifferentFirst,
+}) {
+  final out = [for (final a in albums) if (affinityIn(a, filter)) a];
+  out.sort((a, b) {
+    final byDiff = mostDifferentFirst
+        ? b.difference.compareTo(a.difference)
+        : a.difference.compareTo(b.difference);
+    return byDiff != 0 ? byDiff : b.at.compareTo(a.at);
+  });
+  return out;
+}
