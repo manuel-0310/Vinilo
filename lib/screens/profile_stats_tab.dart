@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -51,9 +52,15 @@ class _ProfileStatsTabState extends State<ProfileStatsTab> {
   Future<Map<String, AlbumStats>>? _community;
   int _communityKey = 0;
 
-  /// País y géneros de mis artistas.
+  /// País y géneros de mis artistas: lo que ya está en `artistMeta` y lo
+  /// que se va encontrando ahora (`_foundMeta`).
   Future<Map<String, ArtistMeta>>? _meta;
   int _metaKey = 0;
+  final Map<String, ArtistMeta> _foundMeta = {};
+
+  /// Los artistas que ya se le pidieron a la función en esta sesión.
+  final Set<String> _metaAsked = {};
+  bool _fillingMeta = false;
 
   /// A quién sigo y sus notas, para la afinidad.
   Future<_Friends>? _friends;
@@ -102,9 +109,45 @@ class _ProfileStatsTabState extends State<ProfileStatsTab> {
     final artistsKey = Object.hashAll(artistIds);
     if (_meta == null || artistsKey != _metaKey) {
       _metaKey = artistsKey;
-      _meta = services.ratings.artistMeta(artistIds);
+      _meta = _loadMeta(services, artistIds);
     }
     _fillDurations(services, ratings);
+  }
+
+  /// Lo que ya se sabe de mis artistas y, para los que faltan, la búsqueda
+  /// en MusicBrainz (por la función `spotify`) sin esperarla.
+  Future<Map<String, ArtistMeta>> _loadMeta(Services services, List<String> ids) async {
+    final known = await services.ratings.artistMeta(ids);
+    final missing = [for (final id in ids) if (!known.containsKey(id)) id];
+    if (missing.isNotEmpty) unawaited(_fillMeta(services, missing));
+    return known;
+  }
+
+  /// Pide a la función los artistas sin país ni géneros, de a 10; ella
+  /// resuelve unos pocos por vez (MusicBrainz admite una petición por
+  /// segundo) y dice cuáles quedaron: se repite hasta 8 veces por sesión.
+  /// Lo encontrado se pinta en cuanto llega.
+  Future<void> _fillMeta(Services services, List<String> missing) async {
+    if (_fillingMeta) return;
+    var queue = [for (final id in missing) if (_metaAsked.add(id)) id];
+    if (queue.isEmpty) return;
+    _fillingMeta = true;
+    for (var round = 0; round < 8 && queue.isNotEmpty && mounted; round++) {
+      final batch = queue.take(10).toList();
+      try {
+        final result = await services.spotify.artistMeta(batch);
+        if (!mounted) break;
+        if (result.meta.isNotEmpty) setState(() => _foundMeta.addAll(result.meta));
+        final pending = result.pending.toSet();
+        queue = [...queue.skip(batch.length), ...batch.where(pending.contains)];
+        // Nada nuevo en esta vuelta: MusicBrainz no responde; otro día.
+        if (result.meta.isEmpty) break;
+      } catch (_) {
+        // Sin conexión o sin la ruta desplegada: se queda como está.
+        break;
+      }
+    }
+    _fillingMeta = false;
   }
 
   /// Las notas de antes no guardan cuánto dura el disco: se le pregunta a
@@ -480,7 +523,7 @@ class _ProfileStatsTabState extends State<ProfileStatsTab> {
         FutureBuilder<Map<String, ArtistMeta>>(
           future: _meta,
           builder: (context, snap) {
-            final meta = snap.data ?? const <String, ArtistMeta>{};
+            final meta = {...?snap.data, ..._foundMeta};
             final genres = genreShares(inPeriod, meta);
             final countries = countryShares(inPeriod, meta);
             final mostCountry = countries.top.firstOrNull?.count ?? 0;

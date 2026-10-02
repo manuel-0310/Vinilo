@@ -3023,4 +3023,83 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationsNothingNewBody =>
       'We\'ll let you know when someone follows you, replies to your ratings or likes what you write.';
+
+  @override
+  String get settingsModeration => 'Moderation';
+
+  @override
+  String get moderationTitle => 'Moderation';
+
+  @override
+  String moderationOpen(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n open reports',
+      one: '1 open report',
+      zero: 'No open reports',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moderationTabReports => 'Reports';
+
+  @override
+  String get moderationTabProblems => 'Problems';
+
+  @override
+  String get moderationTabRequests => 'Requested albums';
+
+  @override
+  String get moderationRemove => 'Remove';
+
+  @override
+  String get moderationDismiss => 'No changes';
+
+  @override
+  String get moderationView => 'View';
+
+  @override
+  String get moderationRemoveTitle => 'Remove this comment?';
+
+  @override
+  String get moderationRemoveBody =>
+      'It disappears for everyone. If it is a rating, its score stays; if it is a reply, it leaves the thread.';
+
+  @override
+  String get moderationRemoved => 'Content removed';
+
+  @override
+  String get moderationDismissed => 'Report closed with no changes';
+
+  @override
+  String moderationFailed(String error) {
+    return 'Couldn\'t do it: $error';
+  }
+
+  @override
+  String get moderationNoReports => 'No open reports.';
+
+  @override
+  String get moderationNoProblems => 'Nobody has reported problems.';
+
+  @override
+  String get moderationNoRequests => 'Nobody has requested albums.';
+
+  @override
+  String moderationReportedBy(String uid) {
+    return 'Reported by $uid';
+  }
+
+  @override
+  String moderationRequestCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n times',
+      one: 'once',
+    );
+    return '$_temp0';
+  }
 }

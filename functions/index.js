@@ -13,6 +13,8 @@
  *   /artist/:id/albums?offset=0     → { items: [Album], total, nextOffset }
  *   /new?offset=0                   → { items: [Album] } álbumes del año en curso
  *   /artists/search?q=texto&offset=0 → { items: [Artist], total, nextOffset }
+ *   /artists/meta?ids=a,b,c         → { meta: { id: {country, genres} }, pending }
+ *                                     país y géneros desde MusicBrainz, ver meta.js
  *   /                               → { ok: true }
  *
  * Nota: en modo desarrollo Spotify limita cada página a 10 elementos y
@@ -45,6 +47,7 @@ const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getStorage } = require("firebase-admin/storage");
 const { createWebHandler } = require("./web");
 const { createRecoverHandler } = require("./recover");
+const { createMetaResolver, parseIds } = require("./meta");
 
 initializeApp();
 
@@ -248,6 +251,13 @@ async function getArtist(id) {
   return normalizeArtist(await spotifyGet(`/artists/${id}`));
 }
 
+/** País y géneros de los artistas (`artistMeta`), ver meta.js. */
+const resolveArtistMeta = createMetaResolver({
+  getFirestore,
+  fetch: (...args) => fetch(...args),
+  logError: (msg, err) => logger.warn(msg, { message: err.message, status: err.status }),
+});
+
 // ---------------------------------------------------------------------------
 // Auth: la app manda el ID token del usuario anónimo de Firebase.
 // ---------------------------------------------------------------------------
@@ -302,6 +312,12 @@ async function route(req) {
     const items = (paging?.items || []).filter(Boolean).map(normalizeArtist);
     const hasMore = Boolean(paging?.next) && offset + PAGE_SIZE < MAX_OFFSET + PAGE_SIZE;
     return { items, total: paging?.total ?? items.length, nextOffset: hasMore ? offset + PAGE_SIZE : null };
+  }
+
+  if (path === "/artists/meta") {
+    const ids = parseIds(req.query.ids);
+    if (ids.length === 0) throw new HttpError(400, "Falta ids");
+    return resolveArtistMeta(ids);
   }
 
   const albumMatch = path.match(/^\/album\/([A-Za-z0-9]+)$/);
@@ -477,9 +493,13 @@ async function deleteAccountData(uid) {
   }
   deleted.replies = repliesRemoved;
 
-  // 2. Sus "me gusta" en notas de otras personas.
+  // 2. Sus "me gusta" en notas de otras personas y en respuestas (índice de
+  //    grupo de colecciones sobre `replies.likedBy`).
   const liked = await db.collection("ratings").where("likedBy", "array-contains", uid).get();
   deleted.ratingLikes = await inBatches(db, liked.docs, (b, d) =>
+    b.update(d.ref, { likedBy: FieldValue.arrayRemove(uid) }));
+  const likedReplies = await db.collectionGroup("replies").where("likedBy", "array-contains", uid).get();
+  deleted.replyLikes = await inBatches(db, likedReplies.docs, (b, d) =>
     b.update(d.ref, { likedBy: FieldValue.arrayRemove(uid) }));
 
   // 3. Sus listas, y sus "me gusta" y guardadas en listas de otras personas.
@@ -528,6 +548,12 @@ async function deleteAccountData(uid) {
   deleted.reports =
     (await inBatches(db, reportsMade.docs, (b, d) => b.delete(d.ref))) +
     (await inBatches(db, reportsGot.docs, (b, d) => b.delete(d.ref)));
+  //     Y lo que mandó al equipo: problemas reportados y discos pedidos.
+  const problems = await db.collection("problems").where("uid", "==", uid).get();
+  const requests = await db.collection("requests").where("uid", "==", uid).get();
+  deleted.support =
+    (await inBatches(db, problems.docs, (b, d) => b.delete(d.ref))) +
+    (await inBatches(db, requests.docs, (b, d) => b.delete(d.ref)));
 
   // 6. Avatar y banner en Storage.
   const bucket = getStorage().bucket();

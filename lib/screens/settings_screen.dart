@@ -13,6 +13,7 @@ import '../widgets/v_icons.dart';
 import '../widgets/v_sections.dart';
 import 'delete_account_sheet.dart';
 import 'edit_profile_sheet.dart';
+import 'moderation_panel_screen.dart';
 import 'privacy_screen.dart';
 import 'profile_form.dart';
 
@@ -169,6 +170,8 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // Solo quien modera (`admins/{uid}`) ve el panel de reportes.
+                  ModerationEntry(uid: me.uid),
                   header(l.settingsAccount),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: VSpace.page),

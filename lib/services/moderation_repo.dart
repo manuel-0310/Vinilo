@@ -225,11 +225,44 @@ class ModerationRepo {
 
   /// Cierra un reporte con lo que se decidió (`dismissed` o `removed`).
   Future<void> resolve(Report report, {required String outcome, required String by}) {
-    return _reports.doc(report.id).update({
-      'status': 'resolved',
-      'outcome': outcome,
-      'resolvedBy': by,
-      'resolvedAt': FieldValue.serverTimestamp(),
-    });
+    return _reports.doc(report.id).update(_resolution(outcome, by));
+  }
+
+  static Map<String, dynamic> _resolution(String outcome, String by) => {
+        'status': 'resolved',
+        'outcome': outcome,
+        'resolvedBy': by,
+        'resolvedAt': FieldValue.serverTimestamp(),
+      };
+
+  /// Retira lo reportado y cierra el reporte como `removed`, en un lote. Una
+  /// nota se queda con su puntaje y sin comentario (`moderated: true`); una
+  /// respuesta se borra y baja el contador del hilo. Si ya no existe, solo
+  /// se cierra el reporte. Un reporte de una persona no retira nada (las
+  /// cuentas se revisan en la consola).
+  Future<void> removeContent(Report report, {required String by}) async {
+    final ratings = _db.collection('ratings');
+    final batch = _db.batch();
+    final ratingId = report.ratingId ??
+        (report.targetType == ReportTarget.rating ? report.targetId : null);
+    if (ratingId != null && ratingId.isNotEmpty) {
+      final ratingRef = ratings.doc(ratingId);
+      switch (report.targetType) {
+        case ReportTarget.rating:
+          if ((await ratingRef.get()).exists) {
+            batch.update(ratingRef, {'note': '', 'moderated': true});
+          }
+        case ReportTarget.reply:
+          final replyRef = ratingRef.collection('replies').doc(report.targetId);
+          if ((await replyRef.get()).exists) {
+            batch.delete(replyRef);
+            batch.update(ratingRef, {'repliesCount': FieldValue.increment(-1)});
+          }
+        case ReportTarget.user:
+          break;
+      }
+    }
+    batch.update(_reports.doc(report.id), _resolution('removed', by));
+    await batch.commit();
   }
 }

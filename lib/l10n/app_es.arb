@@ -2069,5 +2069,52 @@
   },
   "notificationsUpToDate": "Al día",
   "notificationsNothingNew": "Nada nuevo por ahora",
-  "notificationsNothingNewBody": "Te avisaremos cuando alguien te siga, responda a tus notas o le guste lo que escribes."
+  "notificationsNothingNewBody": "Te avisaremos cuando alguien te siga, responda a tus notas o le guste lo que escribes.",
+  "settingsModeration": "Moderación",
+  "moderationTitle": "Moderación",
+  "moderationOpen": "{n, plural, =0{Sin reportes abiertos} =1{1 reporte abierto} other{{n} reportes abiertos}}",
+  "@moderationOpen": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "moderationTabReports": "Reportes",
+  "moderationTabProblems": "Problemas",
+  "moderationTabRequests": "Discos pedidos",
+  "moderationRemove": "Retirar",
+  "moderationDismiss": "Sin cambios",
+  "moderationView": "Ver",
+  "moderationRemoveTitle": "¿Retirar este comentario?",
+  "moderationRemoveBody": "Se borra para todos. Si es una nota, su puntaje se queda; si es una respuesta, desaparece del hilo.",
+  "moderationRemoved": "Contenido retirado",
+  "moderationDismissed": "Reporte cerrado sin cambios",
+  "moderationFailed": "No se pudo: {error}",
+  "@moderationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "moderationNoReports": "No hay reportes abiertos.",
+  "moderationNoProblems": "Nadie ha reportado problemas.",
+  "moderationNoRequests": "Nadie ha pedido discos.",
+  "moderationReportedBy": "Lo reportó {uid}",
+  "@moderationReportedBy": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
+  "moderationRequestCount": "{n, plural, =1{1 vez} other{{n} veces}}",
+  "@moderationRequestCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }

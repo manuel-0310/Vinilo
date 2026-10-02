@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/support.dart';
+
 /// Lo que la app le manda al equipo de Vinilo:
 ///
 /// - `problems/{id}`: "Reportar el problema" desde "Se rayó el disco" (el
@@ -39,6 +41,24 @@ class SupportRepo {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
+
+  /// Los problemas reportados, del más reciente al más antiguo (solo quien
+  /// modera puede leerlos).
+  Stream<List<ProblemReport>> problems({int limit = 100}) => _db
+      .collection('problems')
+      .orderBy('createdAt', descending: true)
+      .limit(limit)
+      .snapshots()
+      .map((s) => s.docs.map(ProblemReport.fromDoc).toList());
+
+  /// Los discos pedidos, del más reciente al más antiguo (solo quien
+  /// modera).
+  Stream<List<AlbumRequest>> requests({int limit = 300}) => _db
+      .collection('requests')
+      .orderBy('createdAt', descending: true)
+      .limit(limit)
+      .snapshots()
+      .map((s) => s.docs.map(AlbumRequest.fromDoc).toList());
 
   /// Recorta un texto a `max` caracteres.
   static String clip(String text, int max) => text.length > max ? text.substring(0, max) : text;

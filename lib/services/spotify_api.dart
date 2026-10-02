@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/album.dart';
 import '../models/artist.dart';
+import '../models/stats.dart';
 
 /// Qué falló al hablar con la función de Spotify. El texto para la persona
 /// lo pone `describeError` (util/errors.dart) en su idioma.
@@ -75,6 +76,21 @@ class SpotifyApi {
     final artist = Artist.fromJson(await _get('/artist/$id'));
     _artistDetails[id] = artist;
     return artist;
+  }
+
+  /// País y géneros de hasta 10 artistas (`/artists/meta`, que los busca en
+  /// MusicBrainz y los guarda en `artistMeta`). `pending` son los que la
+  /// función no alcanzó a buscar: se vuelven a pedir.
+  Future<({Map<String, ArtistMeta> meta, List<String> pending})> artistMeta(List<String> ids) async {
+    final body = await _get('/artists/meta', {'ids': ids.take(10).join(',')});
+    final raw = body['meta'] is Map ? body['meta'] as Map : const {};
+    return (
+      meta: {
+        for (final e in raw.entries)
+          if (e.value is Map) '${e.key}': ArtistMeta.fromMap(Map<String, dynamic>.from(e.value as Map)),
+      },
+      pending: [for (final id in (body['pending'] as List?) ?? const []) '$id'],
+    );
   }
 
   AlbumDetail? cachedAlbum(String id) => _albums[id];

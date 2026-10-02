@@ -4687,6 +4687,120 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Te avisaremos cuando alguien te siga, responda a tus notas o le guste lo que escribes.'**
   String get notificationsNothingNewBody;
+
+  /// No description provided for @settingsModeration.
+  ///
+  /// In es, this message translates to:
+  /// **'Moderación'**
+  String get settingsModeration;
+
+  /// No description provided for @moderationTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Moderación'**
+  String get moderationTitle;
+
+  /// No description provided for @moderationOpen.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =0{Sin reportes abiertos} =1{1 reporte abierto} other{{n} reportes abiertos}}'**
+  String moderationOpen(int n);
+
+  /// No description provided for @moderationTabReports.
+  ///
+  /// In es, this message translates to:
+  /// **'Reportes'**
+  String get moderationTabReports;
+
+  /// No description provided for @moderationTabProblems.
+  ///
+  /// In es, this message translates to:
+  /// **'Problemas'**
+  String get moderationTabProblems;
+
+  /// No description provided for @moderationTabRequests.
+  ///
+  /// In es, this message translates to:
+  /// **'Discos pedidos'**
+  String get moderationTabRequests;
+
+  /// No description provided for @moderationRemove.
+  ///
+  /// In es, this message translates to:
+  /// **'Retirar'**
+  String get moderationRemove;
+
+  /// No description provided for @moderationDismiss.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin cambios'**
+  String get moderationDismiss;
+
+  /// No description provided for @moderationView.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver'**
+  String get moderationView;
+
+  /// No description provided for @moderationRemoveTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Retirar este comentario?'**
+  String get moderationRemoveTitle;
+
+  /// No description provided for @moderationRemoveBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Se borra para todos. Si es una nota, su puntaje se queda; si es una respuesta, desaparece del hilo.'**
+  String get moderationRemoveBody;
+
+  /// No description provided for @moderationRemoved.
+  ///
+  /// In es, this message translates to:
+  /// **'Contenido retirado'**
+  String get moderationRemoved;
+
+  /// No description provided for @moderationDismissed.
+  ///
+  /// In es, this message translates to:
+  /// **'Reporte cerrado sin cambios'**
+  String get moderationDismissed;
+
+  /// No description provided for @moderationFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo: {error}'**
+  String moderationFailed(String error);
+
+  /// No description provided for @moderationNoReports.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay reportes abiertos.'**
+  String get moderationNoReports;
+
+  /// No description provided for @moderationNoProblems.
+  ///
+  /// In es, this message translates to:
+  /// **'Nadie ha reportado problemas.'**
+  String get moderationNoProblems;
+
+  /// No description provided for @moderationNoRequests.
+  ///
+  /// In es, this message translates to:
+  /// **'Nadie ha pedido discos.'**
+  String get moderationNoRequests;
+
+  /// No description provided for @moderationReportedBy.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo reportó {uid}'**
+  String moderationReportedBy(String uid);
+
+  /// No description provided for @moderationRequestCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 vez} other{{n} veces}}'**
+  String moderationRequestCount(int n);
 }
 
 class _AppLocalizationsDelegate

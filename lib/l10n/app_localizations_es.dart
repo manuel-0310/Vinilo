@@ -3024,4 +3024,83 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get notificationsNothingNewBody =>
       'Te avisaremos cuando alguien te siga, responda a tus notas o le guste lo que escribes.';
+
+  @override
+  String get settingsModeration => 'Moderación';
+
+  @override
+  String get moderationTitle => 'Moderación';
+
+  @override
+  String moderationOpen(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n reportes abiertos',
+      one: '1 reporte abierto',
+      zero: 'Sin reportes abiertos',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moderationTabReports => 'Reportes';
+
+  @override
+  String get moderationTabProblems => 'Problemas';
+
+  @override
+  String get moderationTabRequests => 'Discos pedidos';
+
+  @override
+  String get moderationRemove => 'Retirar';
+
+  @override
+  String get moderationDismiss => 'Sin cambios';
+
+  @override
+  String get moderationView => 'Ver';
+
+  @override
+  String get moderationRemoveTitle => '¿Retirar este comentario?';
+
+  @override
+  String get moderationRemoveBody =>
+      'Se borra para todos. Si es una nota, su puntaje se queda; si es una respuesta, desaparece del hilo.';
+
+  @override
+  String get moderationRemoved => 'Contenido retirado';
+
+  @override
+  String get moderationDismissed => 'Reporte cerrado sin cambios';
+
+  @override
+  String moderationFailed(String error) {
+    return 'No se pudo: $error';
+  }
+
+  @override
+  String get moderationNoReports => 'No hay reportes abiertos.';
+
+  @override
+  String get moderationNoProblems => 'Nadie ha reportado problemas.';
+
+  @override
+  String get moderationNoRequests => 'Nadie ha pedido discos.';
+
+  @override
+  String moderationReportedBy(String uid) {
+    return 'Lo reportó $uid';
+  }
+
+  @override
+  String moderationRequestCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n veces',
+      one: '1 vez',
+    );
+    return '$_temp0';
+  }
 }
