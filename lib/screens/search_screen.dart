@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
@@ -9,7 +10,9 @@ import '../models/follow.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/errors.dart';
+import '../util/search_text.dart';
 import '../util/tab_reselect.dart';
+import '../widgets/album_cover.dart';
 import '../widgets/album_grid.dart';
 import '../widgets/artist_avatar.dart';
 import '../widgets/line_field.dart';
@@ -17,6 +20,7 @@ import '../widgets/person_row.dart';
 import '../widgets/v_buttons.dart';
 import '../widgets/v_icons.dart';
 import '../widgets/v_sections.dart';
+import '../widgets/v_states.dart';
 import 'routes.dart';
 import 'search_all_screen.dart';
 
@@ -62,6 +66,17 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _loading = false;
   Object? _error;
 
+  /// "Reintentar" desde "Sin conexión" o "Se rayó el disco": el aviso se
+  /// queda con su spinner hasta que llega la respuesta.
+  bool _retrying = false;
+
+  /// Sin resultados: discos de búsquedas parecidas ("¿Quisiste decir?").
+  List<Album>? _didYouMean;
+
+  /// Ya se pidió agregar el disco que no se encontró.
+  bool _requested = false;
+  late final TapGestureRecognizer _requestTap = TapGestureRecognizer()..onTap = _requestAlbum;
+
   @override
   void initState() {
     super.initState();
@@ -84,6 +99,7 @@ class _SearchScreenState extends State<SearchScreen> {
     _controller.dispose();
     _focus.dispose();
     _scroll.dispose();
+    _requestTap.dispose();
     super.dispose();
   }
 
@@ -113,6 +129,8 @@ class _SearchScreenState extends State<SearchScreen> {
         _people = null;
         _error = null;
         _loading = false;
+        _didYouMean = null;
+        _requested = false;
       });
       return;
     }
@@ -120,13 +138,19 @@ class _SearchScreenState extends State<SearchScreen> {
     _debounce = Timer(const Duration(milliseconds: 380), () => _search(q));
   }
 
-  Future<void> _search(String q) async {
+  /// Busca. Con `keepError` (los "Reintentar"), el aviso de error se queda
+  /// hasta que llega la respuesta.
+  Future<void> _search(String q, {bool keepError = false}) async {
     if (q.isEmpty) return;
     final id = ++_requestId;
     setState(() {
+      if (q != _query) {
+        _didYouMean = null;
+        _requested = false;
+      }
       _query = q;
       _loading = true;
-      _error = null;
+      if (!keepError) _error = null;
     });
     try {
       // Álbumes, artistas y personas a la vez; si solo falla la búsqueda de
@@ -160,7 +184,11 @@ class _SearchScreenState extends State<SearchScreen> {
         _artists = found;
         _people = foundPeople;
         _loading = false;
+        _error = null;
       });
+      if (result.items.isEmpty && found.isEmpty && foundPeople.isEmpty) {
+        unawaited(_suggest(q, id));
+      }
     } catch (e) {
       if (id != _requestId || !mounted) return;
       setState(() {
@@ -168,6 +196,56 @@ class _SearchScreenState extends State<SearchScreen> {
         _loading = false;
       });
     }
+  }
+
+  /// "¿Quisiste decir?": prueba búsquedas parecidas (`didYouMeanQueries`)
+  /// hasta juntar tres discos.
+  Future<void> _suggest(String q, int id) async {
+    final spotify = ServicesScope.of(context).spotify;
+    final found = <Album>[];
+    for (final candidate in didYouMeanQueries(q)) {
+      try {
+        final page = await spotify.search(candidate);
+        for (final album in page.items) {
+          if (found.length < 3 && !found.any((a) => a.id == album.id)) found.add(album);
+        }
+      } catch (_) {
+        // Una que falla no impide las demás.
+      }
+      if (found.length >= 3 || id != _requestId || !mounted) break;
+    }
+    if (id != _requestId || !mounted) return;
+    setState(() => _didYouMean = found);
+  }
+
+  /// "Reintentar" desde un error: vuelve a comprobar la conexión si era
+  /// eso y repite la búsqueda.
+  Future<void> _retry() async {
+    if (_retrying) return;
+    final error = _error;
+    setState(() => _retrying = true);
+    if (isOfflineError(error)) await ServicesScope.of(context).connectivity.check();
+    await _search(_query, keepError: true);
+    if (mounted) setState(() => _retrying = false);
+  }
+
+  /// "Pídenos que lo agreguemos": queda anotado en `requests/` (sin
+  /// esperar: si no hay conexión, sube cuando vuelva).
+  void _requestAlbum() {
+    final me = CurrentUser.maybeOf(context);
+    if (me == null || _requested || _query.isEmpty) return;
+    unawaited(
+      ServicesScope.of(context)
+          .support
+          .requestAlbum(uid: me.uid, query: _query)
+          .catchError((Object _) {}),
+    );
+    setState(() => _requested = true);
+  }
+
+  void _openSaved() {
+    final me = CurrentUser.of(context);
+    openDiary(context, uid: me.uid, name: me.name, isMe: true, initial: const []);
   }
 
   void _submit(String q) {
@@ -255,6 +333,27 @@ class _SearchScreenState extends State<SearchScreen> {
                 onPick: _submit,
               ),
             )
+          else if (_error != null && isOfflineError(_error))
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: OfflineState(
+                checking: _retrying,
+                onRetry: _retry,
+                onSaved: _openSaved,
+                padding: const EdgeInsets.fromLTRB(VSpace.page, 26, VSpace.page, 24),
+              ),
+            )
+          else if (_error != null && isServerError(_error))
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: ServerErrorState(
+                error: _error,
+                retrying: _retrying,
+                onRetry: _retry,
+                where: 'search: $_query',
+                padding: const EdgeInsets.fromLTRB(VSpace.page, 0, VSpace.page, 24),
+              ),
+            )
           else if (_error != null)
             SliverToBoxAdapter(
               child: VEmptyState(
@@ -264,7 +363,8 @@ class _SearchScreenState extends State<SearchScreen> {
                 action: VSecondaryButton(
                   key: const ValueKey('search-retry'),
                   label: l.retry,
-                  onPressed: () => _search(_query),
+                  busy: _retrying,
+                  onPressed: _retry,
                 ),
               ),
             )
@@ -278,11 +378,18 @@ class _SearchScreenState extends State<SearchScreen> {
               artists.isEmpty &&
               people.isEmpty)
             SliverToBoxAdapter(
-              child: VEmptyState(
-                title: l.searchNothingTitle,
-                message: _query.startsWith('@') ? l.searchNoUsername : l.searchNothingBody,
-                padding: const EdgeInsets.fromLTRB(VSpace.page, 26, VSpace.page, 24),
-              ),
+              child: _query.startsWith('@')
+                  ? VEmptyState(
+                      title: l.searchNothingTitle,
+                      message: l.searchNoUsername,
+                      padding: const EdgeInsets.fromLTRB(VSpace.page, 26, VSpace.page, 24),
+                    )
+                  : _NotFound(
+                      query: _query,
+                      suggestions: _didYouMean,
+                      requested: _requested,
+                      requestTap: _requestTap,
+                    ),
             )
           else if (_page != null) ...[
             if (people.isNotEmpty)
@@ -351,6 +458,122 @@ class _SearchScreenState extends State<SearchScreen> {
           const SliverToBoxAdapter(
             child: SizedBox(height: VSpace.tabBarClearance),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sin resultados (prototipo "Vacío · búsqueda"): "0 resultados", "No
+/// encontramos “…”", qué probar, "¿Quisiste decir?" con hasta tres discos
+/// de búsquedas parecidas y "¿Falta un disco en Vinilo? Pídenos que lo
+/// agreguemos".
+class _NotFound extends StatelessWidget {
+  const _NotFound({
+    required this.query,
+    required this.suggestions,
+    required this.requested,
+    required this.requestTap,
+  });
+
+  final String query;
+  final List<Album>? suggestions;
+  final bool requested;
+  final TapGestureRecognizer requestTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final l = context.l10n;
+    final found = suggestions ?? const <Album>[];
+    return Padding(
+      key: const ValueKey('search-not-found'),
+      padding: const EdgeInsets.fromLTRB(VSpace.page, 36, VSpace.page, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          VMono(l.searchZeroResults),
+          const SizedBox(height: 8),
+          Text(
+            l.searchNotFound(query),
+            style: VText.display(30, weight: 700, stretch: 70, height: 1.02, tracking: 0),
+          ),
+          const SizedBox(height: 10),
+          Text(l.searchNotFoundBody, style: VText.ui(15, height: 1.45, color: c.ink2)),
+          if (found.isNotEmpty) ...[
+            const SizedBox(height: 28),
+            Container(
+              padding: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: c.line))),
+              child: VMono(l.searchDidYouMean),
+            ),
+            for (final (i, album) in found.indexed)
+              Pressable(
+                key: ValueKey('did-you-mean-$i'),
+                onTap: () => openAlbum(context, album, heroTag: 'dym-${album.id}'),
+                builder: (context, pressed) => Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: pressed ? c.inkA(0.04) : null,
+                    border: Border(bottom: BorderSide(color: c.lineSoft)),
+                  ),
+                  child: Row(
+                    children: [
+                      AlbumCover(url: album.smallCover, size: 52, heroTag: 'dym-${album.id}'),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              album.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: VText.ui(16, weight: 600),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              album.subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: VText.ui(13, color: c.ink3),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Text('→', style: VText.ui(16, color: c.ink4)),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+          const SizedBox(height: 22),
+          if (requested)
+            Text(
+              l.searchRequestSent(query),
+              key: const ValueKey('search-request-sent'),
+              style: VText.ui(14, height: 1.45, color: c.ink2),
+            )
+          else
+            Text.rich(
+              key: const ValueKey('search-request'),
+              TextSpan(
+                children: [
+                  TextSpan(text: l.searchMissingLead),
+                  TextSpan(
+                    text: l.searchMissingAction,
+                    recognizer: requestTap,
+                    style: TextStyle(
+                      color: c.ink,
+                      decoration: TextDecoration.underline,
+                      decorationColor: c.ink,
+                    ),
+                  ),
+                ],
+              ),
+              style: VText.ui(14, height: 1.45, color: c.ink2),
+            ),
         ],
       ),
     );

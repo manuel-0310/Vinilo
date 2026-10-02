@@ -624,13 +624,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bannerPlaceholder => 'Banner photo';
 
   @override
-  String get homeFollowTitle => 'Follow your friends';
-
-  @override
-  String get homeFollowBody =>
-      'Here you\'ll see what the people you follow rate. Find them in the Search tab by name or @username.';
-
-  @override
   String get homeQuietTitle => 'All quiet here';
 
   @override
@@ -703,13 +696,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String notificationsError(String error) {
     return 'Couldn\'t load them: $error';
   }
-
-  @override
-  String get notificationsEmptyTitle => 'Nothing yet';
-
-  @override
-  String get notificationsEmptyBody =>
-      'You\'ll see here when someone follows you, likes one of your ratings or saves one of your lists.';
 
   @override
   String get commentsTitle => 'Comments';

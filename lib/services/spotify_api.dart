@@ -26,13 +26,17 @@ class SpotifyApiException implements Exception {
 /// Cliente de la Cloud Function que hace de proxy de Spotify.
 /// La URL llega por `--dart-define=SPOTIFY_FN_URL=…`.
 class SpotifyApi {
-  SpotifyApi({required String baseUrl, required this.idToken})
+  SpotifyApi({required String baseUrl, required this.idToken, this.onReachable})
       : baseUrl = baseUrl.replaceAll(RegExp(r'/+$'), '');
 
   static const String configuredUrl = String.fromEnvironment('SPOTIFY_FN_URL');
 
   final String baseUrl;
   final Future<String?> Function() idToken;
+
+  /// Avisa si se llegó al servidor (true, aunque responda un error) o si la
+  /// petición no salió (false): así se entera `ConnectivityService`.
+  final void Function(bool reachable)? onReachable;
   final http.Client _client = http.Client();
   final Map<String, AlbumDetail> _albums = {};
   final Map<String, AlbumPage> _pages = {};
@@ -109,10 +113,13 @@ class SpotifyApi {
         'Accept': 'application/json',
       }).timeout(const Duration(seconds: 20));
     } on TimeoutException {
+      onReachable?.call(false);
       throw SpotifyApiException(SpotifyError.timeout);
     } on http.ClientException catch (e) {
+      onReachable?.call(false);
       throw SpotifyApiException(SpotifyError.offline, detail: e.message);
     }
+    onReachable?.call(true);
     dynamic body;
     try {
       body = jsonDecode(utf8.decode(res.bodyBytes));

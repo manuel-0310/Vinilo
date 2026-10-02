@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../models/album.dart';
 import '../models/music_list.dart';
+import '../models/outbox.dart';
 import '../models/rating.dart';
 import '../services/services.dart';
 import '../theme/score.dart';
@@ -58,6 +59,9 @@ class _AlbumScreenState extends State<AlbumScreen> {
   Stream<RatingEntry?>? _mine;
   Stream<List<RatingEntry>>? _community;
 
+  /// Mi nota de este disco que espera conexión (la cola del teléfono).
+  Stream<PendingRating?>? _pending;
+
   /// "Calificado por": las notas de las personas que sigo sobre este disco.
   Stream<List<RatingEntry>>? _friends;
 
@@ -103,6 +107,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
     _services = services;
     _stats = services.ratings.albumStats(widget.album.id);
     _mine = services.ratings.myRating(me.uid, widget.album.id);
+    _pending = services.ratings.pending(me.uid, widget.album.id);
     _community = services.ratings.albumRatings(widget.album.id);
     _friends = switchLatest(
       services.follows.followingIds(me.uid).distinct(listEquals),
@@ -167,7 +172,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
     if (color != null && mounted) setState(() => _coverColor = color);
   }
 
-  Future<void> _rate(RatingEntry? existing) async {
+  Future<void> _rate(RatingEntry? existing, [PendingRating? queued]) async {
     // Calificar mientras un borrado espera su "Deshacer" lo cancela: la nota
     // sigue en Firestore y se abre para editarla.
     final pending = _pendingDelete;
@@ -180,6 +185,10 @@ class _AlbumScreenState extends State<AlbumScreen> {
       context,
       album: _album,
       existing: existing,
+      // Si hay una versión esperando conexión, se abre con ella.
+      initialScore: queued?.score,
+      initialNote: queued?.note,
+      pending: queued != null,
       tone: cover == null ? null : VColors.of(context).coverTone(cover),
     );
     if (!mounted || result == null) return;
@@ -187,6 +196,8 @@ class _AlbumScreenState extends State<AlbumScreen> {
       if (existing != null) _deleteWithUndo(existing);
       return;
     }
+    // En la cola, el disco ya dice "Tu nota · por subir".
+    if (result == RatingSheetResult.queued) return;
     _snack(context.l10n.ratingSaved, seconds: 2);
   }
 
@@ -471,14 +482,18 @@ class _AlbumScreenState extends State<AlbumScreen> {
                         children: [
                           _Heading(album: album, detail: detail, tone: tone),
                           const SizedBox(height: 22),
-                          StreamBuilder<AlbumStats?>(
-                            stream: _stats,
-                            builder: (context, statsSnap) => _Scores(
-                              stats: statsSnap.data,
-                              mine: mine,
-                              waiting: waitingMine,
-                              tone: tone,
-                              onRate: () => _rate(mine),
+                          StreamBuilder<PendingRating?>(
+                            stream: _pending,
+                            builder: (context, pendingSnap) => StreamBuilder<AlbumStats?>(
+                              stream: _stats,
+                              builder: (context, statsSnap) => _Scores(
+                                stats: statsSnap.data,
+                                mine: mine,
+                                queued: pendingSnap.data,
+                                waiting: waitingMine,
+                                tone: tone,
+                                onRate: () => _rate(mine, pendingSnap.data),
+                              ),
                             ),
                           ),
                         ],
@@ -876,6 +891,7 @@ class _Scores extends StatelessWidget {
   const _Scores({
     required this.stats,
     required this.mine,
+    required this.queued,
     required this.waiting,
     required this.tone,
     required this.onRate,
@@ -883,6 +899,10 @@ class _Scores extends StatelessWidget {
 
   final AlbumStats? stats;
   final RatingEntry? mine;
+
+  /// Mi nota que espera conexión: se muestra en lugar de la guardada, con
+  /// "Tu nota · por subir".
+  final PendingRating? queued;
   final bool waiting;
   final Color tone;
   final VoidCallback onRate;
@@ -893,7 +913,7 @@ class _Scores extends StatelessWidget {
     final l10n = context.l10n;
     final s = stats;
     final count = s?.count ?? 0;
-    final mineScore = mine?.score;
+    final mineScore = queued?.score ?? mine?.score;
     final bigNumber = VText.display(56, weight: 700, height: 0.85, tracking: 0);
 
     final Widget left;
@@ -915,7 +935,10 @@ class _Scores extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              VMono(l10n.albumYourRatingEdit),
+              VMono(
+                queued != null ? l10n.ratePendingLabel : l10n.albumYourRatingEdit,
+                key: queued != null ? const ValueKey('rating-pending') : null,
+              ),
               const SizedBox(height: 4),
               Row(
                 key: ValueKey('rated-$mineScore'),
@@ -955,7 +978,7 @@ class _Scores extends StatelessWidget {
     );
 
     final Widget below;
-    if (waiting) {
+    if (waiting && queued == null) {
       // Mientras llega mi nota, el hueco del botón.
       below = const SizedBox(key: ValueKey('mine-waiting'), height: 16 + 56);
     } else if (mineScore == null) {

@@ -125,11 +125,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 SliverToBoxAdapter(
                   child: VPageHeader(
                     title: l.notificationsTitle,
+                    // Vacía, "Al día" va abajo, en el aviso.
                     subtitle: items == null
                         ? l.loading
-                        : unreadLeft == 0
-                            ? l.notificationsAllCaughtUp
-                            : l.notificationsUnread(unreadLeft),
+                        : items.isEmpty
+                            ? null
+                            : unreadLeft == 0
+                                ? l.notificationsAllCaughtUp
+                                : l.notificationsUnread(unreadLeft),
                     subtitleKey: const ValueKey('notifications-subtitle'),
                     action: items != null && items.isNotEmpty ? l.notificationsClear : null,
                     onAction: items == null ? null : () => _deleteAll(items),
@@ -149,12 +152,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 else if (items == null)
                   const _Skeleton()
                 else if (items.isEmpty)
+                  // Prototipo "Vacío · notificaciones": 120 por debajo del
+                  // título, una línea y "Al día · Nada nuevo por ahora".
                   SliverToBoxAdapter(
                     child: Container(
+                      key: const ValueKey('notifications-empty'),
+                      margin: const EdgeInsets.fromLTRB(VSpace.page, 108, VSpace.page, 0),
+                      padding: const EdgeInsets.only(top: 18),
                       decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
-                      child: VEmptyState(
-                        title: l.notificationsEmptyTitle,
-                        message: l.notificationsEmptyBody,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          VMono(l.notificationsUpToDate),
+                          const SizedBox(height: 8),
+                          Text(
+                            l.notificationsNothingNew,
+                            style: VText.display(30, weight: 700, stretch: 70, height: 1.02, tracking: 0),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(l.notificationsNothingNewBody, style: VText.ui(15, height: 1.45, color: c.ink2)),
+                        ],
                       ),
                     ),
                   )

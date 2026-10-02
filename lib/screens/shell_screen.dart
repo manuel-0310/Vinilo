@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
+import '../models/user_profile.dart';
+import '../services/outbox_sync.dart';
 import '../services/services.dart';
 import '../util/tab_reselect.dart';
 import '../widgets/v_bottom_bar.dart';
@@ -36,6 +38,13 @@ class _ShellScreenState extends State<ShellScreen> {
 
   bool _checkedSearchFields = false;
 
+  /// Sube las notas que quedaron en la cola sin conexión.
+  OutboxSync? _outbox;
+
+  /// El perfil del último build: la nota que sube lleva mi nombre y mi foto
+  /// de ese momento.
+  UserProfile? _me;
+
   @override
   void initState() {
     super.initState();
@@ -51,13 +60,21 @@ class _ShellScreenState extends State<ShellScreen> {
     // Los perfiles de antes no tienen el nombre en minúsculas con el que se
     // busca a la gente; se completa una vez al entrar.
     final me = CurrentUser.maybeOf(context);
-    if (me != null) ServicesScope.of(context).users.ensureSearchFields(me);
+    if (me == null) return;
+    final services = ServicesScope.of(context);
+    services.users.ensureSearchFields(me);
+    _outbox = OutboxSync(
+      connectivity: services.connectivity,
+      pendingCount: services.ratings.outbox(me.uid).map((l) => l.length),
+      flush: () => services.ratings.flushOutbox(_me ?? me),
+    )..start();
   }
 
   @override
   void dispose() {
     ShellScreen.tabRequests.removeListener(_onTabRequest);
     ShellScreen.actionRequests.removeListener(_onActionRequest);
+    _outbox?.dispose();
     for (final r in _reselect) {
       r.dispose();
     }
@@ -92,6 +109,7 @@ class _ShellScreenState extends State<ShellScreen> {
   @override
   Widget build(BuildContext context) {
     final me = CurrentUser.of(context);
+    _me = me;
     final l10n = context.l10n;
     return Scaffold(
       body: IndexedStack(

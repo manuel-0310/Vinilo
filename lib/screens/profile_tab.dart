@@ -16,6 +16,7 @@ import '../widgets/v_icons.dart';
 import '../widgets/v_ruler.dart';
 import '../widgets/v_sections.dart';
 import 'routes.dart';
+import 'shell_screen.dart';
 
 /// Cuántas notas enseña el diario del perfil (el resto, en "Ver todo").
 const int profileDiaryPreview = 5;
@@ -50,6 +51,27 @@ class ProfileTab extends StatelessWidget {
     final canPickAlbums = isMe && (list?.isNotEmpty ?? false);
     // El diario va por fecha de la nota, lo más nuevo arriba.
     final diary = [...?list]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    // Mi perfil sin ninguna nota (prototipo "Vacío · perfil"): la gráfica
+    // plana y "Calificar mi primer disco". Los favoritos que eligió en el
+    // onboarding se siguen viendo arriba.
+    if (isMe && list != null && list.isEmpty) {
+      return SliverMainAxisGroup(
+        slivers: [
+          if (favorites.isNotEmpty || artists.isNotEmpty)
+            SliverToBoxAdapter(
+              child: _MyFavorites(
+                favorites: favorites,
+                artists: artists,
+                uid: profile.uid,
+                onPickAlbums: null,
+                onPickArtists: onPickArtists,
+              ),
+            ),
+          const SliverToBoxAdapter(child: _BlankDiary()),
+        ],
+      );
+    }
 
     return SliverMainAxisGroup(
       slivers: [
@@ -114,6 +136,39 @@ class ProfileTab extends StatelessWidget {
             monthCounts: DiaryList.countByMonth(diary),
           ),
       ],
+    );
+  }
+}
+
+/// "Tu diario está en blanco": la gráfica sin notas (10 rayas de 2 px),
+/// el título, la explicación y "Calificar mi primer disco", que lleva a
+/// Buscar.
+class _BlankDiary extends StatelessWidget {
+  const _BlankDiary();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final l = context.l10n;
+    return Padding(
+      key: const ValueKey('profile-empty'),
+      padding: const EdgeInsets.fromLTRB(VSpace.page, 36, VSpace.page, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Histogram10(counts: {}, height: 70, barMargin: 1.5),
+          const SizedBox(height: 22),
+          Text(l.profileEmptyTitle, style: VText.display(30, weight: 700, stretch: 70, height: 1.02, tracking: 0)),
+          const SizedBox(height: 10),
+          Text(l.profileEmptyBody, style: VText.ui(15, height: 1.45, color: c.ink2)),
+          const SizedBox(height: 22),
+          VPrimaryButton.accent(
+            key: const ValueKey('profile-rate-first'),
+            label: l.profileEmptyAction,
+            onPressed: () => ShellScreen.tabRequests.value = 1,
+          ),
+        ],
+      ),
     );
   }
 }

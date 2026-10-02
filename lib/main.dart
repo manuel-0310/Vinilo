@@ -33,7 +33,27 @@ class ViniloApp extends StatefulWidget {
   State<ViniloApp> createState() => _ViniloAppState();
 }
 
-class _ViniloAppState extends State<ViniloApp> {
+class _ViniloAppState extends State<ViniloApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    // Si hay conexión se comprueba al arrancar y cada vez que la app vuelve
+    // al frente; el resto lo avisan las peticiones que fallan.
+    WidgetsBinding.instance.addObserver(this);
+    widget.services.connectivity.check();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) widget.services.connectivity.check();
+  }
+
   // Un par de temas por color de énfasis; se construyen la primera vez que
   // alguien elige ese color y se reutilizan.
   final Map<int, (ThemeData, ThemeData)> _themes = {};

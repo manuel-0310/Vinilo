@@ -1064,18 +1064,6 @@ abstract class AppLocalizations {
   /// **'Foto de fondo'**
   String get bannerPlaceholder;
 
-  /// No description provided for @homeFollowTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Sigue a tus amigos'**
-  String get homeFollowTitle;
-
-  /// No description provided for @homeFollowBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Aquí verás lo que califican las personas que sigues. Búscalas en la pestaña Buscar por su nombre o su @usuario.'**
-  String get homeFollowBody;
-
   /// No description provided for @homeQuietTitle.
   ///
   /// In es, this message translates to:
@@ -1207,18 +1195,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudieron cargar: {error}'**
   String notificationsError(String error);
-
-  /// No description provided for @notificationsEmptyTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Nada por ahora'**
-  String get notificationsEmptyTitle;
-
-  /// No description provided for @notificationsEmptyBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Aquí verás cuando alguien te siga, le guste una de tus notas o guarde una de tus listas.'**
-  String get notificationsEmptyBody;
 
   /// No description provided for @commentsTitle.
   ///

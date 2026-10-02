@@ -6,6 +6,7 @@ import '../models/moderation.dart';
 import '../models/user_profile.dart';
 import 'account_service.dart';
 import 'auth_service.dart';
+import 'connectivity_service.dart';
 import 'follow_repo.dart';
 import 'lists_repo.dart';
 import 'moderation_repo.dart';
@@ -15,6 +16,7 @@ import 'ratings_repo.dart';
 import 'recovery_service.dart';
 import 'replies_repo.dart';
 import 'spotify_api.dart';
+import 'support_repo.dart';
 import 'user_repo.dart';
 import 'web_service.dart';
 
@@ -33,6 +35,8 @@ class Services {
     required this.web,
     required this.moderation,
     required this.recovery,
+    required this.connectivity,
+    required this.support,
   });
 
   factory Services.create() {
@@ -42,11 +46,13 @@ class Services {
     final follows = FollowRepo(db, notifications);
     final lists = ListsRepo(db, notifications);
     final replies = RepliesRepo(db, notifications);
+    final connectivity = ConnectivityService();
     return Services._(
       auth: auth,
       spotify: SpotifyApi(
         baseUrl: SpotifyApi.configuredUrl,
         idToken: auth.idToken,
+        onReachable: (ok) => ok ? connectivity.reportSuccess() : connectivity.reportFailure(),
       ),
       users: UserRepo(
         db,
@@ -65,6 +71,8 @@ class Services {
       web: WebService(spotifyUrl: SpotifyApi.configuredUrl),
       moderation: ModerationRepo(db, notifications),
       recovery: RecoveryService(spotifyUrl: SpotifyApi.configuredUrl),
+      connectivity: connectivity,
+      support: SupportRepo(db),
     );
   }
 
@@ -81,6 +89,12 @@ class Services {
   final WebService web;
   final ModerationRepo moderation;
   final RecoveryService recovery;
+
+  /// Si hay conexión: el aviso de "Sin conexión" y la cola de notas.
+  final ConnectivityService connectivity;
+
+  /// Problemas reportados y discos que faltan.
+  final SupportRepo support;
 }
 
 class ServicesScope extends InheritedWidget {

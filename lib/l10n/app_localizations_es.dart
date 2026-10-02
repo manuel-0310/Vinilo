@@ -624,13 +624,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bannerPlaceholder => 'Foto de fondo';
 
   @override
-  String get homeFollowTitle => 'Sigue a tus amigos';
-
-  @override
-  String get homeFollowBody =>
-      'Aquí verás lo que califican las personas que sigues. Búscalas en la pestaña Buscar por su nombre o su @usuario.';
-
-  @override
   String get homeQuietTitle => 'Todo tranquilo por aquí';
 
   @override
@@ -703,13 +696,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String notificationsError(String error) {
     return 'No se pudieron cargar: $error';
   }
-
-  @override
-  String get notificationsEmptyTitle => 'Nada por ahora';
-
-  @override
-  String get notificationsEmptyBody =>
-      'Aquí verás cuando alguien te siga, le guste una de tus notas o guarde una de tus listas.';
 
   @override
   String get commentsTitle => 'Comentarios';

@@ -34,3 +34,36 @@ bool albumMatches(Album album, String query) {
   return foldForSearch(album.name).contains(q) ||
       foldForSearch(album.artist).contains(q);
 }
+
+/// Otras búsquedas para "¿Quisiste decir?" cuando una no encontró nada, de
+/// la más parecida a la menos: sin letras repetidas de más ("ceratti" →
+/// "cerati"), y cada palabra larga sola, de la más larga a la más corta
+/// (así "ceratti bocanda" prueba "cerati bocanda", "cerati" y "bocanda").
+/// Nunca repite la búsqueda original y da como mucho `max`.
+List<String> didYouMeanQueries(String query, {int max = 3}) {
+  final original = foldForSearch(query);
+  if (original.isEmpty || original.startsWith('@')) return const [];
+  String squeeze(String s) => s.replaceAllMapped(RegExp(r'(.)\1+'), (m) => m[1]!);
+  // De la más larga a la más corta; empatadas, en el orden en que se
+  // escribieron.
+  final all = original.split(' ');
+  final words = all.where((w) => w.length >= 4).toList()
+    ..sort((a, b) {
+      final byLength = b.length.compareTo(a.length);
+      return byLength != 0 ? byLength : all.indexOf(a).compareTo(all.indexOf(b));
+    });
+  final out = <String>[];
+  void add(String candidate) {
+    final c = candidate.trim();
+    if (c.length < 3 || c == original || out.contains(c)) return;
+    out.add(c);
+  }
+
+  add(squeeze(original));
+  if (words.length > 1) {
+    for (final w in words) {
+      add(squeeze(w));
+    }
+  }
+  return out.take(max).toList();
+}

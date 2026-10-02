@@ -385,8 +385,6 @@
   "nameHint": "¿Cómo te llamamos?",
   "yourColorLabel": "TU COLOR",
   "bannerPlaceholder": "Foto de fondo",
-  "homeFollowTitle": "Sigue a tus amigos",
-  "homeFollowBody": "Aquí verás lo que califican las personas que sigues. Búscalas en la pestaña Buscar por su nombre o su @usuario.",
   "homeQuietTitle": "Todo tranquilo por aquí",
   "homeQuietBody": "Las personas que sigues todavía no han calificado nada. Cuando lo hagan, aparecerá aquí.",
   "homeActivityError": "No se pudo cargar la actividad: {error}",
@@ -430,8 +428,6 @@
       }
     }
   },
-  "notificationsEmptyTitle": "Nada por ahora",
-  "notificationsEmptyBody": "Aquí verás cuando alguien te siga, le guste una de tus notas o guarde una de tus listas.",
   "commentsTitle": "Comentarios",
   "countComments": "{n, plural, =1{1 comentario} other{{n} comentarios}}",
   "@countComments": {

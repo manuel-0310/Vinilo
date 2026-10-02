@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import '../models/album.dart';
 import '../models/feed.dart';
 import '../models/notification.dart';
+import '../models/outbox.dart';
 import '../models/popular.dart' as popular;
 import '../models/rating.dart';
 import '../models/stats.dart';
@@ -40,6 +41,10 @@ class RatingsRepo {
       _db.collection('albums');
   CollectionReference<Map<String, dynamic>> get _users =>
       _db.collection('users');
+
+  /// Las notas que esperan conexión (`users/{uid}/outbox/{albumId}`).
+  CollectionReference<Map<String, dynamic>> _outbox(String uid) =>
+      _users.doc(uid).collection('outbox');
 
   List<RatingEntry> _entries(QuerySnapshot<Map<String, dynamic>> snap) =>
       snap.docs.map(RatingEntry.fromDoc).toList();
@@ -312,13 +317,69 @@ class RatingsRepo {
     });
   }
 
+  /// Deja la nota en la cola del teléfono porque no hay conexión. No hace
+  /// falta esperarla: Firestore la guarda en el teléfono al instante y la
+  /// sube cuando vuelve la señal (el `Future` se cumple entonces).
+  Future<void> queue({
+    required String uid,
+    required Album album,
+    required int score,
+    required String note,
+  }) {
+    final pending = PendingRating(
+      album: album,
+      score: score,
+      note: note,
+      createdAt: DateTime.now(),
+    );
+    return _outbox(uid).doc(album.id).set(pending.toMap());
+  }
+
+  /// La nota de este disco que espera conexión (null si no hay).
+  Stream<PendingRating?> pending(String uid, String albumId) => _outbox(uid)
+      .doc(albumId)
+      .snapshots()
+      .map((s) => s.exists ? PendingRating.fromDoc(s) : null);
+
+  /// Cuántas notas esperan conexión (la cola completa).
+  Stream<List<PendingRating>> outbox(String uid) => _outbox(uid)
+      .snapshots()
+      .map((s) => s.docs.map(PendingRating.fromDoc).toList());
+
+  /// Saca un disco de la cola (ya se guardó o se borró su nota). Es una
+  /// escritura normal y no una dentro de la transacción: así va en la misma
+  /// fila que la que la puso en la cola y nunca llega antes que ella.
+  Future<void> clearPending(String uid, String albumId) =>
+      _outbox(uid).doc(albumId).delete();
+
+  /// Sube las notas de la cola, de la más vieja a la más nueva, y las saca
+  /// de ella. Devuelve cuántas subió. Si se vuelve a cortar la conexión, se
+  /// detiene y el resto espera a la próxima vez.
+  Future<int> flushOutbox(UserProfile me) async {
+    final snap = await _outbox(me.uid).get();
+    final queued = snap.docs.map(PendingRating.fromDoc).toList()
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    var done = 0;
+    for (final p in queued) {
+      if (p.isValid) {
+        await rate(user: me, album: p.album, score: p.score, note: p.note);
+        done++;
+      }
+      // Una que no sirve se descarta para que no atasque la cola.
+      await clearPending(me.uid, p.albumId);
+    }
+    return done;
+  }
+
   /// Borra la nota con su hilo de respuestas (primero el hilo: las reglas
   /// dejan a la dueña borrarlas mientras la nota existe) y la descuenta del
-  /// disco y de la persona.
+  /// disco y de la persona. Si había una versión esperando conexión, también
+  /// sale de la cola (si no, volvería a aparecer al recuperar la señal).
   Future<void> remove({required String uid, required String albumId}) async {
     final ratingRef = _ratings.doc(RatingEntry.docId(uid, albumId));
     final albumRef = _albums.doc(albumId);
     final userRef = _users.doc(uid);
+    unawaited(clearPending(uid, albumId).catchError((Object _) {}));
     await _replies?.deleteAllFor(ratingRef.id);
 
     await _db.runTransaction((tx) async {

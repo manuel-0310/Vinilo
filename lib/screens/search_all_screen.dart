@@ -10,6 +10,7 @@ import '../widgets/album_grid.dart';
 import '../widgets/artist_avatar.dart';
 import '../widgets/v_buttons.dart';
 import '../widgets/v_sections.dart';
+import '../widgets/v_states.dart';
 import 'routes.dart';
 
 enum SearchAllKind { artists, albums }
@@ -64,12 +65,26 @@ class _SearchAllScreenState extends State<SearchAllScreen> {
     if (_scroll.position.extentAfter < 600) _load();
   }
 
-  Future<void> _load() async {
+  /// "Reintentar" desde "Sin conexión" o "Se rayó el disco": el aviso se
+  /// queda con su spinner hasta que llega la respuesta.
+  bool _retrying = false;
+
+  Future<void> _retry() async {
+    if (_retrying) return;
+    final error = _error;
+    setState(() => _retrying = true);
+    if (isOfflineError(error)) await ServicesScope.of(context).connectivity.check();
+    if (!mounted) return;
+    await _load(keepError: true);
+    if (mounted) setState(() => _retrying = false);
+  }
+
+  Future<void> _load({bool keepError = false}) async {
     final offset = _next;
     if (offset == null || _loading) return;
     setState(() {
       _loading = true;
-      _error = null;
+      if (!keepError) _error = null;
     });
     try {
       final spotify = ServicesScope.of(context).spotify;
@@ -82,6 +97,7 @@ class _SearchAllScreenState extends State<SearchAllScreen> {
         _artists.addAll(page.items.where((a) => _seen.add(a.id)));
         _next = page.items.isEmpty ? null : page.nextOffset;
       }
+      _error = null;
     } catch (e) {
       _error = e;
     }
@@ -100,6 +116,9 @@ class _SearchAllScreenState extends State<SearchAllScreen> {
     final l = context.l10n;
     final albums = widget.kind == SearchAllKind.albums;
     final empty = albums ? _albums.isEmpty : _artists.isEmpty;
+    // Sin nada que mostrar, los errores de conexión y del servidor ocupan la
+    // pantalla.
+    final fullError = empty && (isOfflineError(_error) || isServerError(_error));
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -119,7 +138,37 @@ class _SearchAllScreenState extends State<SearchAllScreen> {
                 color: c.line,
               ),
             ),
-            if (empty && _loading)
+            if (fullError && isOfflineError(_error))
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: OfflineState(
+                  checking: _retrying,
+                  onRetry: _retry,
+                  padding: EdgeInsets.fromLTRB(
+                    VSpace.page,
+                    10,
+                    VSpace.page,
+                    MediaQuery.paddingOf(context).bottom + 30,
+                  ),
+                ),
+              )
+            else if (fullError)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: ServerErrorState(
+                  error: _error,
+                  retrying: _retrying,
+                  onRetry: _retry,
+                  where: 'search-all: ${widget.query}',
+                  padding: EdgeInsets.fromLTRB(
+                    VSpace.page,
+                    0,
+                    VSpace.page,
+                    MediaQuery.paddingOf(context).bottom + 30,
+                  ),
+                ),
+              )
+            else if (empty && _loading)
               albums ? const AlbumGridSkeleton() : const _ArtistGridSkeleton()
             else if (empty && _error == null)
               SliverToBoxAdapter(
@@ -129,7 +178,7 @@ class _SearchAllScreenState extends State<SearchAllScreen> {
               AlbumGrid(albums: _albums, heroPrefix: 'all-${widget.query}', keyPrefix: 'all-album')
             else
               _ArtistGrid(artists: _artists),
-            SliverToBoxAdapter(child: _footer(c, l, empty)),
+            if (!fullError) SliverToBoxAdapter(child: _footer(c, l, empty)),
           ],
         ),
       ),
@@ -152,7 +201,8 @@ class _SearchAllScreenState extends State<SearchAllScreen> {
             VSecondaryButton(
               key: const ValueKey('all-retry'),
               label: l.retry,
-              onPressed: _load,
+              busy: _retrying,
+              onPressed: _retry,
             ),
           ],
         ),
