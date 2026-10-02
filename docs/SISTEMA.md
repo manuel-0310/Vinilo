@@ -141,6 +141,38 @@ Lo que dejó el rediseño (terminado el 2026-09-25) y sigue vigente: decisiones 
 - **Lista y Ranking:** franja `coverShade` del color de la portada (la elegida o la del primer elemento), portada de 150, barra fija al pasar la franja (como el disco), filas de lista con portada de 44 y de ranking con el número en el tono.
 - **Configuración:** secciones con línea y etiqueta mono, `SegmentedBoxes`, avatar relleno del énfasis, y debajo "Cerrar sesión" y "Eliminar cuenta" (hoja rediseñada con `LineField` y `VPrimaryButton.tone` en `danger`).
 
+### Lo que sumó la ronda 8 (2026-10-02): usar esto también
+
+Prototipos `Vinilo Nuevas.dc.html`, `Vinilo Onboarding.dc.html`, `Vinilo Moderación.dc.html` y `Vinilo Estados.dc.html`; el plan y lo que hace cada fase están en `docs/PLAN.md`.
+
+- **Tokens:** `skeleton` (`#1E1D1B`) y `skeletonSoft` (`#1A1917`) para las cargas; `danger` pasó a `oklch(0.68 0.19 25)` (`#F75D59`), el de los prototipos nuevos.
+- **Cargas (`v_sections.dart`):** `VSkeleton(soft:)` trae su brillo; `VShimmer` envuelve un grupo de bloques para que compartan un solo brillo (1,4 s, como el prototipo). `VSpinner` (`v_buttons.dart`): círculo de 16 con borde de 2 al que le falta un cuarto, 0,8 s por vuelta; `VPrimaryButton(busy:)` y `VSecondaryButton(busy:)` lo ponen en lugar de la flecha.
+- **`VPrimaryButton`:** `trailingIcon` (el ↻ de "Reintentar") y `mutedWhenDisabled` (tinta al 12 % con el texto al 40 %: "Continuar" del onboarding, "Enviar reporte").
+- **`VSwitch`** (`v_choices.dart`): interruptor cuadrado de 48×28 (Privacidad y seguridad).
+- **`VFilterOption` / `VTextFilters`** (`v_sections.dart`): filtros de texto de 14 con la raya de 1 px en el elegido (géneros del onboarding, periodos de Estadísticas).
+- **Íconos:** `VIcon.copy`, `VIcon.refresh` (↻) y `VIcon.backspace` (el ⌫ del teclado del código).
+- **Menús "···":** `showMenuSheet` + `MenuSheetItem` (`menu_sheet.dart`); encima, `showProfileMenu`, `showContentMenu`, `openReport`, `confirmBlock`, `MoreDots`, `BlockedAvatar`, `MonoArrowRow` y `handleOf` (`screens/moderation_actions.dart`).
+- **`Moderation.of(context)`** (`services.dart`, junto a `CurrentUser`): lo que hay que esconder (bloqueos en los dos sentidos, silenciados, ocultos) y el filtro de palabras; las listas pasan por `.feed`, `.ratings`, `.people`, `.notifications` y los textos por `.text`.
+- **`LineField` con error:** la línea (2 px) y la etiqueta en `danger`, el mensaje de 13,5 debajo.
+- **`shareWith`** (`share_button.dart`): lo que hace cualquier botón de compartir (con tarjetas, la hoja "Compartir"; sin ellas, la del sistema).
+- **Estados (`v_states.dart`):** `OfflineState` ("Sin conexión": "Sin señal · Lado B", la gráfica plana de 120, el título de 64, "Reintentar"/"Conectando…" y "Ver mis discos guardados"; llena el alto que le den, va en un `SliverFillRemaining`), `ServerErrorState` ("Se rayó el disco" con el estado en 180, el código y "Reportar el problema"), `OfflineBanner` (la franja de tinta del inicio), `ConnectivityBuilder` y `checkConnection`.
+- **Conexión y cola:** `Services.connectivity` (`ConnectivityService`) y `OutboxSync` (en `ShellScreen`); `RatingsRepo.queue`, `pending`, `outbox`, `clearPending` y `flushOutbox`; `PendingRating` (`models/outbox.dart`). La hoja de Calificar devuelve `RatingSheetResult.queued` y acepta `initialNote` y `pending`.
+- **Errores (`util/errors.dart`):** `isOfflineError`, `isServerError`, `serverStatusOf` y `errorCode` ("VN-500-7F2A").
+- **Soporte:** `Services.support` (`SupportRepo`: `reportProblem`, `requestAlbum`, `problems`, `requests`), `supportEmail` (`util/support.dart`), `ProblemReport`, `AlbumRequest` y `groupRequests` (`models/support.dart`).
+- **Búsqueda:** `didYouMeanQueries` (`util/search_text.dart`).
+- **Moderar:** `ModerationRepo.openReports`, `resolve`, `removeContent` e `isAdmin`; `ModerationEntry` y `ModerationPanelScreen` (`moderation_panel_screen.dart`).
+- **Estadísticas:** `models/stats.dart` (periodos, artistas, décadas, rachas, afinidad), `util/music_meta.dart` (`countryName`, nombres de géneros en español) y `SpotifyApi.artistMeta` (la ruta `/artists/meta`).
+
+#### Lo que no quedó idéntico en la ronda 8
+
+- **Inicio vacío:** conserva la campana (el prototipo solo tiene "VINILO") y, como en el prototipo, no muestra "Popular esta semana" mientras la persona no sigue a nadie.
+- **Mi perfil vacío:** si se eligieron favoritos en el onboarding, se ven arriba (el prototipo no tiene favoritos); las cifras son las del encabezado de siempre.
+- **Buscar sin resultados:** "¿Quisiste decir?" sale de buscar variantes de lo escrito (sin letras repetidas de más y cada palabra larga sola) y muestra hasta 3 discos; si ninguna encuentra nada, no aparece.
+- **"Sin conexión" y "Se rayó el disco" en Buscar** van debajo del campo, no a pantalla completa (la búsqueda sigue a mano); en "Ver todos" ocupan la pantalla. "Se rayó el disco" muestra el estado que devolvió la función (502, 503…), 500 si no lo hay.
+- **"Error al guardar":** es la hoja de Calificar de siempre (fondo `sheet` y velo de la especificación) con las barras y el comentario escondidos mientras dura el error.
+- **"Cargando disco":** no se usa; el disco siempre abre con el álbum ya conocido (portada, título) y solo cargan las canciones, que tienen su propio esqueleto.
+- **Sin diseño en los prototipos:** el panel de moderación (usa los bloques de "Mis reportes") y "Ver mis discos guardados" (abre el diario).
+
 ## Cambios de comportamiento acordados
 
 1. **Crear cuenta en una sola pantalla** (fase 2):
