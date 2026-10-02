@@ -22,6 +22,7 @@ import '../widgets/user_avatar.dart';
 import '../widgets/v_buttons.dart';
 import '../widgets/v_icons.dart';
 import '../widgets/v_sections.dart';
+import 'moderation_actions.dart';
 import 'routes.dart';
 
 /// Alto del banner debajo de la barra de estado (156 en el prototipo, con
@@ -86,6 +87,18 @@ class ProfileHeader extends StatelessWidget {
     );
   }
 
+  /// El "···" del perfil de otra persona. "Compartir perfil" hace lo mismo
+  /// que el botón de compartir de antes; lo demás lo resuelve el menú.
+  Future<void> _openMenu(BuildContext context) async {
+    final choice = await showProfileMenu(context, person: profile.person);
+    if (choice != ProfileMenuAction.share || !context.mounted) return;
+    await shareWith(
+      context,
+      message: (l) => shareProfileMessage(profile, l, mine: false),
+      cards: () => _shareCards(context),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
@@ -107,12 +120,22 @@ class ProfileHeader extends StatelessWidget {
               onTap: () => Navigator.of(context).maybePop(),
             ),
           const Spacer(),
-          ShareButton(
-            key: const ValueKey('share-profile'),
-            message: (l) => shareProfileMessage(profile, l, mine: isMe),
-            cards: () => _shareCards(context),
-          ),
-          if (isMe) ...[
+          // En el propio, compartir; en el ajeno, el menú "···" (compartir,
+          // silenciar, reportar y bloquear).
+          if (!isMe)
+            VIconButton(
+              key: const ValueKey('profile-more'),
+              icon: VIcon.more,
+              style: VIconButtonStyle.filled,
+              tooltip: l.menuMore,
+              onTap: () => _openMenu(context),
+            )
+          else ...[
+            ShareButton(
+              key: const ValueKey('share-profile'),
+              message: (l) => shareProfileMessage(profile, l, mine: isMe),
+              cards: () => _shareCards(context),
+            ),
             const SizedBox(width: 4),
             VIconButton(
               key: const ValueKey('settings'),

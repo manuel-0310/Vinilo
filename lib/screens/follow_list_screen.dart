@@ -54,7 +54,7 @@ class _FollowListScreenState extends State<FollowListScreen> {
         child: StreamBuilder<List<PersonInfo>>(
           stream: _stream,
           builder: (context, snap) {
-            final people = snap.data;
+            final people = snap.data == null ? null : Moderation.of(context).people(snap.data!);
             return CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(

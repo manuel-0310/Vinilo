@@ -296,10 +296,7 @@ class _ArtistScreenState extends State<ArtistScreen> {
                             )
                           : _loadingMore && page != null
                               ? Center(
-                                  child: SizedBox.square(
-                                    dimension: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 1.6, color: c.ink3),
-                                  ),
+                                  child: VSpinner(color: c.ink3),
                                 )
                               : page != null && page.nextOffset == null
                                   ? VMono(l10n.spotifyCredit, size: 10, tracking: 0.04, color: c.ink4, uppercase: false)

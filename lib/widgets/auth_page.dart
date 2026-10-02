@@ -22,6 +22,7 @@ class AuthScaffold extends StatelessWidget {
     this.bottom,
     this.showBack = true,
     this.bodyTop = 36,
+    this.overline,
   });
 
   /// Título en dos líneas ("Iniciar\nsesión").
@@ -40,6 +41,10 @@ class AuthScaffold extends StatelessWidget {
   /// Aire entre el título y los campos (36 al entrar, 32 al crear la
   /// cuenta).
   final double bodyTop;
+
+  /// La etiqueta mono sobre el título; por defecto "VINILO" ("Paso 1 de 3"
+  /// al recuperar la contraseña).
+  final String? overline;
 
   /// Volver (40) más su relleno de arriba (4).
   static const double _backHeight = 44;
@@ -75,7 +80,7 @@ class AuthScaffold extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        VMono(context.l10n.appName),
+                        VMono(overline ?? context.l10n.appName),
                         const SizedBox(height: 8),
                         Text(
                           title,

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@1,6..72,400&display=swap" rel="stylesheet"><style>body{margin:0;background:#e9e6e0;font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}a:hover{color:oklch(0.7 0.19 38)}</style></helmet>
+<section data-screen-label="Reportar y bloquear" style="padding:44px 48px 36px">
+<div style="font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;color:#1a1a1a;margin:0 0 24px">Reportar y bloquear</div>
+<div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:12px"><div style="font:500 12px system-ui,sans-serif;color:rgba(0,0,0,.6)">1 · Menú ··· en el perfil de alguien</div>
+<div data-screen-label="Menú perfil" style="width:390px;height:844px;background:#0f0e0d;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #1c1b1a,0 0 0 11px #3a3836,0 30px 60px rgba(0,0,0,.25);color:#efebe4;margin:11px">
+<div style="height:156px;position:relative;background-color:oklch(0.36 0.09 28);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 1px,transparent 1px 8px)">
+<div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 36px;font:600 15px Archivo;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000"></div><div style="width:24px;height:11px;border:1px solid rgba(239,235,228,.5);border-radius:3px"></div></div>
+<div style="display:flex;justify-content:space-between;padding:4px 16px"><div style="width:40px;height:40px;background:rgba(15,14,13,.55);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4L6 10l6 6"></path></svg></div><div style="width:40px;height:40px;background:#efebe4;color:#0f0e0d;display:flex;align-items:center;justify-content:center;font:700 16px Archivo;letter-spacing:1px">···</div></div>
+</div>
+<div style="padding:0 20px"><span style="display:flex;position:relative;width:84px;height:84px;border-radius:50%;background:oklch(0.45 0.12 30);border:4px solid #0f0e0d;margin-top:-42px;align-items:center;justify-content:center;font:600 30px Archivo">S</span>
+<div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:40px;line-height:.85;margin-top:10px">Santiago Mejía</div><div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.55);margin-top:6px">@santi</div></div>
+<div style="position:absolute;inset:0;background:rgba(8,8,7,.7)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:#1b1a18;border-top:1px solid rgba(239,235,228,.18);padding:10px 20px 38px">
+<div style="width:40px;height:4px;background:rgba(239,235,228,.3);margin:0 auto 14px"></div>
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58);padding-bottom:10px">@santi</div>
+<div style="border-top:1px solid rgba(239,235,228,.14)">
+<div style="display:flex;justify-content:space-between;gap:12px;white-space:nowrap;padding:16px 0;border-bottom:1px solid rgba(239,235,228,.08);font:500 16px Archivo"><span>Compartir perfil</span><span style="color:rgba(239,235,228,.5)">→</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px;white-space:nowrap;padding:16px 0;border-bottom:1px solid rgba(239,235,228,.08);font:500 16px Archivo"><span>Silenciar</span><span style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,235,228,.5);padding-top:3px">No verás su actividad</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px;white-space:nowrap;padding:16px 0;border-bottom:1px solid rgba(239,235,228,.08);font:500 16px Archivo;color:{{ danger }}"><span>Reportar a @santi</span><span>→</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px;white-space:nowrap;padding:16px 0;font:600 16px Archivo;color:{{ danger }}"><span>Bloquear a @santi</span><span>→</span></div>
+</div>
+<div style="height:52px;margin-top:12px;border:1px solid rgba(239,235,228,.28);display:flex;align-items:center;justify-content:center;font:500 16px Archivo">Cancelar</div>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#efebe4"></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px"><div style="font:500 12px system-ui,sans-serif;color:rgba(0,0,0,.6)">2 · Menú ··· en una calificación o respuesta</div>
+<div data-screen-label="Menú contenido" style="width:390px;height:844px;background:#0f0e0d;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #1c1b1a,0 0 0 11px #3a3836,0 30px 60px rgba(0,0,0,.25);color:#efebe4;margin:11px">
+<div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 36px;font:600 15px Archivo;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000"></div><div style="width:24px;height:11px;border:1px solid rgba(239,235,228,.5);border-radius:3px"></div></div>
+<div style="padding:16px 20px 0">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:end;padding-bottom:16px;border-bottom:1px solid rgba(239,235,228,.14)">
+<div><div style="display:flex;align-items:center;gap:10px"><span style="width:28px;height:28px;border-radius:50%;background:oklch(0.5 0.1 85);display:flex;align-items:center;justify-content:center;font:600 12px Archivo">T</span><span style="font:600 16px Archivo">Tomás G.</span><span style="font:700 14px Archivo;margin-left:6px;background:#efebe4;color:#0f0e0d;padding:0 6px">···</span></div><div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,235,228,.55);margin-top:10px">Calificó hace 2 días</div></div>
+<div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:96px;line-height:.78;color:{{ accent }}">2</div>
+<div style="grid-column:1 / -1;font-family:Newsreader,Georgia,serif;font-style:italic;font-size:20px;line-height:1.3;margin-top:4px"><span style="color:{{ accent }}">“</span>Comentario ofensivo de ejemplo que alguien querría reportar.<span style="color:{{ accent }}">”</span></div>
+</div>
+</div>
+<div style="position:absolute;inset:0;background:rgba(8,8,7,.7)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:#1b1a18;border-top:1px solid rgba(239,235,228,.18);padding:10px 20px 38px">
+<div style="width:40px;height:4px;background:rgba(239,235,228,.3);margin:0 auto 14px"></div>
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58);padding-bottom:10px">Calificación de @tomasg</div>
+<div style="border-top:1px solid rgba(239,235,228,.14)">
+<div style="display:flex;justify-content:space-between;gap:12px;white-space:nowrap;padding:16px 0;border-bottom:1px solid rgba(239,235,228,.08);font:500 16px Archivo"><span>Ocultar este comentario</span><span style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,235,228,.5);padding-top:3px">Solo para ti</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px;white-space:nowrap;padding:16px 0;border-bottom:1px solid rgba(239,235,228,.08);font:500 16px Archivo;color:{{ danger }}"><span>Reportar comentario</span><span>→</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px;white-space:nowrap;padding:16px 0;font:600 16px Archivo;color:{{ danger }}"><span>Bloquear a @tomasg</span><span>→</span></div>
+</div>
+<div style="height:52px;margin-top:12px;border:1px solid rgba(239,235,228,.28);display:flex;align-items:center;justify-content:center;font:500 16px Archivo">Cancelar</div>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#efebe4"></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px"><div style="font:500 12px system-ui,sans-serif;color:rgba(0,0,0,.6)">3 · Reportar (elige un motivo)</div>
+<div data-screen-label="Reportar" style="width:390px;height:844px;background:#0f0e0d;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #1c1b1a,0 0 0 11px #3a3836,0 30px 60px rgba(0,0,0,.25);color:#efebe4;margin:11px">
+<div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 36px;font:600 15px Archivo;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000"></div><div style="width:24px;height:11px;border:1px solid rgba(239,235,228,.5);border-radius:3px"></div></div>
+<div style="padding:4px 16px 0"><div style="width:40px;height:40px;border:1px solid rgba(239,235,228,.18);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 5l10 10M15 5L5 15"></path></svg></div></div>
+<div style="padding:0 20px">
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58);margin-top:16px">Reportar comentario de @tomasg</div>
+<div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:46px;line-height:.9;margin-top:8px">¿Qué está pasando?</div>
+<div style="font-size:14px;line-height:1.45;color:rgba(239,235,228,.62);margin-top:8px">Tu reporte es anónimo. @tomasg no sabrá que fuiste tú.</div>
+<div style="margin-top:16px;border-top:1px solid rgba(239,235,228,.14)">
+<sc-for list="{{ reasons }}" as="r" hint-placeholder-count="7">
+<div onClick="{{ r.pick }}" style="display:grid;grid-template-columns:minmax(0,1fr) 20px;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid rgba(239,235,228,.08);cursor:pointer">
+<div><div style="font:500 16px Archivo">{{ r.t }}</div><div style="font-size:12.5px;color:rgba(239,235,228,.5);margin-top:2px">{{ r.d }}</div></div>
+<span style="width:20px;height:20px;border-radius:50%;border:{{ r.bd }};box-sizing:border-box;background:{{ r.bg }}"></span>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:12px;padding:10px 0;border-bottom:1px solid rgba(239,235,228,.28);font-size:15px;color:rgba(239,235,228,.5)">Agrega detalles (opcional)</div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;padding:14px 20px 38px;background:#0f0e0d;border-top:1px solid rgba(239,235,228,.14)">
+<div style="height:56px;background:{{ sendBg }};color:{{ sendFg }};display:flex;align-items:center;justify-content:space-between;padding:0 20px;font:600 16px Archivo;cursor:pointer"><span>Enviar reporte</span><span>→</span></div>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#efebe4"></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px"><div style="font:500 12px system-ui,sans-serif;color:rgba(0,0,0,.6)">4 · Reporte enviado</div>
+<div data-screen-label="Reporte enviado" style="width:390px;height:844px;background:#0f0e0d;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #1c1b1a,0 0 0 11px #3a3836,0 30px 60px rgba(0,0,0,.25);color:#efebe4;margin:11px">
+<div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 36px;font:600 15px Archivo;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000"></div><div style="width:24px;height:11px;border:1px solid rgba(239,235,228,.5);border-radius:3px"></div></div>
+<div style="padding:0 20px">
+<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(239,235,228,.14);font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58)"><span>Reporte Nº 4821</span><span>Acoso</span></div>
+<div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:64px;line-height:.86;margin-top:40px">Gracias por avisarnos</div>
+<div style="font-size:15px;line-height:1.45;color:rgba(239,235,228,.62);margin-top:14px;text-wrap:pretty">Ya ocultamos este comentario para ti. Nuestro equipo lo revisa en menos de 24 horas y te avisamos qué decidimos.</div>
+<div style="margin-top:28px;border-top:1px solid rgba(239,235,228,.14)">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:16px 0;border-bottom:1px solid rgba(239,235,228,.14)">
+<div><div style="font:600 16px Archivo">Bloquear también a @tomasg</div><div style="font-size:12.5px;color:rgba(239,235,228,.55);margin-top:3px">No podrá ver tu perfil ni responderte</div></div>
+<div onClick="{{ toggleAlsoBlock }}" style="width:48px;height:28px;background:{{ swBg }};position:relative;cursor:pointer;transition:background .2s"><div style="position:absolute;top:3px;left:{{ swX }}px;width:22px;height:22px;background:{{ swKnob }};transition:left .2s"></div></div>
+</div>
+</div>
+</div>
+<div style="position:absolute;left:20px;right:20px;bottom:38px;display:flex;flex-direction:column;gap:8px">
+<div style="height:56px;background:#efebe4;color:#0f0e0d;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font:600 16px Archivo"><span>Listo</span><span>→</span></div>
+<div style="text-align:center;font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,235,228,.5);padding-top:6px">Ver mis reportes en Ajustes</div>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#efebe4"></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px"><div style="font:500 12px system-ui,sans-serif;color:rgba(0,0,0,.6)">5 · Confirmar bloqueo</div>
+<div data-screen-label="Confirmar bloqueo" style="width:390px;height:844px;background:#0f0e0d;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #1c1b1a,0 0 0 11px #3a3836,0 30px 60px rgba(0,0,0,.25);color:#efebe4;margin:11px">
+<div style="height:156px;position:relative;background-color:oklch(0.36 0.09 28);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 1px,transparent 1px 8px)">
+<div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 36px;font:600 15px Archivo;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000"></div><div style="width:24px;height:11px;border:1px solid rgba(239,235,228,.5);border-radius:3px"></div></div>
+</div>
+<div style="position:absolute;inset:0;background:rgba(8,8,7,.7)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:#1b1a18;border-top:1px solid rgba(239,235,228,.18);padding:10px 20px 38px">
+<div style="width:40px;height:4px;background:rgba(239,235,228,.3);margin:0 auto 18px"></div>
+<span style="display:flex;width:56px;height:56px;border-radius:50%;background:oklch(0.45 0.12 30);align-items:center;justify-content:center;font:600 22px Archivo">S</span>
+<div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:46px;line-height:.9;margin-top:14px">¿Bloquear a @santi?</div>
+<div style="margin-top:16px;border-top:1px solid rgba(239,235,228,.14)">
+<sc-for list="{{ blockRules }}" as="b" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;padding:11px 0;border-bottom:1px solid rgba(239,235,228,.08);font-size:15px;line-height:1.4"><span style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.5);padding-top:2px">{{ b.n }}</span><span>{{ b.t }}</span></div></sc-for>
+</div>
+<div style="font-size:12.5px;line-height:1.4;color:rgba(239,235,228,.5);margin-top:10px">No le avisaremos. Puedes desbloquearlo cuando quieras en Ajustes.</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+<div style="height:56px;background:{{ danger }};color:#0f0e0d;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font:600 16px Archivo"><span>Bloquear</span><span>→</span></div>
+<div style="height:52px;border:1px solid rgba(239,235,228,.28);display:flex;align-items:center;justify-content:center;font:500 16px Archivo">Cancelar</div>
+</div>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#efebe4"></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px"><div style="font:500 12px system-ui,sans-serif;color:rgba(0,0,0,.6)">6 · Perfil bloqueado</div>
+<div data-screen-label="Perfil bloqueado" style="width:390px;height:844px;background:#0f0e0d;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #1c1b1a,0 0 0 11px #3a3836,0 30px 60px rgba(0,0,0,.25);color:#efebe4;margin:11px">
+<div style="height:156px;position:relative;background:#2a2826">
+<div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 36px;font:600 15px Archivo;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000"></div><div style="width:24px;height:11px;border:1px solid rgba(239,235,228,.5);border-radius:3px"></div></div>
+<div style="display:flex;justify-content:space-between;padding:4px 16px"><div style="width:40px;height:40px;background:rgba(15,14,13,.55);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4L6 10l6 6"></path></svg></div><div style="width:40px;height:40px;background:rgba(15,14,13,.55);display:flex;align-items:center;justify-content:center;font:700 16px Archivo;letter-spacing:1px">···</div></div>
+</div>
+<div style="padding:0 20px"><span style="display:flex;position:relative;width:84px;height:84px;border-radius:50%;background:#3a3836;border:4px solid #0f0e0d;margin-top:-42px;align-items:center;justify-content:center;font:600 30px Archivo;color:rgba(239,235,228,.5)">S</span>
+<div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:40px;line-height:.85;margin-top:10px">Santiago Mejía</div><div style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.55);margin-top:6px">@santi</div>
+<div style="margin-top:40px;padding:22px 0;border-top:1px solid rgba(239,235,228,.14);border-bottom:1px solid rgba(239,235,228,.14)">
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:{{ danger }}">{{ blkTag }}</div>
+<div style="font-family:Archivo;font-stretch:70%;font-weight:700;font-size:28px;line-height:1.05;margin-top:8px">{{ blkTitle }}</div>
+<div style="font-size:14px;line-height:1.45;color:rgba(239,235,228,.6);margin-top:8px">{{ blkBody }}</div>
+</div>
+<div onClick="{{ toggleBlocked }}" style="height:52px;margin-top:18px;border:1px solid rgba(239,235,228,.28);display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:500 16px Archivo;cursor:pointer" style-hover="border-color:#efebe4"><span>{{ blkBtn }}</span><span style="color:rgba(239,235,228,.5)">→</span></div>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#efebe4"></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px"><div style="font:500 12px system-ui,sans-serif;color:rgba(0,0,0,.6)">7 · Ajustes · privacidad y seguridad</div>
+<div data-screen-label="Ajustes bloqueados" style="width:390px;height:844px;background:#0f0e0d;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #1c1b1a,0 0 0 11px #3a3836,0 30px 60px rgba(0,0,0,.25);color:#efebe4;margin:11px">
+<div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 36px;font:600 15px Archivo;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000"></div><div style="width:24px;height:11px;border:1px solid rgba(239,235,228,.5);border-radius:3px"></div></div>
+<div style="padding:4px 16px 0"><div style="width:40px;height:40px;border:1px solid rgba(239,235,228,.18);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4L6 10l6 6"></path></svg></div></div>
+<div style="padding:0 20px">
+<div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:46px;line-height:.9;margin-top:16px">Privacidad y seguridad</div>
+<div style="margin-top:22px;border-top:1px solid rgba(239,235,228,.14)">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(239,235,228,.08)"><div><div style="font:500 16px Archivo">Filtrar comentarios ofensivos</div><div style="font-size:12.5px;color:rgba(239,235,228,.55);margin-top:2px">Ocultamos palabras ofensivas automáticamente</div></div><div onClick="{{ toggleFilter }}" style="width:48px;height:28px;background:{{ fBg }};position:relative;cursor:pointer;transition:background .2s"><div style="position:absolute;top:3px;left:{{ fX }}px;width:22px;height:22px;background:{{ fKnob }};transition:left .2s"></div></div></div>
+<div style="display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(239,235,228,.08);font:500 16px Archivo"><span>Mis reportes</span><span style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.5)">2 →</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(239,235,228,.14);font:500 16px Archivo"><span>Cuentas silenciadas</span><span style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.5)">0 →</span></div>
+</div>
+<div style="display:flex;justify-content:space-between;padding:22px 0 10px;font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58)"><span>Cuentas bloqueadas</span><span>{{ blkCount }}</span></div>
+<div style="border-top:1px solid rgba(239,235,228,.14)">
+<sc-for list="{{ blocked }}" as="u" hint-placeholder-count="2">
+<div style="display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(239,235,228,.08)">
+<span style="width:40px;height:40px;border-radius:50%;background:#3a3836;display:flex;align-items:center;justify-content:center;font:600 15px Archivo;color:rgba(239,235,228,.6)">{{ u.i }}</span>
+<div><div style="font:600 15px Archivo">{{ u.n }}</div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,235,228,.5);margin-top:3px">{{ u.d }}</div></div>
+<div onClick="{{ u.unblock }}" style="height:34px;padding:0 12px;border:1px solid rgba(239,235,228,.28);display:flex;align-items:center;font:500 13px Archivo;cursor:pointer">Desbloquear</div>
+</div>
+</sc-for>
+<sc-if value="{{ noBlocked }}" hint-placeholder-val="{{ false }}"><div style="padding:24px 0;font-size:14px;color:rgba(239,235,228,.5)">No tienes cuentas bloqueadas.</div></sc-if>
+</div>
+<div style="margin-top:22px;font-size:12.5px;line-height:1.45;color:rgba(239,235,228,.5)">¿Algo urgente? Escríbenos a <span style="color:#efebe4">soporte@vinilo.app</span></div>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#efebe4"></div>
+</div>
+</div>
+
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;oklch(0.7 0.19 38)&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;oklch(0.7 0.19 38)&quot;,&quot;oklch(0.65 0.15 255)&quot;,&quot;oklch(0.72 0.15 150)&quot;]},&quot;danger&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;oklch(0.68 0.19 25)&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;oklch(0.68 0.19 25)&quot;,&quot;oklch(0.7 0.19 38)&quot;,&quot;#efebe4&quot;]}}">
+class Component extends DCLogic {
+  state = { reason: 1, also: false, blocked: true, filter: true, list: [0, 1] };
+  renderVals() {
+    const acc = this.props.accent ?? 'oklch(0.7 0.19 38)';
+    const danger = this.props.danger ?? 'oklch(0.68 0.19 25)';
+    const R = [['Spam','Publicidad, enlaces o mensajes repetidos'],['Acoso o bullying','Ataques o insultos a alguien'],['Discurso de odio','Contra un grupo o identidad'],['Contenido sexual','Texto o imagen explícita'],['Suplantación','Se hace pasar por otra persona'],['Violencia o amenazas','Daño a alguien o a sí mismo'],['Otro','Cuéntanos en los detalles']];
+    const sw = (on) => ({ bg: on ? acc : 'rgba(239,235,228,.18)', x: on ? 23 : 3, k: on ? '#0f0e0d' : '#efebe4' });
+    const a = sw(this.state.also), f = sw(this.state.filter);
+    const U = [['Tomás G.','T','Bloqueado hace 2 días'],['spam_discos','S','Bloqueado hace 3 semanas']];
+    const list = this.state.list.map(i => ({ n: U[i][0], i: U[i][1], d: U[i][2], unblock: () => this.setState(s => ({ list: s.list.filter(x => x !== i) })) }));
+    const b = this.state.blocked;
+    return {
+      accent: acc, danger,
+      reasons: R.map(([t, d], i) => ({ t, d, bd: i === this.state.reason ? `6px solid ${acc}` : '1px solid rgba(239,235,228,.4)', bg: 'transparent', pick: () => this.setState({ reason: i }) })),
+      sendBg: this.state.reason == null ? 'rgba(239,235,228,.12)' : acc, sendFg: '#0f0e0d',
+      swBg: a.bg, swX: a.x, swKnob: a.k, toggleAlsoBlock: () => this.setState(s => ({ also: !s.also })),
+      fBg: f.bg, fX: f.x, fKnob: f.k, toggleFilter: () => this.setState(s => ({ filter: !s.filter })),
+      blockRules: [['01','No podrá ver tu perfil, tus notas ni tus listas.'],['02','No podrá seguirte, responderte ni mencionarte.'],['03','Dejarán de seguirse mutuamente.'],['04','Sus calificaciones y comentarios desaparecen de tu inicio.']].map(([n, t]) => ({ n, t })),
+      blkTag: b ? 'Bloqueado' : 'Desbloqueado',
+      blkTitle: b ? 'Bloqueaste a esta cuenta' : 'Ya no está bloqueado',
+      blkBody: b ? 'No ves su actividad y no puede interactuar contigo.' : 'Pueden volver a verse. Tendrás que seguirlo de nuevo si quieres.',
+      blkBtn: b ? 'Desbloquear' : 'Seguir',
+      toggleBlocked: () => this.setState(s => ({ blocked: !s.blocked })),
+      blocked: list, blkCount: list.length, noBlocked: list.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

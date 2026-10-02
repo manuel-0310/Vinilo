@@ -39,3 +39,19 @@ String dayGroup(DateTime date, AppLocalizations l, {DateTime? now}) {
   if (days < 7) return l.groupThisWeek;
   return monthYear(date, l);
 }
+
+/// Hace cuánto pasó algo, en palabras y sin fechas: "hoy", "ayer", "hace 2
+/// días", "hace 3 semanas", "hace 5 meses", "hace 2 años". Lo usan las
+/// listas de Privacidad y seguridad ("Bloqueado hace 3 semanas").
+String relativeAgo(DateTime date, AppLocalizations l, {DateTime? now}) {
+  final n = now ?? DateTime.now();
+  final today = DateTime(n.year, n.month, n.day);
+  final day = DateTime(date.year, date.month, date.day);
+  final days = today.difference(day).inHours ~/ 24;
+  if (days <= 0) return l.timeToday;
+  if (days == 1) return l.timeYesterday;
+  if (days < 7) return l.timeDaysAgo(days);
+  if (days < 30) return l.timeWeeksAgo(days ~/ 7);
+  if (days < 365) return l.timeMonthsAgo(days ~/ 30);
+  return l.timeYearsAgo(days ~/ 365);
+}

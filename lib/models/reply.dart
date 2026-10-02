@@ -20,6 +20,7 @@ class Reply {
     required this.text,
     required this.createdAt,
     this.mentions = const [],
+    this.likedBy = const [],
   });
 
   final String id;
@@ -37,6 +38,12 @@ class Reply {
   /// Personas mencionadas con su @ (se les avisa).
   final List<String> mentions;
 
+  /// A quién le gusta esta respuesta.
+  final List<String> likedBy;
+
+  int get likes => likedBy.length;
+  bool likedByMe(String me) => likedBy.contains(me);
+
   factory Reply.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data() ?? const {};
     final uid = (d['uid'] ?? '') as String;
@@ -52,6 +59,7 @@ class Reply {
       text: (d['text'] ?? '') as String,
       createdAt: dateFrom(d['createdAt']),
       mentions: List<String>.from((d['mentions'] as List?) ?? const []),
+      likedBy: List<String>.from((d['likedBy'] as List?) ?? const []),
     );
   }
 

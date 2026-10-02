@@ -33,6 +33,8 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
     required this.onAccent,
     required this.success,
     required this.danger,
+    required this.skeleton,
+    required this.skeletonSoft,
   });
 
   /// Bermellón, `oklch(0.7 0.19 38)`: el primero de la paleta.
@@ -100,8 +102,14 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
   /// Confirmaciones ("✓ Disponible").
   final Color success;
 
-  /// Errores y acciones que borran (no está en el prototipo).
+  /// Errores y acciones que borran, reportan o bloquean:
+  /// `oklch(0.68 0.19 25)` en oscuro.
   final Color danger;
+
+  /// Bloques de carga (`VSkeleton`): el principal y el de las líneas
+  /// secundarias, un punto más apagado.
+  final Color skeleton;
+  final Color skeletonSoft;
 
   bool get isDark => brightness == Brightness.dark;
 
@@ -155,12 +163,14 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
     overButton: Color(0x8C0F0E0D),
     onAccent: Color(0xFF0F0E0D),
     success: Color(0xFF76CF8A),
-    danger: Color(0xFFED756E),
+    danger: Color(0xFFF75D59),
+    skeleton: Color(0xFF1E1D1B),
+    skeletonSoft: Color(0xFF1A1917),
   );
 
   /// "Modo claro" de la especificación: papel cálido y tinta casi negra.
-  /// `buttonLine`, `inactive`, `placeholder`, `overButton`, `success` y
-  /// `danger` no están en la tabla del diseñador: siguen las mismas
+  /// `buttonLine`, `inactive`, `placeholder`, `overButton`, `success`,
+  /// `danger` y los dos `skeleton` no están en la tabla del diseñador: siguen las mismas
   /// opacidades que en oscuro (un poco más fuertes, como hace él con las
   /// tintas) y los colores de estado bajan de luminosidad para leerse.
   static const ViniloPalette light = ViniloPalette(
@@ -183,6 +193,8 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
     onAccent: Color(0xFF0F0E0D),
     success: Color(0xFF2E8A4A),
     danger: Color(0xFFC23F36),
+    skeleton: Color(0xFFE5E0D6),
+    skeletonSoft: Color(0xFFEAE6DD),
   );
 
   @override
@@ -208,6 +220,8 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
     Color? onAccent,
     Color? success,
     Color? danger,
+    Color? skeleton,
+    Color? skeletonSoft,
   }) {
     return ViniloPalette(
       brightness: brightness ?? this.brightness,
@@ -231,6 +245,8 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
       onAccent: onAccent ?? this.onAccent,
       success: success ?? this.success,
       danger: danger ?? this.danger,
+      skeleton: skeleton ?? this.skeleton,
+      skeletonSoft: skeletonSoft ?? this.skeletonSoft,
     );
   }
 
@@ -260,6 +276,8 @@ class ViniloPalette extends ThemeExtension<ViniloPalette> {
       onAccent: mix(onAccent, other.onAccent),
       success: mix(success, other.success),
       danger: mix(danger, other.danger),
+      skeleton: mix(skeleton, other.skeleton),
+      skeletonSoft: mix(skeletonSoft, other.skeletonSoft),
     );
   }
 }

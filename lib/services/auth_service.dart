@@ -66,6 +66,10 @@ class AuthService {
 
   Future<void> signOut() => _auth.signOut();
 
+  /// La clave pública de la app en Firebase (no es un secreto): con ella se
+  /// comprueba, al recuperar la contraseña, que la nueva no sea la de antes.
+  String get apiKey => _auth.app.options.apiKey;
+
   Future<String?> idToken() =>
       _auth.currentUser?.getIdToken() ?? Future.value(null);
 }

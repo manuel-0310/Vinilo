@@ -8,14 +8,16 @@ import '../util/auth_errors.dart';
 import '../util/email.dart';
 import '../widgets/auth_page.dart';
 import '../widgets/line_field.dart';
-import '../widgets/sheet.dart';
 import '../widgets/v_buttons.dart';
 import '../widgets/v_sections.dart';
+import 'recover_password_screen.dart';
 import 'welcome_screen.dart';
 
 /// Entrar con correo y contraseña. El campo dice "Correo o usuario", como el
 /// prototipo, pero por ahora solo se entra con el correo: con un @usuario
-/// avisa debajo. Apple y Google se ven y todavía no hacen nada.
+/// avisa debajo. Con los datos incorrectos, la contraseña queda en rojo con
+/// su mensaje y "¿Olvidaste tu contraseña?" pasa a tinta. Apple y Google se
+/// ven y todavía no hacen nada.
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
 
@@ -65,9 +67,14 @@ class _SignInScreenState extends State<SignInScreen> {
       if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
     } catch (e) {
       if (!mounted) return;
-      final message = friendlyError(e, context.l10n);
-      final aboutEmail = e is FirebaseAuthException &&
-          (e.code == 'invalid-email' || e.code == 'missing-email' || e.code == 'user-disabled');
+      final code = e is FirebaseAuthException ? e.code : '';
+      final aboutEmail =
+          code == 'invalid-email' || code == 'missing-email' || code == 'user-disabled';
+      // Con los datos incorrectos, lo que dice el diseño ("Error login").
+      const wrong = {'wrong-password', 'invalid-credential', 'INVALID_LOGIN_CREDENTIALS', 'user-not-found'};
+      final message = wrong.contains(code)
+          ? context.l10n.signInWrongPassword
+          : friendlyError(e, context.l10n);
       setState(() {
         if (aboutEmail) {
           _identifierError = message;
@@ -80,22 +87,10 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  Future<void> _forgot() async {
-    final services = ServicesScope.of(context);
+  /// "¿Olvidaste tu contraseña?": los tres pasos con el código.
+  void _forgot() {
     final typed = _identifier.text.trim();
-    final target = await showVSheet<String>(
-      context,
-      (_) => _ResetSheet(initialEmail: looksLikeEmail(typed) ? typed : ''),
-    );
-    if (target == null || target.isEmpty || !mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final l10n = context.l10n;
-    try {
-      await services.auth.sendPasswordReset(target);
-      messenger.showSnackBar(SnackBar(content: Text(l10n.resetSent(target))));
-    } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(friendlyError(e, l10n))));
-    }
+    openRecoverPassword(context, initialEmail: looksLikeEmail(typed) ? typed : '');
   }
 
   @override
@@ -156,7 +151,8 @@ class _SignInScreenState extends State<SignInScreen> {
               child: VTextLink(
                 l.authForgotPassword,
                 key: const ValueKey('forgot-password'),
-                style: VText.ui(14, color: c.ink2),
+                // Con la contraseña mal, el enlace pasa a tinta.
+                style: VText.ui(14, color: _passwordError != null ? c.ink : c.ink2),
                 onTap: _forgot,
               ),
             ),
@@ -201,68 +197,6 @@ class _SignInScreenState extends State<SignInScreen> {
               Navigator.of(context).pop();
               WelcomeScreen.openSignUp(context);
             },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Pide (o confirma) el correo al que mandar el enlace de recuperación.
-class _ResetSheet extends StatefulWidget {
-  const _ResetSheet({required this.initialEmail});
-
-  final String initialEmail;
-
-  @override
-  State<_ResetSheet> createState() => _ResetSheetState();
-}
-
-class _ResetSheetState extends State<_ResetSheet> {
-  late final TextEditingController _email =
-      TextEditingController(text: widget.initialEmail);
-
-  @override
-  void dispose() {
-    _email.dispose();
-    super.dispose();
-  }
-
-  bool get _valid => looksLikeEmail(_email.text);
-
-  void _send() {
-    if (_valid) Navigator.of(context).pop(_email.text.trim());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    return SheetScaffold(
-      title: l.resetTitle,
-      subtitle: l.resetBody,
-      titleSize: 40,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          LineField(
-            label: l.authEmailLabel,
-            hint: l.authEmailPlaceholder,
-            fieldKey: const ValueKey('reset-email-field'),
-            controller: _email,
-            autofocus: widget.initialEmail.isEmpty,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.send,
-            autocorrect: false,
-            enableSuggestions: false,
-            autofillHints: const [AutofillHints.email],
-            onChanged: (_) => setState(() {}),
-            onSubmitted: (_) => _send(),
-          ),
-          const SizedBox(height: 28),
-          VPrimaryButton(
-            key: const ValueKey('reset-send'),
-            label: l.send,
-            onPressed: _valid ? _send : null,
           ),
         ],
       ),

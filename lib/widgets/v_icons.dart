@@ -38,6 +38,9 @@ enum VIcon {
   chat,
   download,
   link,
+  copy,
+  refresh,
+  backspace,
 }
 
 /// Un ícono de `VIcon` a `size` px. El grosor del trazo escala con el
@@ -136,6 +139,14 @@ const Map<VIcon, _IconSpec> _specs = {
   VIcon.download: _IconSpec(24, 1.6, [_PathShape('M12 4v11M7 10l5 5 5-5M5 20h14')]),
   VIcon.link: _IconSpec(24, 1.6, [
     _PathShape('M10 14l4-4M8.5 11.5 6 14a3 3 0 0 0 4 4l2.5-2.5M15.5 12.5 18 10a3 3 0 0 0-4-4l-2.5 2.5'),
+  ]),
+  // Propios, para "Copiar link" y "Intentar de nuevo" (⧉ y ↻ no existen en
+  // las fuentes de la app).
+  VIcon.copy: _IconSpec(20, 1.6, [_PathShape('M7 7h9v9H7zM4 13V4h9')]),
+  VIcon.backspace: _IconSpec(20, 1.6, [_PathShape('M7 5h10v10H7l-4-5zM10 8l4 4M14 8l-4 4')]),
+  VIcon.refresh: _IconSpec(20, 1.6, [
+    _PathShape('M16 10a6 6 0 1 1-2-4.5'),
+    _PathShape('M14.5 2.5v3.5h-3.5'),
   ]),
   VIcon.addToList: _IconSpec(20, 1.6, [_PathShape('M3 5h10M3 10h10M3 15h6M15 12v6M12 15h6')]),
   VIcon.bell: _IconSpec(20, 1.5, [

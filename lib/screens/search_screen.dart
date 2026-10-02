@@ -199,7 +199,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final l = context.l10n;
     final me = CurrentUser.of(context);
     final topPad = MediaQuery.paddingOf(context).top;
-    final people = _people ?? const <PersonInfo>[];
+    final people = Moderation.of(context).people(_people ?? const <PersonInfo>[]);
     final artists = _artists ?? const <Artist>[];
 
     return Scaffold(

@@ -162,10 +162,7 @@ class _SearchAllScreenState extends State<SearchAllScreen> {
       return Padding(
         padding: EdgeInsets.only(top: 24, bottom: bottom),
         child: Center(
-          child: SizedBox.square(
-            dimension: 18,
-            child: CircularProgressIndicator(strokeWidth: 1.6, color: c.ink4),
-          ),
+          child: VSpinner(color: c.ink4),
         ),
       );
     }

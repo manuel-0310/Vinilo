@@ -43,17 +43,26 @@ class ShareButton extends StatelessWidget {
         style: style,
         fill: fill,
         tooltip: context.l10n.shareAction,
-        onTap: () async {
-          final specs = await cards?.call() ?? const <ShareCardSpec>[];
-          if (!context.mounted) return;
-          if (specs.isEmpty) {
-            shareMessage(context, message(context.l10n));
-          } else {
-            openShare(context, cards: specs, message: message);
-          }
-        },
+        onTap: () => shareWith(context, message: message, cards: cards),
       ),
     );
+  }
+}
+
+/// Lo que hace el botón de compartir (y "Compartir perfil" del menú): con
+/// tarjetas abre la hoja "Compartir" con las imágenes; sin ellas, la hoja
+/// del sistema con el texto y el enlace.
+Future<void> shareWith(
+  BuildContext context, {
+  required ShareMessage Function(AppLocalizations l) message,
+  FutureOr<List<ShareCardSpec>> Function()? cards,
+}) async {
+  final specs = await cards?.call() ?? const <ShareCardSpec>[];
+  if (!context.mounted) return;
+  if (specs.isEmpty) {
+    await shareMessage(context, message(context.l10n));
+  } else {
+    await openShare(context, cards: specs, message: message);
   }
 }
 

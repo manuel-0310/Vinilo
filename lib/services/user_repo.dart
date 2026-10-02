@@ -101,6 +101,7 @@ class UserRepo {
     required int colorValue,
     required String username,
     String? avatarUrl,
+    OnboardingStep? onboarding,
   }) {
     return _db.runTransaction((tx) async {
       await _reserveUsername(tx, uid, username);
@@ -117,6 +118,8 @@ class UserRepo {
         'recentSearches': <String>[],
         'followersCount': 0,
         'followingCount': 0,
+        // Las cuentas nuevas pasan por el onboarding antes de entrar.
+        if (onboarding != null) 'onboarding': onboarding.key,
       });
     });
   }
@@ -273,6 +276,43 @@ class UserRepo {
       'favoriteArtists':
           artists.take(maxFavorites).map((a) => a.toMap()).toList(),
     }, SetOptions(merge: true));
+  }
+
+  /// Paso 1 del onboarding: los discos elegidos. Los tres primeros quedan de
+  /// favoritos, todos (hasta [maxTastes]) en `tastes`, y la cuenta pasa al
+  /// paso de seguir gente.
+  Future<void> saveTastes(String uid, List<Album> albums) {
+    return _users.doc(uid).set({
+      'favorites': albums.take(maxFavorites).map((a) => a.toMap()).toList(),
+      'tastes': albums.take(maxTastes).map((a) => a.toMap()).toList(),
+      'onboarding': OnboardingStep.follow.key,
+    }, SetOptions(merge: true));
+  }
+
+  /// Cuántos discos del onboarding se guardan.
+  static const int maxTastes = 9;
+
+  /// Termina el onboarding: la cuenta entra a la app.
+  Future<void> finishOnboarding(String uid) {
+    return _users.doc(uid).set(
+      {'onboarding': FieldValue.delete()},
+      SetOptions(merge: true),
+    );
+  }
+
+  /// "Filtrar comentarios ofensivos".
+  Future<void> setFilterOffensive(String uid, bool value) {
+    return _users.doc(uid).set({'filterOffensive': value}, SetOptions(merge: true));
+  }
+
+  /// Las cuentas con más seguidores (para sugerir a quién seguir).
+  Future<List<UserProfile>> popularPeople({int limit = 12}) async {
+    final snap = await _users
+        .where('followersCount', isGreaterThan: 0)
+        .orderBy('followersCount', descending: true)
+        .limit(limit)
+        .get();
+    return snap.docs.map(UserProfile.fromDoc).toList();
   }
 
   /// "es", "en" o null para seguir el idioma del teléfono.

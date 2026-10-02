@@ -86,6 +86,16 @@ class RepliesRepo {
     await batch.commit();
   }
 
+  /// Da o quita mi "me gusta" a una respuesta (sin aviso: es un gesto
+  /// pequeño dentro de un hilo).
+  Future<void> toggleLike(Reply reply, String me) {
+    return _replies(reply.ratingId).doc(reply.id).update({
+      'likedBy': reply.likedByMe(me)
+          ? FieldValue.arrayRemove([me])
+          : FieldValue.arrayUnion([me]),
+    });
+  }
+
   /// Borra una respuesta (la autora o la dueña de la nota). Si la borra su
   /// autora y no le queda otra en el hilo, también quita los avisos que
   /// había provocado (hay uno solo por persona y nota).

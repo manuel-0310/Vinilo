@@ -165,10 +165,7 @@ class _NewListRow extends StatelessWidget {
               size: 56,
               color: c.accentText,
               child: busy
-                  ? SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 1.6, color: c.accentText),
-                    )
+                  ? VSpinner(color: c.accentText)
                   : VIconView(VIcon.plus, size: 20, color: c.accentText, strokeWidth: 1.4),
             ),
             const SizedBox(width: 14),

@@ -151,7 +151,8 @@ class _HomeScreenState extends State<HomeScreen> {
           StreamBuilder<FollowingFeed>(
             stream: _activity,
             builder: (context, snap) {
-              final entries = snap.data?.entries ?? const <RatingEntry>[];
+              final entries =
+                  Moderation.of(context).feed(snap.data?.entries ?? const <RatingEntry>[]);
               final fresh = freshCount(entries, DateTime.now());
               return SliverMainAxisGroup(
                 slivers: [
@@ -192,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
-    final entries = feed.entries;
+    final entries = Moderation.of(context).feed(feed.entries);
     if (entries.isEmpty) {
       return SliverToBoxAdapter(
         child: VEmptyState(

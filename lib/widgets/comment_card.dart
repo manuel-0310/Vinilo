@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 import '../models/rating.dart';
 import '../screens/routes.dart';
+import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/format.dart';
 import 'feed_card.dart';
@@ -97,7 +98,7 @@ class CommentCard extends StatelessWidget {
                   if (entry.hasNote) ...[
                     const SizedBox(height: 8),
                     Text(
-                      '“${entry.note.trim()}”',
+                      '“${Moderation.of(context).text(entry.note.trim())}”',
                       maxLines: maxLines,
                       overflow: maxLines == null ? null : TextOverflow.ellipsis,
                       style: VText.quote(21, color: c.ink),

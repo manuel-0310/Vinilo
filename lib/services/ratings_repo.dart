@@ -9,6 +9,7 @@ import '../models/feed.dart';
 import '../models/notification.dart';
 import '../models/popular.dart' as popular;
 import '../models/rating.dart';
+import '../models/stats.dart';
 import '../models/user_profile.dart';
 import '../util/chunks.dart';
 import '../util/streams.dart';
@@ -138,6 +139,75 @@ class RatingsRepo {
         .limit(200)
         .snapshots()
         .map((s) => popular.popularThisWeek(s.docs.map(AlbumStats.fromDoc), now, limit: limit));
+  }
+
+  /// Los discos con más notas de toda la comunidad (el filtro "Populares"
+  /// del onboarding). Índice de un solo campo sobre `ratingsCount`.
+  Future<List<AlbumStats>> mostRated({int limit = 12}) async {
+    final snap = await _albums.orderBy('ratingsCount', descending: true).limit(limit).get();
+    return snap.docs.map(AlbumStats.fromDoc).where((a) => a.count > 0).toList();
+  }
+
+  /// Las notas que la gente les puso a estos discos (hasta 30 ids): con
+  /// ellas se sugiere a quién seguir.
+  Future<List<RatingEntry>> ratingsForAlbums(List<String> albumIds, {int limit = 300}) async {
+    final ids = albumIds.where((id) => id.isNotEmpty).take(firestoreInLimit).toList();
+    if (ids.isEmpty) return const [];
+    final snap = await _ratings.where('albumId', whereIn: ids).limit(limit).get();
+    return _entries(snap);
+  }
+
+  /// Los agregados de varios discos a la vez (para comparar mis notas con
+  /// las de la comunidad): una consulta por cada 30 ids.
+  Future<Map<String, AlbumStats>> albumStatsFor(Iterable<String> albumIds) async {
+    final ids = {for (final id in albumIds) if (id.isNotEmpty) id}.toList();
+    if (ids.isEmpty) return const {};
+    final pages = await Future.wait([
+      for (final chunk in chunked(ids, firestoreInLimit))
+        _albums.where(FieldPath.documentId, whereIn: chunk).get(),
+    ]);
+    return {
+      for (final page in pages)
+        for (final doc in page.docs) doc.id: AlbumStats.fromDoc(doc),
+    };
+  }
+
+  /// Todas las notas de varias personas (para la afinidad con mis amigos),
+  /// agrupadas por persona: una consulta por cada 30 uids.
+  Future<Map<String, List<RatingEntry>>> ratingsOf(Iterable<String> uids) async {
+    final ids = {for (final u in uids) if (u.isNotEmpty) u}.toList();
+    if (ids.isEmpty) return const {};
+    final pages = await Future.wait([
+      for (final chunk in chunked(ids, firestoreInLimit))
+        _ratings.where('uid', whereIn: chunk).get(),
+    ]);
+    final out = <String, List<RatingEntry>>{};
+    for (final page in pages) {
+      for (final entry in _entries(page)) {
+        out.putIfAbsent(entry.uid, () => []).add(entry);
+      }
+    }
+    return out;
+  }
+
+  /// Guarda cuánto dura el disco en una nota mía que no lo tenía (las de
+  /// antes de que existieran las estadísticas).
+  Future<void> setAlbumDuration(String ratingId, int durationMs) =>
+      _ratings.doc(ratingId).update({'album.durationMs': durationMs});
+
+  /// País y géneros de unos artistas (`artistMeta/{id}`, que llena la
+  /// función `spotify`). Los que no están, no salen.
+  Future<Map<String, ArtistMeta>> artistMeta(Iterable<String> artistIds) async {
+    final ids = {for (final id in artistIds) if (id.isNotEmpty) id}.toList();
+    if (ids.isEmpty) return const {};
+    final pages = await Future.wait([
+      for (final chunk in chunked(ids, firestoreInLimit))
+        _db.collection('artistMeta').where(FieldPath.documentId, whereIn: chunk).get(),
+    ]);
+    return {
+      for (final page in pages)
+        for (final doc in page.docs) doc.id: ArtistMeta.fromMap(doc.data()),
+    };
   }
 
   /// Agregados de todos los discos de un artista que alguien haya

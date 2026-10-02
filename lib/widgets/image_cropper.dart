@@ -241,7 +241,7 @@ class _ImageCropperState extends State<ImageCropper> {
                     ? (_error != null
                         ? Text(context.l10n.cropOpenFailed(describeError(_error, context.l10n)),
                             style: VText.ui(14, color: ink2))
-                        : CircularProgressIndicator(strokeWidth: 1.6, color: ink2))
+                        : VSpinner(color: ink2))
                     : LayoutBuilder(
                         builder: (context, constraints) {
                           var frameW = constraints.maxWidth;

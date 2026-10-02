@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><style>body{margin:0;background:#e9e6e0;font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}a:hover{color:oklch(0.7 0.19 38)}</style></helmet>
+<section data-screen-label="Onboarding" style="padding:44px 48px 36px;border-bottom:1px solid rgba(0,0,0,.08)">
+<div style="font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;color:#1a1a1a;margin:0 0 24px">Onboarding</div>
+<div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:12px"><div style="font:500 12px system-ui,sans-serif;color:rgba(0,0,0,.6)">1 · Tus gustos (toca portadas)</div>
+<div data-screen-label="Onboarding · gustos" style="width:390px;height:844px;background:#0f0e0d;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #1c1b1a,0 0 0 11px #3a3836,0 30px 60px rgba(0,0,0,.25);color:#efebe4;margin:11px">
+<div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 36px;font:600 15px Archivo;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000"></div><div style="width:24px;height:11px;border:1px solid rgba(239,235,228,.5);border-radius:3px;padding:1px;box-sizing:border-box"><div style="width:80%;height:100%;background:#efebe4;border-radius:1px"></div></div></div>
+<div style="padding:0 20px">
+<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(239,235,228,.14);font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58)"><span>Paso 1 de 2</span><span>Tus gustos</span></div>
+<div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:52px;line-height:.88;margin-top:18px">Elige 3 discos que te encanten</div>
+<div style="font-size:15px;line-height:1.45;color:rgba(239,235,228,.62);margin-top:10px;text-wrap:pretty">Con eso armamos tu inicio y te mostramos gente con gustos parecidos.</div>
+<div style="margin-top:16px;padding:10px 0;border-bottom:1px solid rgba(239,235,228,.28);display:flex;gap:10px;font-size:15px;color:rgba(239,235,228,.5)"><span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58);padding-top:3px">Buscar</span>un disco o artista</div>
+<div style="display:flex;gap:18px;padding-top:14px;font:500 14px Archivo;white-space:nowrap;overflow:hidden">
+<span style="color:#efebe4;border-bottom:1px solid #efebe4;padding-bottom:3px">Populares</span><span style="color:rgba(239,235,228,.55)">Rock</span><span style="color:rgba(239,235,228,.55)">Pop latino</span><span style="color:rgba(239,235,228,.55)">Hip hop</span><span style="color:rgba(239,235,228,.55)">Electrónica</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px">
+<sc-for list="{{ albums }}" as="a" hint-placeholder-count="9">
+<div onClick="{{ a.toggle }}" style="cursor:pointer;display:flex;flex-direction:column;gap:6px">
+<div style="aspect-ratio:1;position:relative;background-color:{{ a.c }};background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 1px,transparent 1px 8px);outline:{{ a.ol }};outline-offset:-2px">
+<div style="position:absolute;right:6px;top:6px;width:22px;height:22px;background:{{ a.badgeBg }};border:{{ a.badgeBd }};color:#0f0e0d;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono',monospace">{{ a.badge }}</div>
+</div>
+<div style="min-width:0"><div style="font:600 13px Archivo;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.t }}</div><div style="font-size:11.5px;color:rgba(239,235,228,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.ar }}</div></div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;padding:14px 20px 38px;background:#0f0e0d;border-top:1px solid rgba(239,235,228,.14)">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="display:grid;grid-template-columns:repeat(3,28px);gap:3px"><sc-for list="{{ progress }}" as="p" hint-placeholder-count="3"><div style="height:4px;background:{{ p.bg }}"></div></sc-for></div><span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58)">{{ selLabel }}</span></div>
+<div style="height:56px;background:{{ ctaBg }};color:{{ ctaFg }};display:flex;align-items:center;justify-content:space-between;padding:0 20px;font:600 16px Archivo;cursor:pointer;transition:background .2s"><span>Continuar</span><span>→</span></div>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#efebe4"></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px"><div style="font:500 12px system-ui,sans-serif;color:rgba(0,0,0,.6)">2 · Seguir gente (opcional)</div>
+<div data-screen-label="Onboarding · seguir" style="width:390px;height:844px;background:#0f0e0d;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #1c1b1a,0 0 0 11px #3a3836,0 30px 60px rgba(0,0,0,.25);color:#efebe4;margin:11px">
+<div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 36px;font:600 15px Archivo;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000"></div><div style="width:24px;height:11px;border:1px solid rgba(239,235,228,.5);border-radius:3px;padding:1px;box-sizing:border-box"><div style="width:80%;height:100%;background:#efebe4;border-radius:1px"></div></div></div>
+<div style="padding:0 20px">
+<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(239,235,228,.14);font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58)"><span>Paso 2 de 2 · opcional</span><span style="color:#efebe4">Saltar</span></div>
+<div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:52px;line-height:.88;margin-top:18px">Sigue a gente con tu oído</div>
+<div style="font-size:15px;line-height:1.45;color:rgba(239,235,228,.62);margin-top:10px;text-wrap:pretty">Así tu inicio no empieza vacío. Puedes hacerlo después.</div>
+<div style="display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;margin-top:18px;padding:12px 0;border-top:1px solid rgba(239,235,228,.14);border-bottom:1px solid rgba(239,235,228,.14)">
+<div style="width:40px;height:40px;border:1px dashed {{ accent }};display:flex;align-items:center;justify-content:center;color:{{ accent }};font:500 18px Archivo">+</div>
+<div><div style="font:600 15px Archivo">Buscar en tus contactos</div><div style="font-size:12.5px;color:rgba(239,235,228,.55);margin-top:2px">Encuentra amigos que ya usan Vinilo</div></div>
+<span style="color:rgba(239,235,228,.5)">→</span>
+</div>
+<div style="padding:16px 0 4px;font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58)">Por tus 3 discos</div>
+<sc-for list="{{ people }}" as="p" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(239,235,228,.08)">
+<span style="width:44px;height:44px;border-radius:50%;background:{{ p.c }};display:flex;align-items:center;justify-content:center;font:600 16px Archivo">{{ p.i }}</span>
+<div style="min-width:0"><div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 15px Archivo">{{ p.n }}</span><span style="font:600 12px 'IBM Plex Mono',monospace;color:{{ accent }}">{{ p.af }}%</span></div><div style="font-size:12.5px;color:rgba(239,235,228,.55);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.why }}</div></div>
+<div onClick="{{ p.toggle }}" style="height:36px;padding:0 14px;display:flex;align-items:center;font:600 13px Archivo;cursor:pointer;background:{{ p.bg }};color:{{ p.fg }};border:{{ p.bd }}">{{ p.label }}</div>
+</div>
+</sc-for>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;padding:14px 20px 38px;background:#0f0e0d;border-top:1px solid rgba(239,235,228,.14)">
+<div style="height:56px;background:#efebe4;color:#0f0e0d;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font:600 16px Archivo;cursor:pointer" style-hover="background:{{ accent }}"><span>{{ followCta }}</span><span>→</span></div>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#efebe4"></div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section data-screen-label="Perfil · estadísticas" style="padding:44px 48px 36px">
+<div style="font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;color:#1a1a1a;margin:0 0 24px">Perfil · estadísticas</div>
+<div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;gap:12px"><div style="font:500 12px system-ui,sans-serif;color:rgba(0,0,0,.6)">Mi perfil · estadísticas (scroll)</div>
+<div data-screen-label="Mi perfil · estadísticas" style="width:390px;height:2440px;background:#0f0e0d;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #1c1b1a,0 0 0 11px #3a3836,0 30px 60px rgba(0,0,0,.25);color:#efebe4;margin:11px">
+<div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 36px;font:600 15px Archivo;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000"></div><div style="width:24px;height:11px;border:1px solid rgba(239,235,228,.5);border-radius:3px;padding:1px;box-sizing:border-box"><div style="width:80%;height:100%;background:#efebe4;border-radius:1px"></div></div></div>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:8px 20px 0">
+<div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:40px;line-height:.85">Manuel</div>
+<div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58)">{{ sTotal }} discos · {{ sAvg }}</div>
+</div>
+<div style="display:flex;gap:24px;padding:0 20px;margin-top:14px;border-bottom:1px solid rgba(239,235,228,.14)">
+<span style="font:500 15px Archivo;padding:10px 0;color:rgba(239,235,228,.55)">Perfil</span>
+<span style="font:500 15px Archivo;padding:10px 0;color:rgba(239,235,228,.55)">Listas</span>
+<span style="font:600 15px Archivo;padding:10px 0;border-bottom:2px solid #efebe4;margin-bottom:-1px">Estadísticas</span>
+</div>
+<div style="display:flex;gap:18px;padding:16px 20px 0;font:500 14px Archivo">
+<sc-for list="{{ periods }}" as="p" hint-placeholder-count="3"><span onClick="{{ p.pick }}" style="cursor:pointer;color:{{ p.fg }};border-bottom:{{ p.bd }};padding-bottom:3px">{{ p.label }}</span></sc-for>
+</div>
+
+<div style="padding:22px 20px 0">
+<div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid rgba(239,235,228,.14);border-bottom:1px solid rgba(239,235,228,.14)">
+<div style="padding:14px 0"><div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:72px;line-height:.8">{{ sTotal }}</div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58);margin-top:8px">Discos calificados</div></div>
+<div style="padding:14px 0 14px 14px;border-left:1px solid rgba(239,235,228,.14)"><div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:72px;line-height:.8;color:{{ accent }}">{{ sAvg }}</div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58);margin-top:8px">Tu nota promedio</div></div>
+</div>
+<div style="font-size:15px;line-height:1.45;margin-top:14px;text-wrap:pretty">Calificas <span style="color:{{ accent }}">{{ sDiff }}</span> que la comunidad. Su promedio en los mismos discos es {{ sComm }}.</div>
+</div>
+
+<div style="padding:30px 20px 0">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-family:Archivo;font-stretch:70%;font-weight:700;font-size:28px;line-height:1">Cómo calificas</div><span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,235,228,.58)">{{ histSel }}</span></div>
+<div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px;height:120px;align-items:end;margin-top:16px;border-bottom:1px solid rgba(239,235,228,.14)">
+<sc-for list="{{ hist }}" as="h" hint-placeholder-count="10"><div onClick="{{ h.pick }}" style="cursor:pointer;height:{{ h.h }}px;background:{{ h.bg }};display:flex;align-items:flex-start;justify-content:center;padding-top:5px;box-sizing:border-box;font:500 10px 'IBM Plex Mono',monospace;color:{{ h.fg }};transition:height .4s ease">{{ h.q }}</div></sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:6px"><sc-for list="{{ hist }}" as="h" hint-placeholder-count="10"><span style="text-align:center;font:500 10px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.5)">{{ h.n }}</span></sc-for></div>
+</div>
+
+<div style="padding:30px 20px 0">
+<div style="font-family:Archivo;font-stretch:70%;font-weight:700;font-size:28px;line-height:1">Artistas que más escuchas</div>
+<div style="margin-top:14px;border-top:1px solid rgba(239,235,228,.14)">
+<sc-for list="{{ artists }}" as="a" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(239,235,228,.08)">
+<span style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.5)">{{ a.r }}</span>
+<div style="min-width:0"><div style="font:600 15px Archivo">{{ a.n }}</div><div style="height:4px;margin-top:7px;background:rgba(239,235,228,.1)"><div style="height:4px;width:{{ a.w }}%;background:{{ a.bg }}"></div></div></div>
+<div style="text-align:right"><div style="font:600 13px 'IBM Plex Mono',monospace">{{ a.q }} discos</div><div style="font:500 10px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.5);margin-top:2px">prom. {{ a.avg }}</div></div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="padding:30px 20px 0">
+<div style="font-family:Archivo;font-stretch:70%;font-weight:700;font-size:28px;line-height:1">Por década</div>
+<div style="display:flex;height:40px;gap:2px;margin-top:16px">
+<sc-for list="{{ decades }}" as="d" hint-placeholder-count="6"><div style="flex:{{ d.q }};background:{{ d.bg }}"></div></sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 12px;margin-top:12px">
+<sc-for list="{{ decades }}" as="d" hint-placeholder-count="6"><div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;background:{{ d.bg }}"></span><span style="font:500 12px 'IBM Plex Mono',monospace">{{ d.n }}</span><span style="font:500 11px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.5)">{{ d.q }}</span></div></sc-for>
+</div>
+</div>
+
+<div style="padding:30px 20px 0">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-family:Archivo;font-stretch:70%;font-weight:700;font-size:28px;line-height:1">Tu ritmo</div><span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,235,228,.58)">Discos por mes · 2026</span></div>
+<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:3px;height:80px;align-items:end;margin-top:16px;border-bottom:1px solid rgba(239,235,228,.14)">
+<sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><div style="height:{{ m.h }}px;background:{{ m.bg }}"></div></sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:6px"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><span style="text-align:center;font:500 9.5px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.5)">{{ m.l }}</span></sc-for></div>
+<div style="font-size:15px;line-height:1.45;margin-top:14px;color:rgba(239,235,228,.75)">Racha actual: <span style="color:{{ accent }}">6 semanas</span> calificando al menos un disco.</div>
+</div>
+
+<div style="padding:30px 20px 0">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-family:Archivo;font-stretch:70%;font-weight:700;font-size:28px;line-height:1">Tiempo escuchando</div><span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,235,228,.58)">Suma de tus discos</span></div>
+<div style="display:flex;align-items:flex-end;gap:12px;margin-top:16px;padding:14px 0;border-top:1px solid rgba(239,235,228,.14);border-bottom:1px solid rgba(239,235,228,.14)"><span style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:72px;line-height:.8;color:{{ accent }}">{{ tHours }}</span><span style="padding-bottom:4px"><span style="display:block;font:600 16px Archivo">horas</span><span style="display:block;font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,235,228,.58);margin-top:3px">{{ tSub }}</span></span></div>
+</div>
+<div style="padding:30px 20px 0">
+<div style="font-family:Archivo;font-stretch:70%;font-weight:700;font-size:28px;line-height:1">Géneros</div>
+<div style="display:flex;height:40px;gap:2px;margin-top:16px"><sc-for list="{{ genres }}" as="g" hint-placeholder-count="5"><div style="flex:{{ g.q }};background:{{ g.bg }}"></div></sc-for></div>
+<div style="margin-top:12px;border-top:1px solid rgba(239,235,228,.14)">
+<sc-for list="{{ genres }}" as="g" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(239,235,228,.08)"><span style="width:10px;height:10px;background:{{ g.bg }}"></span><span style="font:500 15px Archivo">{{ g.n }}</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.6)">{{ g.p }}%</span></div></sc-for>
+</div>
+</div>
+<div style="padding:30px 20px 0">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-family:Archivo;font-stretch:70%;font-weight:700;font-size:28px;line-height:1">De dónde vienen</div><span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:rgba(239,235,228,.58)">{{ cCount }} países</span></div>
+<div style="margin-top:14px;border-top:1px solid rgba(239,235,228,.14)">
+<sc-for list="{{ countries }}" as="c" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:110px minmax(0,1fr) 28px;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(239,235,228,.08)"><span style="font:500 15px Archivo">{{ c.n }}</span><div style="height:4px;background:rgba(239,235,228,.1)"><div style="height:4px;width:{{ c.w }}%;background:{{ c.bg }}"></div></div><span style="text-align:right;font:500 12px 'IBM Plex Mono',monospace;color:rgba(239,235,228,.6)">{{ c.q }}</span></div></sc-for>
+</div>
+</div>
+<div style="padding:30px 20px 0">
+<div style="font-family:Archivo;font-stretch:70%;font-weight:700;font-size:28px;line-height:1">Afinidad con amigos</div>
+<div style="margin-top:14px;border-top:1px solid rgba(239,235,228,.14)">
+<sc-for list="{{ friends }}" as="f" hint-placeholder-count="2"><div style="display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid rgba(239,235,228,.08)"><span style="width:44px;height:44px;border-radius:50%;background:{{ f.c }};display:flex;align-items:center;justify-content:center;font:600 16px Archivo">{{ f.i }}</span><div style="min-width:0"><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:{{ f.tagC }}">{{ f.tag }}</div><div style="font:600 16px Archivo;margin-top:3px">{{ f.n }}</div><div style="font-size:12.5px;color:rgba(239,235,228,.55);margin-top:1px">{{ f.why }}</div></div><span style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:40px;line-height:.8;color:{{ f.pc }}">{{ f.p }}%</span></div></sc-for>
+</div>
+</div>
+<div style="padding:24px 20px 0">
+<div onClick="{{ openShare }}" style="height:52px;border:1px solid rgba(239,235,228,.28);display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:500 15px Archivo;cursor:pointer" style-hover="border-color:#efebe4"><span>Compartir mis estadísticas</span><span style="color:rgba(239,235,228,.5)">→</span></div>
+</div>
+
+<div style="position:absolute;left:0;right:0;bottom:0;height:84px;background:#0f0e0d;border-top:1px solid rgba(239,235,228,.14);display:grid;grid-template-columns:repeat(3,1fr)">
+<div style="display:flex;flex-direction:column;align-items:center"><div style="height:2px;width:32px"></div><span style="font:500 13px Archivo;margin-top:14px;color:rgba(239,235,228,.55)">Inicio</span></div>
+<div style="display:flex;flex-direction:column;align-items:center"><div style="height:2px;width:32px"></div><span style="font:500 13px Archivo;margin-top:14px;color:rgba(239,235,228,.55)">Buscar</span></div>
+<div style="display:flex;flex-direction:column;align-items:center"><div style="height:2px;width:32px;background:{{ accent }}"></div><span style="font:600 13px Archivo;margin-top:14px">Perfil</span></div>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#efebe4"></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px"><div style="font:500 12px system-ui,sans-serif;color:rgba(0,0,0,.6)">Compartir estadísticas (cambia de tarjeta)</div>
+<div data-screen-label="Compartir estadísticas" style="width:390px;height:844px;background:#0f0e0d;border-radius:48px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #1c1b1a,0 0 0 11px #3a3836,0 30px 60px rgba(0,0,0,.25);color:#efebe4;margin:11px">
+<div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 36px;font:600 15px Archivo;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000"></div><div style="width:24px;height:11px;border:1px solid rgba(239,235,228,.5);border-radius:3px;padding:1px;box-sizing:border-box"><div style="width:80%;height:100%;background:#efebe4;border-radius:1px"></div></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 16px 0">
+<div style="width:40px;height:40px;border:1px solid rgba(239,235,228,.18);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 5l10 10M15 5L5 15"></path></svg></div>
+<span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(239,235,228,.58)">Compartir</span>
+<div style="width:40px"></div>
+</div>
+<div style="margin:16px auto 0;width:270px;height:480px;background:{{ cardBg }};color:{{ cardFg }};padding:22px 20px;box-sizing:border-box;display:flex;flex-direction:column;position:relative">
+<div style="display:flex;justify-content:space-between;font:500 9.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;opacity:.75"><span>@manuel</span><span>2026</span></div>
+<div style="font-family:Archivo;font-stretch:62%;font-weight:900;font-size:38px;line-height:.86;text-transform:uppercase;margin-top:14px">Mi año<br>en discos</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;margin-top:22px;border-top:1px solid {{ cardLine }};border-bottom:1px solid {{ cardLine }}">
+<div style="padding:10px 0"><div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:54px;line-height:.8">54</div><div style="font:500 8.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin-top:6px">Discos</div></div>
+<div style="padding:10px 0 10px 10px;border-left:1px solid {{ cardLine }}"><div style="font-family:Archivo;font-stretch:62%;font-weight:800;font-size:54px;line-height:.8;color:{{ cardHi }}">7,4</div><div style="font:500 8.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin-top:6px">Promedio</div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;height:70px;align-items:end;margin-top:16px;border-bottom:1px solid {{ cardLine }}">
+<sc-for list="{{ cardHist }}" as="h" hint-placeholder-count="10"><div style="height:{{ h.h }}px;background:{{ h.bg }}"></div></sc-for>
+</div>
+<div style="font:500 8.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin-top:5px">Mi nota más común: 8</div>
+<div style="margin-top:16px;font:500 8.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;opacity:.75">Artista del año</div>
+<div style="font-family:Archivo;font-stretch:70%;font-weight:700;font-size:24px;line-height:1;margin-top:4px">Gustavo Cerati</div>
+<div style="margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end"><span style="font-family:Archivo;font-stretch:62%;font-weight:900;font-size:22px;line-height:.86;text-transform:uppercase">Vinilo</span><span style="font:500 8.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;opacity:.75">vinilo.app/manuel</span></div>
+</div>
+<div style="display:flex;justify-content:center;gap:10px;margin-top:16px">
+<sc-for list="{{ themes }}" as="t" hint-placeholder-count="3"><div onClick="{{ t.pick }}" style="width:28px;height:28px;background:{{ t.bg }};outline:{{ t.ol }};outline-offset:3px;cursor:pointer;border:1px solid rgba(239,235,228,.2);box-sizing:border-box"></div></sc-for>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;padding:14px 20px 38px;border-top:1px solid rgba(239,235,228,.14);display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+<sc-for list="{{ targets }}" as="t" hint-placeholder-count="4"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer"><div style="width:52px;height:52px;border:1px solid rgba(239,235,228,.22);display:flex;align-items:center;justify-content:center;font:600 13px 'IBM Plex Mono',monospace">{{ t.i }}</div><span style="font:500 12px Archivo;color:rgba(239,235,228,.75)">{{ t.l }}</span></div></sc-for>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#efebe4"></div>
+</div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;oklch(0.7 0.19 38)&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;oklch(0.7 0.19 38)&quot;,&quot;oklch(0.65 0.15 255)&quot;,&quot;oklch(0.72 0.15 150)&quot;,&quot;oklch(0.7 0.16 340)&quot;]}}">
+class Component extends DCLogic {
+  state = { sel: [0, 4], follow: {}, period: 'año', hist: null };
+  renderVals() {
+    const acc = this.props.accent ?? 'oklch(0.7 0.19 38)';
+    const dim = 'rgba(239,235,228,.14)';
+    const A = [['OK Computer','Radiohead','oklch(0.86 0.01 250)'],['El Mal Querer','Rosalía','oklch(0.48 0.13 245)'],['Bocanada','Gustavo Cerati','oklch(0.42 0.14 255)'],['Blonde','Frank Ocean','oklch(0.52 0.13 150)'],['Re','Café Tacvba','oklch(0.62 0.21 38)'],['Un Verano Sin Ti','Bad Bunny','oklch(0.65 0.18 10)'],['Homogenic','Björk','oklch(0.45 0.1 220)'],['El Circo','Maldita Vecindad','oklch(0.55 0.17 15)'],['Sueño Stereo','Soda Stereo','oklch(0.88 0.03 220)']];
+    const sel = this.state.sel;
+    const albums = A.map(([t, ar, c], i) => {
+      const k = sel.indexOf(i), on = k >= 0;
+      return { t, ar, c, ol: on ? `3px solid ${acc}` : 'none', badge: on ? String(k + 1) : '', badgeBg: on ? acc : 'rgba(15,14,13,.45)', badgeBd: on ? 'none' : '1px solid rgba(239,235,228,.6)',
+        toggle: () => this.setState(s => ({ sel: s.sel.includes(i) ? s.sel.filter(x => x !== i) : [...s.sel, i] })) };
+    });
+    const n = sel.length, ok = n >= 3;
+    const P = [['Santiago Mejía','S','oklch(0.45 0.12 30)',86,'También le puso 10 a OK Computer'],['Valeria R.','V','oklch(0.45 0.1 220)',81,'Fan de Café Tacvba · 212 discos'],['Diego Ar.','D','oklch(0.5 0.12 150)',77,'Calificó Blonde con 9'],['Lucía M.','L','oklch(0.5 0.14 330)',72,'Sigue a 3 de tus artistas'],['Tomás G.','T','oklch(0.5 0.1 85)',68,'Popular en Vinilo · 1,2 mil seguidores']];
+    const f = this.state.follow;
+    const people = P.map(([nm, i, c, af, why], k) => ({ n: nm, i, c, af, why, label: f[k] ? 'Siguiendo' : 'Seguir', bg: f[k] ? 'transparent' : '#efebe4', fg: f[k] ? '#efebe4' : '#0f0e0d', bd: f[k] ? '1px solid rgba(239,235,228,.28)' : '1px solid #efebe4', toggle: () => this.setState(s => ({ follow: { ...s.follow, [k]: !s.follow[k] } })) }));
+    const nf = Object.values(f).filter(Boolean).length;
+    const D = {
+      'mes': { h: [0,0,0,0,1,1,2,3,1,0], tot: 8, avg: '7,6', comm: '7,0' },
+      'año': { h: [0,1,1,2,4,7,12,15,9,3], tot: 54, avg: '7,4', comm: '6,9' },
+      'todo': { h: [1,2,3,5,9,16,27,34,22,9], tot: 128, avg: '7,3', comm: '6,9' }
+    }[this.state.period];
+    const mx = Math.max(...D.h), mode = D.h.indexOf(mx);
+    const hs = this.state.hist ?? mode;
+    const diff = parseFloat(D.avg.replace(',', '.')) - parseFloat(D.comm.replace(',', '.'));
+    const th = this.state.theme ?? 0;
+    const T = [{ bg: acc, fg: '#0f0e0d', line: 'rgba(15,14,13,.25)', hi: '#0f0e0d', bar: '#0f0e0d', dimb: 'rgba(15,14,13,.3)' }, { bg: '#efebe4', fg: '#0f0e0d', line: 'rgba(15,14,13,.18)', hi: acc, bar: acc, dimb: 'rgba(15,14,13,.2)' }, { bg: '#1b1a18', fg: '#efebe4', line: 'rgba(239,235,228,.18)', hi: acc, bar: acc, dimb: 'rgba(239,235,228,.25)' }][th];
+    const ch = [0,1,1,2,4,7,12,15,9,3];
+    return {
+      accent: acc, albums,
+      openShare: () => {},
+      tHours: { mes: '6', 'año': '41', todo: '97' }[this.state.period],
+      tSub: { mes: '≈ 8 discos', 'año': '≈ 1,7 días seguidos', todo: '≈ 4 días seguidos' }[this.state.period],
+      genres: [['Rock alternativo',34],['Pop latino',22],['Hip hop',16],['Electrónica',12],['Otros',16]].map(([n, p], i) => ({ n, p, q: p, bg: i === 0 ? acc : `rgba(239,235,228,${0.62 - i * 0.12})` })),
+      cCount: 11,
+      countries: [['Argentina',24],['Reino Unido',21],['Estados Unidos',19],['México',15],['España',9]].map(([n, q], i) => ({ n, q, w: Math.round(q / 24 * 100), bg: i === 0 ? acc : 'rgba(239,235,228,.55)' })),
+      friends: [{ tag: 'Más afín', n: 'Santiago Mejía', i: 'S', c: 'oklch(0.45 0.12 30)', why: '38 discos en común', p: 86, pc: acc, tagC: acc }, { tag: 'Menos afín', n: 'Tomás G.', i: 'T', c: 'oklch(0.5 0.1 85)', why: '21 discos en común', p: 34, pc: '#efebe4', tagC: 'rgba(239,235,228,.58)' }],
+      cardBg: T.bg, cardFg: T.fg, cardLine: T.line, cardHi: T.hi,
+      cardHist: ch.map((q, i) => ({ h: q ? 4 + Math.round(64 * q / 15) : 2, bg: i === 7 ? T.bar : T.dimb })),
+      themes: [acc, '#efebe4', '#1b1a18'].map((bg, i) => ({ bg, ol: i === th ? '1px solid #efebe4' : 'none', pick: () => this.setState({ theme: i }) })),
+      targets: [['IG','Historias'],['WA','WhatsApp'],['↓','Guardar'],['⧉','Copiar link']].map(([i, l]) => ({ i, l })),
+      progress: [0, 1, 2].map(i => ({ bg: i < n ? acc : dim })),
+      selLabel: ok ? `${n} elegidos · listo` : `${n} de 3`,
+      ctaBg: ok ? acc : 'rgba(239,235,228,.12)', ctaFg: ok ? '#0f0e0d' : 'rgba(239,235,228,.4)',
+      people, followCta: nf ? `Empezar · sigues a ${nf}` : 'Empezar sin seguir a nadie',
+      periods: [['mes','Este mes'],['año','Este año'],['todo','Siempre']].map(([k, l]) => ({ label: l, fg: k === this.state.period ? '#efebe4' : 'rgba(239,235,228,.55)', bd: k === this.state.period ? '1px solid #efebe4' : '1px solid transparent', pick: () => this.setState({ period: k, hist: null }) })),
+      sTotal: D.tot, sAvg: D.avg, sComm: D.comm,
+      sDiff: `${diff.toFixed(1).replace('.', ',')} puntos más alto`,
+      hist: D.h.map((q, i) => ({ n: i + 1, q: q || '', h: q ? 14 + Math.round(104 * q / mx) : 2, bg: i === hs ? acc : 'rgba(239,235,228,.22)', fg: i === hs ? '#0f0e0d' : 'rgba(239,235,228,.7)', pick: () => this.setState({ hist: i }) })),
+      histSel: `${D.h[hs]} discos con ${hs + 1}`,
+      artists: [['Gustavo Cerati',9,'8,1'],['Radiohead',7,'8,9'],['Rosalía',5,'7,4'],['Café Tacvba',4,'8,3'],['Bad Bunny',4,'6,8']].map(([nm, q, avg], i) => ({ r: String(i + 1).padStart(2, '0'), n: nm, q, avg, w: Math.round(q / 9 * 100), bg: i === 0 ? acc : 'rgba(239,235,228,.55)' })),
+      decades: [['70s',6],['80s',14],['90s',38],['00s',29],['10s',24],['20s',17]].map(([nm, q], i) => ({ n: nm, q, bg: i === 2 ? acc : `rgba(239,235,228,${0.18 + i * 0.1})` })),
+      months: ['E','F','M','A','M','J','J','A','S','O','N','D'].map((l, i) => { const q = [4,6,3,8,5,7,9,4,6,2,0,0][i]; return { l, h: q ? 6 + q * 8 : 2, bg: i === 9 ? acc : 'rgba(239,235,228,.3)' }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

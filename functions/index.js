@@ -23,9 +23,13 @@
  *   POST /delete   → { ok: true, deleted: {...} } borra la cuenta de quien
  *                    manda el token (exige haber escrito la contraseña hace
  *                    menos de 5 minutos) y todo lo suyo con el Admin SDK:
- *                    también los hilos de sus notas y sus respuestas en
- *                    notas ajenas.
+ *                    también los hilos de sus notas, sus respuestas en
+ *                    notas ajenas, sus bloqueos y sus reportes.
  *   GET  /         → { ok: true }
+ *
+ * Vinilo — recuperar la contraseña (función `recover`, en recover.js): manda
+ * un código de 6 dígitos por correo (SMTP, secretos `SMTP_URL` y
+ * `MAIL_FROM`) y cambia la contraseña con el Admin SDK.
  *
  * Vinilo — página web pública (función `web`, en web.js): lo que se comparte
  * desde la app (/l/, /d/, /n/, /a/, /u/), servido por Firebase Hosting en
@@ -40,11 +44,19 @@ const { getAuth } = require("firebase-admin/auth");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getStorage } = require("firebase-admin/storage");
 const { createWebHandler } = require("./web");
+const { createRecoverHandler } = require("./recover");
 
 initializeApp();
 
 const SPOTIFY_CLIENT_ID = defineSecret("SPOTIFY_CLIENT_ID");
 const SPOTIFY_CLIENT_SECRET = defineSecret("SPOTIFY_CLIENT_SECRET");
+
+// Correo para los códigos de recuperar la contraseña (función `recover`):
+// la URL del servidor SMTP con usuario y clave (por ejemplo
+// `smtps://usuario%40gmail.com:clave-de-aplicacion@smtp.gmail.com:465`) y
+// el remitente (`Vinilo <usuario@gmail.com>`).
+const SMTP_URL = defineSecret("SMTP_URL");
+const MAIL_FROM = defineSecret("MAIL_FROM");
 
 const SPOTIFY_API = "https://api.spotify.com/v1";
 const PAGE_SIZE = 10; // Tope de Spotify para apps en modo desarrollo.
@@ -504,6 +516,19 @@ async function deleteAccountData(uid) {
     (await inBatches(db, toMe.docs, (b, d) => b.delete(d.ref))) +
     (await inBatches(db, fromMe.docs, (b, d) => b.delete(d.ref)));
 
+  // 5b. Bloqueos en los dos sentidos y los reportes que mandó o que eran
+  //     sobre ella (lo reportado se va con la cuenta).
+  const blocksMade = await db.collection("blocks").where("blocker", "==", uid).get();
+  const blocksGot = await db.collection("blocks").where("blocked", "==", uid).get();
+  deleted.blocks =
+    (await inBatches(db, blocksMade.docs, (b, d) => b.delete(d.ref))) +
+    (await inBatches(db, blocksGot.docs, (b, d) => b.delete(d.ref)));
+  const reportsMade = await db.collection("reports").where("reporter", "==", uid).get();
+  const reportsGot = await db.collection("reports").where("targetUid", "==", uid).get();
+  deleted.reports =
+    (await inBatches(db, reportsMade.docs, (b, d) => b.delete(d.ref))) +
+    (await inBatches(db, reportsGot.docs, (b, d) => b.delete(d.ref)));
+
   // 6. Avatar y banner en Storage.
   const bucket = getStorage().bucket();
   await Promise.all([
@@ -511,13 +536,14 @@ async function deleteAccountData(uid) {
     bucket.file(`banners/${uid}.jpg`).delete({ ignoreNotFound: true }),
   ]);
 
-  // 7. El @usuario reservado y el perfil, juntos.
+  // 7. El @usuario reservado y el perfil, con lo privado que cuelga de él
+  //    (silenciados, comentarios ocultos y notas pendientes de subir).
   const userRef = db.collection("users").doc(uid);
   const usernames = await db.collection("usernames").where("uid", "==", uid).get();
   const batch = db.batch();
   for (const doc of usernames.docs) batch.delete(doc.ref);
-  batch.delete(userRef);
   await batch.commit();
+  await db.recursiveDelete(userRef);
   deleted.usernames = usernames.size;
 
   // 8. La cuenta de Auth, al final.
@@ -583,4 +609,36 @@ exports.web = onRequest(
     timeoutSeconds: 30,
   },
   createWebHandler({ getAlbumDetail, getArtist }),
+);
+
+// ---------------------------------------------------------------------------
+// Recuperar la contraseña con un código de 6 dígitos, ver recover.js
+// ---------------------------------------------------------------------------
+
+let mailTransport = null;
+
+function mailer() {
+  if (!mailTransport) {
+    const nodemailer = require("nodemailer");
+    mailTransport = nodemailer.createTransport(SMTP_URL.value());
+  }
+  return mailTransport;
+}
+
+exports.recover = onRequest(
+  {
+    region: "us-central1",
+    secrets: [SMTP_URL, MAIL_FROM],
+    cors: true,
+    maxInstances: 3,
+    memory: "256MiB",
+    timeoutSeconds: 30,
+  },
+  createRecoverHandler({
+    getAuth,
+    getFirestore,
+    mailConfigured: () => Boolean(String(SMTP_URL.value() || "").trim()),
+    sendMail: (message) => mailer().sendMail({ from: MAIL_FROM.value(), ...message }),
+    logError: (msg, err) => logger.error(msg, err),
+  }),
 );

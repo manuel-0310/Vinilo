@@ -24,6 +24,26 @@ const List<String> appLanguages = ['es', 'en'];
 
 String? languageFrom(String? raw) => appLanguages.contains(raw) ? raw : null;
 
+/// Los dos pasos que ve una cuenta nueva antes de entrar a la app.
+enum OnboardingStep {
+  /// "Elige 3 discos que te encanten" (obligatorio).
+  tastes('tastes'),
+
+  /// "Sigue a gente con tu oído" (se puede saltar).
+  follow('follow');
+
+  const OnboardingStep(this.key);
+
+  final String key;
+
+  static OnboardingStep? fromKey(String? key) {
+    for (final s in values) {
+      if (s.key == key) return s;
+    }
+    return null;
+  }
+}
+
 class UserProfile {
   const UserProfile({
     required this.uid,
@@ -44,6 +64,9 @@ class UserProfile {
     this.followingCount = 0,
     this.nameLower,
     this.bio,
+    this.filterOffensive = true,
+    this.onboarding,
+    this.tastes = const [],
   });
 
   final String uid;
@@ -81,6 +104,17 @@ class UserProfile {
   /// Nombre en minúsculas para buscar personas por prefijo. Null en los
   /// perfiles de antes: la app lo completa al entrar.
   final String? nameLower;
+
+  /// "Filtrar comentarios ofensivos" (encendido si nunca lo tocó).
+  final bool filterOffensive;
+
+  /// En qué paso del onboarding quedó una cuenta nueva; null si ya lo
+  /// terminó (o si la cuenta es de antes de que existiera).
+  final OnboardingStep? onboarding;
+
+  /// Los discos que eligió en el onboarding (los 3 primeros son además sus
+  /// favoritos): con ellos se le sugiere a quién seguir.
+  final List<Album> tastes;
 
   Color get color => Color(colorValue);
 
@@ -133,6 +167,11 @@ class UserProfile {
       followersCount: (d['followersCount'] as num?)?.toInt() ?? 0,
       followingCount: (d['followingCount'] as num?)?.toInt() ?? 0,
       nameLower: d['nameLower'] as String?,
+      filterOffensive: d['filterOffensive'] != false,
+      onboarding: OnboardingStep.fromKey(d['onboarding'] as String?),
+      tastes: ((d['tastes'] as List?) ?? const [])
+          .map((m) => Album.fromMap(Map<String, dynamic>.from(m as Map)))
+          .toList(),
     );
   }
 }

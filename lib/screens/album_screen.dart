@@ -490,7 +490,8 @@ class _AlbumScreenState extends State<AlbumScreen> {
                   StreamBuilder<List<RatingEntry>>(
                     stream: _friends,
                     builder: (context, snap) {
-                      final friends = snap.data ?? const <RatingEntry>[];
+                      final friends =
+                          Moderation.of(context).ratings(snap.data ?? const <RatingEntry>[]);
                       if (friends.isEmpty) {
                         return const SliverToBoxAdapter(child: SizedBox.shrink());
                       }
@@ -502,7 +503,8 @@ class _AlbumScreenState extends State<AlbumScreen> {
                   StreamBuilder<List<RatingEntry>>(
                     stream: _community,
                     builder: (context, snap) {
-                      final entries = snap.data ?? const <RatingEntry>[];
+                      final entries =
+                          Moderation.of(context).ratings(snap.data ?? const <RatingEntry>[]);
                       final all = topComments(entries);
                       if (all.isEmpty) {
                         return const SliverToBoxAdapter(child: SizedBox.shrink());

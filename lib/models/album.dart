@@ -18,6 +18,7 @@ class Album {
     this.coverSmall,
     this.coverThumb,
     this.spotifyUrl,
+    this.durationMs,
   });
 
   final String id;
@@ -35,6 +36,11 @@ class Album {
   final String? coverSmall;
   final String? coverThumb;
   final String? spotifyUrl;
+
+  /// Cuánto dura el disco entero (la suma de sus canciones). Solo se sabe
+  /// cuando se cargó su ficha; se guarda con la nota para "Tiempo
+  /// escuchando" de las estadísticas.
+  final int? durationMs;
 
   factory Album.fromJson(Map<String, dynamic> j) {
     final artists = (j['artists'] as List?) ?? const [];
@@ -73,6 +79,7 @@ class Album {
       totalTracks: (m['totalTracks'] as num?)?.toInt(),
       cover: m['cover'] as String?,
       coverSmall: m['coverSmall'] as String?,
+      durationMs: (m['durationMs'] as num?)?.toInt(),
     );
   }
 
@@ -87,6 +94,8 @@ class Album {
         'totalTracks': totalTracks,
         'cover': cover,
         'coverSmall': coverSmall,
+        // Solo si se conoce: los documentos de antes no lo tienen.
+        if (durationMs != null) 'durationMs': durationMs,
       };
 
   /// Artistas del disco con id y nombre. Si el documento es viejo y solo
@@ -171,6 +180,7 @@ class AlbumDetail extends Album {
     super.coverSmall,
     super.coverThumb,
     super.spotifyUrl,
+    super.durationMs,
     this.label,
     this.popularity,
     this.genres = const [],
@@ -186,6 +196,10 @@ class AlbumDetail extends Album {
 
   factory AlbumDetail.fromJson(Map<String, dynamic> j) {
     final base = Album.fromJson(j);
+    final tracks = ((j['tracks'] as List?) ?? const [])
+        .map((t) => Track.fromJson(Map<String, dynamic>.from(t as Map)))
+        .toList();
+    final total = tracks.fold<int>(0, (sum, t) => sum + t.durationMs);
     return AlbumDetail(
       id: base.id,
       name: base.name,
@@ -204,9 +218,8 @@ class AlbumDetail extends Album {
       popularity: (j['popularity'] as num?)?.toInt(),
       genres: List<String>.from((j['genres'] as List?) ?? const []),
       copyright: j['copyright'] as String?,
-      tracks: ((j['tracks'] as List?) ?? const [])
-          .map((t) => Track.fromJson(Map<String, dynamic>.from(t as Map)))
-          .toList(),
+      tracks: tracks,
+      durationMs: total > 0 ? total : null,
     );
   }
 

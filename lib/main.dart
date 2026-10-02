@@ -5,9 +5,12 @@ import 'package:flutter/services.dart';
 
 import 'firebase_options.dart';
 import 'l10n/l10n.dart';
+import 'models/moderation.dart';
 import 'models/user_profile.dart';
 import 'screens/link_account_screen.dart';
+import 'screens/onboarding_follow_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/onboarding_tastes_screen.dart';
 import 'screens/shell_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/username_screen.dart';
@@ -56,13 +59,29 @@ class _ViniloAppState extends State<ViniloApp> {
     return _profileStream!;
   }
 
-  Widget _app({UserProfile? profile, required Widget home}) {
+  // Bloqueos, silenciados y comentarios ocultos de quien entró: un solo
+  // stream por sesión, para que las listas de toda la app los escondan.
+  String? _moderationUid;
+  Stream<ModerationState>? _moderationStream;
+
+  Stream<ModerationState> _moderationFor(String uid) {
+    if (_moderationUid != uid) {
+      _moderationUid = uid;
+      _moderationStream = widget.services.moderation.watch(uid);
+    }
+    return _moderationStream!;
+  }
+
+  Widget _app({UserProfile? profile, ModerationState? moderation, required Widget home}) {
     // El color guardado puede ser de la paleta de antes del rediseño: se
     // muestra con el más cercano de la nueva.
     final (light, dark) = _themesFor(
       profile == null ? ViniloPalette.defaultAccent : VColors.nearest(profile.color),
     );
-    return CurrentUser(
+    return Moderation(
+      state: (moderation ?? const ModerationState())
+          .copyWith(filterOffensive: profile?.filterOffensive ?? true),
+      child: CurrentUser(
       profile: profile,
       child: MaterialApp(
         title: 'Vinilo',
@@ -95,6 +114,7 @@ class _ViniloAppState extends State<ViniloApp> {
         ),
         home: _HomeSwitcher(child: home),
       ),
+      ),
     );
   }
 
@@ -105,6 +125,7 @@ class _ViniloAppState extends State<ViniloApp> {
   /// - sesión anónima sin perfil → no tiene nada que perder: bienvenida;
   /// - cuenta sin perfil → onboarding;
   /// - perfil sin @usuario → elegirlo;
+  /// - cuenta nueva → el onboarding (gustos y, después, seguir gente);
   /// - todo listo → la app.
   Widget _homeFor(User user, UserProfile? profile) {
     if (profile == null) {
@@ -114,7 +135,12 @@ class _ViniloAppState extends State<ViniloApp> {
     }
     if (user.isAnonymous) return LinkAccountScreen(profile: profile);
     if (profile.username == null) return UsernameScreen(profile: profile);
-    return const ShellScreen();
+    // Una cuenta nueva pasa por los dos pasos del onboarding antes de entrar.
+    return switch (profile.onboarding) {
+      OnboardingStep.tastes => OnboardingTastesScreen(profile: profile),
+      OnboardingStep.follow => const OnboardingFollowScreen(),
+      null => const ShellScreen(),
+    };
   }
 
   @override
@@ -155,9 +181,19 @@ class _ViniloAppState extends State<ViniloApp> {
                 profile = _lastProfile;
               }
               _lastProfile = profile;
-              return _app(
-                profile: profile,
-                home: _homeFor(user, profile),
+              final shown = profile;
+              if (shown == null || user.isAnonymous) {
+                return _app(profile: shown, home: _homeFor(user, shown));
+              }
+              // Si los bloqueos no se pueden leer, la app sigue sin esconder
+              // nada en vez de quedarse en blanco.
+              return StreamBuilder<ModerationState>(
+                stream: _moderationFor(user.uid),
+                builder: (context, moderationSnap) => _app(
+                  profile: shown,
+                  moderation: moderationSnap.data,
+                  home: _homeFor(user, shown),
+                ),
               );
             },
           );

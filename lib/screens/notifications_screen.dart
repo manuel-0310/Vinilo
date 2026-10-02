@@ -108,7 +108,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: StreamBuilder<List<AppNotification>>(
           stream: _stream,
           builder: (context, snap) {
-            final items = snap.data?.where((n) => !_removed.contains(n.id)).toList();
+            final moderation = Moderation.of(context);
+            final items = snap.data == null
+                ? null
+                : moderation.notifications(snap.data!.where((n) => !_removed.contains(n.id)));
             if (items != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) _markRead(items);
@@ -284,8 +287,13 @@ class _NotificationRow extends StatelessWidget {
                   Text.rich(
                     TextSpan(
                       children: [
+                        // El trozo de una respuesta pasa por el filtro de
+                        // palabras como cualquier comentario.
                         for (final (text, strong) in item.parts(l))
-                          TextSpan(text: text, style: strong ? bold : null),
+                          TextSpan(
+                            text: strong ? text : Moderation.of(context).text(text),
+                            style: strong ? bold : null,
+                          ),
                       ],
                     ),
                     style: VText.ui(14.5, height: 1.35, color: fresh ? c.ink : c.inkA(0.78)),

@@ -320,9 +320,12 @@ class _ListScreenState extends State<ListScreen> {
             _optimisticBase = null;
           }
           final optimistic = _optimistic;
-          final list = raw == null || optimistic == null ? raw : raw.copyWith(items: optimistic);
+          final loaded = raw == null || optimistic == null ? raw : raw.copyWith(items: optimistic);
+          // La lista de alguien con un bloqueo de por medio no existe para mí.
+          final blockedOwner = loaded != null && Moderation.of(context).hidesUser(loaded.ownerUid);
+          final list = blockedOwner ? null : loaded;
           if (list == null) {
-            final waiting = snap.connectionState == ConnectionState.waiting;
+            final waiting = !blockedOwner && snap.connectionState == ConnectionState.waiting;
             return SafeArea(
               bottom: false,
               child: Column(

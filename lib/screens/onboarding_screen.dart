@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
+import '../models/user_profile.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/auth_errors.dart';
@@ -57,8 +58,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             name: name,
             username: username,
             colorValue: ViniloPalette.defaultAccent.toARGB32(),
+            onboarding: OnboardingStep.tastes,
           );
-      // El perfil aparece y main pasa a la app.
+      // El perfil aparece y main pasa al onboarding.
     } catch (e) {
       if (mounted) setState(() => _usernameError = friendlyError(e, context.l10n));
     } finally {

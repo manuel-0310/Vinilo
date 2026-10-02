@@ -2064,4 +2064,977 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get shareImageUnsupported =>
       'This version of the app can\'t share images yet.';
+
+  @override
+  String get menuShareProfile => 'Share profile';
+
+  @override
+  String get menuMute => 'Mute';
+
+  @override
+  String get menuMuteHint => 'You won\'t see their activity';
+
+  @override
+  String get menuUnmute => 'Unmute';
+
+  @override
+  String get menuUnmuteHint => 'You\'ll see their activity again';
+
+  @override
+  String menuReportUser(String handle) {
+    return 'Report $handle';
+  }
+
+  @override
+  String menuBlockUser(String handle) {
+    return 'Block $handle';
+  }
+
+  @override
+  String menuUnblockUser(String handle) {
+    return 'Unblock $handle';
+  }
+
+  @override
+  String menuRatingOf(String handle) {
+    return 'Rating by $handle';
+  }
+
+  @override
+  String menuReplyOf(String handle) {
+    return 'Reply by $handle';
+  }
+
+  @override
+  String get menuHideComment => 'Hide this comment';
+
+  @override
+  String get menuHideHint => 'Only for you';
+
+  @override
+  String get menuReportComment => 'Report comment';
+
+  @override
+  String get menuMore => 'More options';
+
+  @override
+  String get commentHidden => 'Comment hidden';
+
+  @override
+  String userMuted(String handle) {
+    return 'You muted $handle';
+  }
+
+  @override
+  String userUnmuted(String handle) {
+    return 'You unmuted $handle';
+  }
+
+  @override
+  String reportOverlineComment(String handle) {
+    return 'Report comment by $handle';
+  }
+
+  @override
+  String get reportTitle => 'What\'s going on?';
+
+  @override
+  String reportAnonymous(String handle) {
+    return 'Your report is anonymous. $handle won\'t know it was you.';
+  }
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonSpamHint => 'Ads, links or repeated messages';
+
+  @override
+  String get reportReasonHarassment => 'Harassment or bullying';
+
+  @override
+  String get reportReasonHarassmentHint =>
+      'Attacks or insults aimed at someone';
+
+  @override
+  String get reportReasonHarassmentShort => 'Harassment';
+
+  @override
+  String get reportReasonHate => 'Hate speech';
+
+  @override
+  String get reportReasonHateHint => 'Against a group or identity';
+
+  @override
+  String get reportReasonHateShort => 'Hate';
+
+  @override
+  String get reportReasonSexual => 'Sexual content';
+
+  @override
+  String get reportReasonSexualHint => 'Explicit text or images';
+
+  @override
+  String get reportReasonSexualShort => 'Sexual';
+
+  @override
+  String get reportReasonImpersonation => 'Impersonation';
+
+  @override
+  String get reportReasonImpersonationHint => 'Pretending to be someone else';
+
+  @override
+  String get reportReasonViolence => 'Violence or threats';
+
+  @override
+  String get reportReasonViolenceHint => 'Harm to someone or to themselves';
+
+  @override
+  String get reportReasonViolenceShort => 'Violence';
+
+  @override
+  String get reportReasonOther => 'Other';
+
+  @override
+  String get reportReasonOtherHint => 'Tell us in the details';
+
+  @override
+  String get reportDetailsHint => 'Add details (optional)';
+
+  @override
+  String get reportSend => 'Send report';
+
+  @override
+  String reportFailed(String error) {
+    return 'Couldn\'t send the report: $error';
+  }
+
+  @override
+  String reportNumber(String n) {
+    return 'Report No. $n';
+  }
+
+  @override
+  String get reportSentTitle => 'Thanks for letting us know';
+
+  @override
+  String get reportSentBodyComment =>
+      'We\'ve already hidden this comment for you. Our team reviews it within 24 hours and we\'ll let you know what we decide.';
+
+  @override
+  String get reportSentBodyUser =>
+      'Our team reviews this account within 24 hours and we\'ll let you know what we decide.';
+
+  @override
+  String reportAlsoBlock(String handle) {
+    return 'Also block $handle';
+  }
+
+  @override
+  String get reportAlsoBlockHint =>
+      'They won\'t be able to see your profile or reply to you';
+
+  @override
+  String get reportSeeMine => 'See my reports in Settings';
+
+  @override
+  String blockTitle(String handle) {
+    return 'Block $handle?';
+  }
+
+  @override
+  String get blockRule1 =>
+      'They won\'t be able to see your profile, your ratings or your lists.';
+
+  @override
+  String get blockRule2 =>
+      'They won\'t be able to follow you, reply to you or mention you.';
+
+  @override
+  String get blockRule3 => 'You\'ll stop following each other.';
+
+  @override
+  String get blockRule4 =>
+      'Their ratings and comments disappear from your home.';
+
+  @override
+  String get blockNote =>
+      'We won\'t tell them. You can unblock them any time in Settings.';
+
+  @override
+  String get blockConfirm => 'Block';
+
+  @override
+  String blockFailed(String error) {
+    return 'Couldn\'t block: $error';
+  }
+
+  @override
+  String userBlocked(String handle) {
+    return 'You blocked $handle';
+  }
+
+  @override
+  String get blockedTag => 'Blocked';
+
+  @override
+  String get blockedTitle => 'You blocked this account';
+
+  @override
+  String get blockedBody =>
+      'You don\'t see their activity and they can\'t interact with you.';
+
+  @override
+  String get unblock => 'Unblock';
+
+  @override
+  String get unblockedTag => 'Unblocked';
+
+  @override
+  String get unblockedTitle => 'No longer blocked';
+
+  @override
+  String get unblockedBody =>
+      'You can see each other again. You\'ll have to follow them again if you want to.';
+
+  @override
+  String get followPlain => 'Follow';
+
+  @override
+  String get followingPlain => 'Following';
+
+  @override
+  String unblockFailed(String error) {
+    return 'Couldn\'t unblock: $error';
+  }
+
+  @override
+  String get settingsPrivacy => 'Privacy';
+
+  @override
+  String get privacyTitle => 'Privacy and safety';
+
+  @override
+  String get privacyFilter => 'Filter offensive comments';
+
+  @override
+  String get privacyFilterHint => 'We hide offensive words automatically';
+
+  @override
+  String get privacyMyReports => 'My reports';
+
+  @override
+  String get privacyMuted => 'Muted accounts';
+
+  @override
+  String get privacyBlocked => 'Blocked accounts';
+
+  @override
+  String get privacyNoBlocked => 'You have no blocked accounts.';
+
+  @override
+  String privacyBlockedAgo(String when) {
+    return 'Blocked $when';
+  }
+
+  @override
+  String privacyMutedAgo(String when) {
+    return 'Muted $when';
+  }
+
+  @override
+  String get privacyNoMuted => 'You haven\'t muted anyone.';
+
+  @override
+  String get privacyNoReports => 'You haven\'t sent any reports.';
+
+  @override
+  String get privacySupportLead => 'Something urgent? Write to us at ';
+
+  @override
+  String get emailCopied => 'Email copied';
+
+  @override
+  String get reportStatusOpen => 'Under review';
+
+  @override
+  String get reportStatusDismissed => 'Reviewed · no action';
+
+  @override
+  String get reportStatusRemoved => 'Reviewed · content removed';
+
+  @override
+  String reportTargetUser(String handle) {
+    return '$handle\'s account';
+  }
+
+  @override
+  String reportTargetComment(String handle) {
+    return 'Comment by $handle';
+  }
+
+  @override
+  String get timeToday => 'today';
+
+  @override
+  String timeWeeksAgo(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n weeks ago',
+      one: '1 week ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String timeMonthsAgo(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n months ago',
+      one: '1 month ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String timeYearsAgo(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n years ago',
+      one: '1 year ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countAccounts(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n accounts',
+      one: '1 account',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countReports(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n reports',
+      one: '1 report',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentHiddenBody =>
+      'You hid or reported it, so it no longer shows up for you.';
+
+  @override
+  String get commentShowAgain => 'Show again';
+
+  @override
+  String get onboardStep1 => 'Step 1 of 2';
+
+  @override
+  String get onboardStep1Label => 'Your taste';
+
+  @override
+  String get onboardTastesTitle => 'Pick 3 albums you love';
+
+  @override
+  String get onboardTastesBody =>
+      'We use them to set up your home and show you people with similar taste.';
+
+  @override
+  String get onboardSearchHint => 'an album or artist';
+
+  @override
+  String get genrePopular => 'Popular';
+
+  @override
+  String get genreRock => 'Rock';
+
+  @override
+  String get genreLatinPop => 'Latin pop';
+
+  @override
+  String get genreHipHop => 'Hip-hop';
+
+  @override
+  String get genreElectronic => 'Electronic';
+
+  @override
+  String get genrePop => 'Pop';
+
+  @override
+  String get genreRnb => 'R&B';
+
+  @override
+  String get genreIndie => 'Indie';
+
+  @override
+  String onboardPicked(int n) {
+    return '$n of 3';
+  }
+
+  @override
+  String onboardPickedReady(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n picked · ready',
+      one: '1 picked · ready',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onboardContinue => 'Continue';
+
+  @override
+  String get onboardTastesError => 'We couldn\'t load the albums.';
+
+  @override
+  String onboardNoResults(String query) {
+    return 'We couldn\'t find “$query”. Try another name.';
+  }
+
+  @override
+  String get onboardStep2 => 'Step 2 of 2 · optional';
+
+  @override
+  String get onboardSkip => 'Skip';
+
+  @override
+  String get onboardFollowTitle => 'Follow people with your ear';
+
+  @override
+  String get onboardFollowBody =>
+      'So your home doesn\'t start out empty. You can do it later.';
+
+  @override
+  String get onboardContacts => 'Search your contacts';
+
+  @override
+  String get onboardContactsHint => 'Find friends who are already on Vinilo';
+
+  @override
+  String onboardByTastes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Based on your $n albums',
+      one: 'Based on your album',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onboardPopularPeople => 'Popular on Vinilo';
+
+  @override
+  String suggestSameTen(String album) {
+    return 'Also gave $album a 10';
+  }
+
+  @override
+  String suggestRated(String album, int score) {
+    return 'Rated $album $score';
+  }
+
+  @override
+  String suggestPopular(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n followers',
+      one: '1 follower',
+    );
+    return 'Popular on Vinilo · $_temp0';
+  }
+
+  @override
+  String get onboardStartAlone => 'Start without following anyone';
+
+  @override
+  String onboardStartFollowing(int n) {
+    return 'Start · following $n';
+  }
+
+  @override
+  String get onboardNoSuggestions =>
+      'There\'s no one to suggest yet. You can look for people later, in Search.';
+
+  @override
+  String get findPeopleTitle => 'Find people';
+
+  @override
+  String get findPeopleHint => 'Name or @username';
+
+  @override
+  String get findPeopleEmpty => 'No one by that name.';
+
+  @override
+  String get findPeopleBody =>
+      'Follow people who rate what you like and your home fills itself.';
+
+  @override
+  String get profileStatsTab => 'Stats';
+
+  @override
+  String get statsPeriodMonth => 'This month';
+
+  @override
+  String get statsPeriodYear => 'This year';
+
+  @override
+  String get statsPeriodAll => 'All time';
+
+  @override
+  String get statsRated => 'Albums rated';
+
+  @override
+  String get statsMyAverage => 'Your average rating';
+
+  @override
+  String statsCompareHigher(String amount, String average) {
+    return 'You rate *$amount points higher* than the community. Their average on the same albums is $average.';
+  }
+
+  @override
+  String statsCompareLower(String amount, String average) {
+    return 'You rate *$amount points lower* than the community. Their average on the same albums is $average.';
+  }
+
+  @override
+  String statsCompareSame(String average) {
+    return 'You rate *the same* as the community. Their average on the same albums is $average.';
+  }
+
+  @override
+  String get statsHowYouRate => 'How you rate';
+
+  @override
+  String statsHistSelected(int n, int score) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n albums',
+      one: '1 album',
+    );
+    return '$_temp0 rated $score';
+  }
+
+  @override
+  String get statsTopArtists => 'Artists you listen to most';
+
+  @override
+  String statsArtistAverage(String average) {
+    return 'avg. $average';
+  }
+
+  @override
+  String get statsByDecade => 'By decade';
+
+  @override
+  String get statsRhythm => 'Your pace';
+
+  @override
+  String statsRhythmLabel(String year) {
+    return 'Albums per month · $year';
+  }
+
+  @override
+  String statsStreak(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n weeks',
+      one: '1 week',
+    );
+    return 'Current streak: *$_temp0* rating at least one album.';
+  }
+
+  @override
+  String get statsStreakNone =>
+      'No streak right now: rate an album this week to start one.';
+
+  @override
+  String get statsTime => 'Listening time';
+
+  @override
+  String get statsTimeLabel => 'Sum of your albums';
+
+  @override
+  String statsTimeHours(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'hours',
+      one: 'hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsTimeDays(String days) {
+    return '≈ $days days straight';
+  }
+
+  @override
+  String statsTimeAlbums(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n albums',
+      one: '1 album',
+    );
+    return '≈ $_temp0';
+  }
+
+  @override
+  String statsTimeLoading(int done, int total) {
+    return 'Calculating · $done of $total';
+  }
+
+  @override
+  String get statsGenres => 'Genres';
+
+  @override
+  String get statsGenreOther => 'Other';
+
+  @override
+  String get statsCountries => 'Where they come from';
+
+  @override
+  String statsCountriesCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n countries',
+      one: '1 country',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statsFriends => 'Affinity with friends';
+
+  @override
+  String get statsMostAffine => 'Closest taste';
+
+  @override
+  String get statsLeastAffine => 'Furthest taste';
+
+  @override
+  String statsCommon(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n albums in common',
+      one: '1 album in common',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statsShare => 'Share my stats';
+
+  @override
+  String get statsEmptyPeriod =>
+      'You haven\'t rated anything in this period yet.';
+
+  @override
+  String get shareStatsTitleYear => 'My year\nin records';
+
+  @override
+  String get shareStatsTitleMonth => 'My month\nin records';
+
+  @override
+  String get shareStatsTitleAll => 'My life\nin records';
+
+  @override
+  String get shareStatsAlbums => 'Albums';
+
+  @override
+  String get shareStatsAverage => 'Average';
+
+  @override
+  String shareStatsMode(int score) {
+    return 'My most common rating: $score';
+  }
+
+  @override
+  String get shareStatsArtistYear => 'Artist of the year';
+
+  @override
+  String get shareStatsArtistMonth => 'Artist of the month';
+
+  @override
+  String get shareStatsArtistAll => 'Most played artist';
+
+  @override
+  String shareStatsSince(String year) {
+    return 'Since $year';
+  }
+
+  @override
+  String get shareStatsStories => 'Stories';
+
+  @override
+  String get shareStatsWhatsapp => 'WhatsApp';
+
+  @override
+  String get shareStatsSave => 'Save';
+
+  @override
+  String get shareStatsCopy => 'Copy link';
+
+  @override
+  String get shareStatsMine => 'My stats on Vinilo';
+
+  @override
+  String recoverStep(int n) {
+    return 'Step $n of 3';
+  }
+
+  @override
+  String get recoverTitle => 'Reset\npassword';
+
+  @override
+  String get recoverEmailBody =>
+      'Enter your account\'s email and we\'ll send you a 6-digit code.';
+
+  @override
+  String get recoverSendCode => 'Send code';
+
+  @override
+  String get recoverRemembered => 'Remembered it? ';
+
+  @override
+  String get recoverCodeTitle => 'Check your\nemail';
+
+  @override
+  String recoverCodeBody(String email) {
+    return 'We sent a code to *$email*. It expires in 10 minutes.';
+  }
+
+  @override
+  String recoverWrongCode(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Wrong code · $n tries left',
+      one: 'Wrong code · 1 try left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recoverResendIn(String time) {
+    return 'Resend in $time';
+  }
+
+  @override
+  String get recoverResend => 'Resend code';
+
+  @override
+  String get recoverExpired => 'The code expired. Ask for a new one.';
+
+  @override
+  String get recoverTooMany => 'Too many tries. Ask for a new code.';
+
+  @override
+  String recoverThrottled(int n) {
+    return 'Wait $n s to ask for another code.';
+  }
+
+  @override
+  String get recoverCodeSent => 'We sent you a new code.';
+
+  @override
+  String get recoverNewTitle => 'New\npassword';
+
+  @override
+  String get recoverNewLabel => 'New password';
+
+  @override
+  String get recoverRepeatLabel => 'Repeat password';
+
+  @override
+  String get recoverRuleLength => 'At least 8 characters';
+
+  @override
+  String get recoverRuleNumber => 'A number';
+
+  @override
+  String get recoverRuleDifferent => 'Different from the old one';
+
+  @override
+  String get recoverMismatch => 'The passwords don\'t match.';
+
+  @override
+  String get recoverSamePassword =>
+      'That\'s your old password: pick another one.';
+
+  @override
+  String get recoverWeak => 'Use at least 8 characters and a number.';
+
+  @override
+  String get recoverSave => 'Save and sign in';
+
+  @override
+  String get recoverDoneLabel => 'Password';
+
+  @override
+  String get recoverDoneUpdated => 'Updated';
+
+  @override
+  String recoverDoneTitle(String name) {
+    return 'All set, $name';
+  }
+
+  @override
+  String get recoverDoneTitleNoName => 'All set';
+
+  @override
+  String get recoverDoneBody =>
+      'You changed your password. For your security, we signed you out on other devices.';
+
+  @override
+  String get recoverGo => 'Go to Vinilo';
+
+  @override
+  String get recoverServer =>
+      'We couldn\'t do it right now. Try again in a moment.';
+
+  @override
+  String get signInWrongPassword =>
+      'That password doesn\'t match this account.';
+
+  @override
+  String get keypadDelete => 'Delete';
+
+  @override
+  String get offlineOverline => 'No signal';
+
+  @override
+  String get offlineSide => 'Side B';
+
+  @override
+  String get offlineTitle => 'No connection';
+
+  @override
+  String get offlineBody =>
+      'Check your Wi-Fi or your data. Any ratings you save in the meantime will upload when you\'re back online.';
+
+  @override
+  String get offlineConnecting => 'Connecting…';
+
+  @override
+  String get offlineSaved => 'See my saved albums';
+
+  @override
+  String get offlineBanner => 'Offline · showing what was saved last';
+
+  @override
+  String get serverErrorTitle => 'The record skipped';
+
+  @override
+  String get serverErrorBody =>
+      'Something went wrong on our side. It\'s not your connection. Try again in a few seconds.';
+
+  @override
+  String serverErrorCode(String code) {
+    return 'Code · $code';
+  }
+
+  @override
+  String get serverErrorRetry => 'Try again';
+
+  @override
+  String get serverErrorReport => 'Report the problem';
+
+  @override
+  String get problemReported => 'Thanks. We got your report.';
+
+  @override
+  String problemCopied(String email) {
+    return 'Code copied. Write to us at $email.';
+  }
+
+  @override
+  String get rateSaveFailedTitle => 'We couldn\'t save your rating';
+
+  @override
+  String get rateSaveFailedBody =>
+      'You didn\'t lose anything: we saved it on your phone.';
+
+  @override
+  String get ratePendingLabel => 'Your rating · not uploaded yet';
+
+  @override
+  String get homeEmptyTitle => 'Your home is very quiet';
+
+  @override
+  String get homeEmptyBody =>
+      'Here you\'ll see what the people you follow rate. Start with people whose taste is close to yours.';
+
+  @override
+  String get homeEmptyFind => 'Find people';
+
+  @override
+  String get homeEmptyRate => 'Rate an album';
+
+  @override
+  String get profileEmptyTitle => 'Your diary is blank';
+
+  @override
+  String get profileEmptyBody =>
+      'Rate your first album and your ratings, favorites and stats will start showing up here.';
+
+  @override
+  String get profileEmptyAction => 'Rate my first album';
+
+  @override
+  String get searchZeroResults => '0 results';
+
+  @override
+  String searchNotFound(String query) {
+    return 'We couldn\'t find “$query”';
+  }
+
+  @override
+  String get searchNotFoundBody =>
+      'Check the spelling or search by artist only.';
+
+  @override
+  String get searchDidYouMean => 'Did you mean?';
+
+  @override
+  String get searchMissingLead => 'Is an album missing from Vinilo? ';
+
+  @override
+  String get searchMissingAction => 'Ask us to add it';
+
+  @override
+  String searchRequestSent(String query) {
+    return 'Noted: we\'ll look for “$query”.';
+  }
+
+  @override
+  String get notificationsUpToDate => 'Up to date';
+
+  @override
+  String get notificationsNothingNew => 'Nothing new for now';
+
+  @override
+  String get notificationsNothingNewBody =>
+      'We\'ll let you know when someone follows you, replies to your ratings or likes what you write.';
 }

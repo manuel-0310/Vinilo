@@ -54,7 +54,8 @@ class _CommentsScreenState extends State<CommentsScreen> {
           stream: _stream,
           initialData: widget.initial,
           builder: (context, snap) {
-            final comments = topComments(snap.data ?? widget.initial);
+            final comments =
+                topComments(Moderation.of(context).ratings(snap.data ?? widget.initial));
             return CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(

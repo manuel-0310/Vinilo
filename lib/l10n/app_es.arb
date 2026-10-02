@@ -1406,5 +1406,672 @@
   "shareImageSaved": "Imagen guardada",
   "shareSaveDenied": "Vinilo no tiene permiso para guardar en tus fotos. Actívalo en Ajustes.",
   "shareImageFailed": "No se pudo preparar la imagen. Inténtalo de nuevo.",
-  "shareImageUnsupported": "Esta versión de la app todavía no puede compartir imágenes."
+  "shareImageUnsupported": "Esta versión de la app todavía no puede compartir imágenes.",
+  "menuShareProfile": "Compartir perfil",
+  "menuMute": "Silenciar",
+  "menuMuteHint": "No verás su actividad",
+  "menuUnmute": "Dejar de silenciar",
+  "menuUnmuteHint": "Volverás a ver su actividad",
+  "menuReportUser": "Reportar a {handle}",
+  "@menuReportUser": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "menuBlockUser": "Bloquear a {handle}",
+  "@menuBlockUser": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "menuUnblockUser": "Desbloquear a {handle}",
+  "@menuUnblockUser": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "menuRatingOf": "Calificación de {handle}",
+  "@menuRatingOf": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "menuReplyOf": "Respuesta de {handle}",
+  "@menuReplyOf": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "menuHideComment": "Ocultar este comentario",
+  "menuHideHint": "Solo para ti",
+  "menuReportComment": "Reportar comentario",
+  "menuMore": "Más opciones",
+  "commentHidden": "Comentario oculto",
+  "userMuted": "Silenciaste a {handle}",
+  "@userMuted": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "userUnmuted": "Ya no silencias a {handle}",
+  "@userUnmuted": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "reportOverlineComment": "Reportar comentario de {handle}",
+  "@reportOverlineComment": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "reportTitle": "¿Qué está pasando?",
+  "reportAnonymous": "Tu reporte es anónimo. {handle} no sabrá que fuiste tú.",
+  "@reportAnonymous": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "reportReasonSpam": "Spam",
+  "reportReasonSpamHint": "Publicidad, enlaces o mensajes repetidos",
+  "reportReasonHarassment": "Acoso o bullying",
+  "reportReasonHarassmentHint": "Ataques o insultos a alguien",
+  "reportReasonHarassmentShort": "Acoso",
+  "reportReasonHate": "Discurso de odio",
+  "reportReasonHateHint": "Contra un grupo o identidad",
+  "reportReasonHateShort": "Odio",
+  "reportReasonSexual": "Contenido sexual",
+  "reportReasonSexualHint": "Texto o imagen explícita",
+  "reportReasonSexualShort": "Sexual",
+  "reportReasonImpersonation": "Suplantación",
+  "reportReasonImpersonationHint": "Se hace pasar por otra persona",
+  "reportReasonViolence": "Violencia o amenazas",
+  "reportReasonViolenceHint": "Daño a alguien o a sí mismo",
+  "reportReasonViolenceShort": "Violencia",
+  "reportReasonOther": "Otro",
+  "reportReasonOtherHint": "Cuéntanos en los detalles",
+  "reportDetailsHint": "Agrega detalles (opcional)",
+  "reportSend": "Enviar reporte",
+  "reportFailed": "No se pudo enviar el reporte: {error}",
+  "@reportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "reportNumber": "Reporte Nº {n}",
+  "@reportNumber": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "reportSentTitle": "Gracias por avisarnos",
+  "reportSentBodyComment": "Ya ocultamos este comentario para ti. Nuestro equipo lo revisa en menos de 24 horas y te avisamos qué decidimos.",
+  "reportSentBodyUser": "Nuestro equipo revisa esta cuenta en menos de 24 horas y te avisamos qué decidimos.",
+  "reportAlsoBlock": "Bloquear también a {handle}",
+  "@reportAlsoBlock": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "reportAlsoBlockHint": "No podrá ver tu perfil ni responderte",
+  "reportSeeMine": "Ver mis reportes en Ajustes",
+  "blockTitle": "¿Bloquear a {handle}?",
+  "@blockTitle": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "blockRule1": "No podrá ver tu perfil, tus notas ni tus listas.",
+  "blockRule2": "No podrá seguirte, responderte ni mencionarte.",
+  "blockRule3": "Dejarán de seguirse mutuamente.",
+  "blockRule4": "Sus calificaciones y comentarios desaparecen de tu inicio.",
+  "blockNote": "No le avisaremos. Puedes desbloquearlo cuando quieras en Ajustes.",
+  "blockConfirm": "Bloquear",
+  "blockFailed": "No se pudo bloquear: {error}",
+  "@blockFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "userBlocked": "Bloqueaste a {handle}",
+  "@userBlocked": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "blockedTag": "Bloqueado",
+  "blockedTitle": "Bloqueaste a esta cuenta",
+  "blockedBody": "No ves su actividad y no puede interactuar contigo.",
+  "unblock": "Desbloquear",
+  "unblockedTag": "Desbloqueado",
+  "unblockedTitle": "Ya no está bloqueado",
+  "unblockedBody": "Pueden volver a verse. Tendrás que seguirlo de nuevo si quieres.",
+  "followPlain": "Seguir",
+  "followingPlain": "Siguiendo",
+  "unblockFailed": "No se pudo desbloquear: {error}",
+  "@unblockFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPrivacy": "Privacidad",
+  "privacyTitle": "Privacidad y seguridad",
+  "privacyFilter": "Filtrar comentarios ofensivos",
+  "privacyFilterHint": "Ocultamos palabras ofensivas automáticamente",
+  "privacyMyReports": "Mis reportes",
+  "privacyMuted": "Cuentas silenciadas",
+  "privacyBlocked": "Cuentas bloqueadas",
+  "privacyNoBlocked": "No tienes cuentas bloqueadas.",
+  "privacyBlockedAgo": "Bloqueado {when}",
+  "@privacyBlockedAgo": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "privacyMutedAgo": "Silenciado {when}",
+  "@privacyMutedAgo": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "privacyNoMuted": "No has silenciado a nadie.",
+  "privacyNoReports": "No has enviado reportes.",
+  "privacySupportLead": "¿Algo urgente? Escríbenos a ",
+  "emailCopied": "Correo copiado",
+  "reportStatusOpen": "En revisión",
+  "reportStatusDismissed": "Revisado · sin cambios",
+  "reportStatusRemoved": "Revisado · contenido retirado",
+  "reportTargetUser": "Cuenta de {handle}",
+  "@reportTargetUser": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "reportTargetComment": "Comentario de {handle}",
+  "@reportTargetComment": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "timeToday": "hoy",
+  "timeWeeksAgo": "{n, plural, =1{hace 1 semana} other{hace {n} semanas}}",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthsAgo": "{n, plural, =1{hace 1 mes} other{hace {n} meses}}",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearsAgo": "{n, plural, =1{hace 1 año} other{hace {n} años}}",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "countAccounts": "{n, plural, =1{1 cuenta} other{{n} cuentas}}",
+  "@countAccounts": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "countReports": "{n, plural, =1{1 reporte} other{{n} reportes}}",
+  "@countReports": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "commentHiddenBody": "Lo ocultaste o lo reportaste, así que ya no aparece para ti.",
+  "commentShowAgain": "Mostrar de nuevo",
+  "onboardStep1": "Paso 1 de 2",
+  "onboardStep1Label": "Tus gustos",
+  "onboardTastesTitle": "Elige 3 discos que te encanten",
+  "onboardTastesBody": "Con eso armamos tu inicio y te mostramos gente con gustos parecidos.",
+  "onboardSearchHint": "un disco o artista",
+  "genrePopular": "Populares",
+  "genreRock": "Rock",
+  "genreLatinPop": "Pop latino",
+  "genreHipHop": "Hip hop",
+  "genreElectronic": "Electrónica",
+  "genrePop": "Pop",
+  "genreRnb": "R&B",
+  "genreIndie": "Indie",
+  "onboardPicked": "{n} de 3",
+  "@onboardPicked": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardPickedReady": "{n, plural, =1{1 elegido · listo} other{{n} elegidos · listo}}",
+  "@onboardPickedReady": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardContinue": "Continuar",
+  "onboardTastesError": "No pudimos cargar los discos.",
+  "onboardNoResults": "No encontramos “{query}”. Prueba con otro nombre.",
+  "@onboardNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardStep2": "Paso 2 de 2 · opcional",
+  "onboardSkip": "Saltar",
+  "onboardFollowTitle": "Sigue a gente con tu oído",
+  "onboardFollowBody": "Así tu inicio no empieza vacío. Puedes hacerlo después.",
+  "onboardContacts": "Buscar en tus contactos",
+  "onboardContactsHint": "Encuentra amigos que ya usan Vinilo",
+  "onboardByTastes": "{n, plural, =1{Por tu disco} other{Por tus {n} discos}}",
+  "@onboardByTastes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardPopularPeople": "Populares en Vinilo",
+  "suggestSameTen": "También le puso 10 a {album}",
+  "@suggestSameTen": {
+    "placeholders": {
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestRated": "Calificó {album} con {score}",
+  "@suggestRated": {
+    "placeholders": {
+      "album": {
+        "type": "String"
+      },
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "suggestPopular": "Popular en Vinilo · {n, plural, =1{1 seguidor} other{{n} seguidores}}",
+  "@suggestPopular": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardStartAlone": "Empezar sin seguir a nadie",
+  "onboardStartFollowing": "Empezar · sigues a {n}",
+  "@onboardStartFollowing": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardNoSuggestions": "Todavía no hay a quién sugerirte. Puedes buscar gente después, en Buscar.",
+  "findPeopleTitle": "Buscar personas",
+  "findPeopleHint": "Nombre o @usuario",
+  "findPeopleEmpty": "Nadie con ese nombre.",
+  "findPeopleBody": "Sigue a quien califica lo que te gusta y tu inicio se llena solo.",
+  "profileStatsTab": "Estadísticas",
+  "statsPeriodMonth": "Este mes",
+  "statsPeriodYear": "Este año",
+  "statsPeriodAll": "Siempre",
+  "statsRated": "Discos calificados",
+  "statsMyAverage": "Tu nota promedio",
+  "statsCompareHigher": "Calificas *{amount} puntos más alto* que la comunidad. Su promedio en los mismos discos es {average}.",
+  "@statsCompareHigher": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "average": {
+        "type": "String"
+      }
+    }
+  },
+  "statsCompareLower": "Calificas *{amount} puntos más bajo* que la comunidad. Su promedio en los mismos discos es {average}.",
+  "@statsCompareLower": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "average": {
+        "type": "String"
+      }
+    }
+  },
+  "statsCompareSame": "Calificas *igual* que la comunidad. Su promedio en los mismos discos es {average}.",
+  "@statsCompareSame": {
+    "placeholders": {
+      "average": {
+        "type": "String"
+      }
+    }
+  },
+  "statsHowYouRate": "Cómo calificas",
+  "statsHistSelected": "{n, plural, =1{1 disco} other{{n} discos}} con {score}",
+  "@statsHistSelected": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "statsTopArtists": "Artistas que más escuchas",
+  "statsArtistAverage": "prom. {average}",
+  "@statsArtistAverage": {
+    "placeholders": {
+      "average": {
+        "type": "String"
+      }
+    }
+  },
+  "statsByDecade": "Por década",
+  "statsRhythm": "Tu ritmo",
+  "statsRhythmLabel": "Discos por mes · {year}",
+  "@statsRhythmLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "statsStreak": "Racha actual: *{n, plural, =1{1 semana} other{{n} semanas}}* calificando al menos un disco.",
+  "@statsStreak": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "statsStreakNone": "Sin racha por ahora: califica un disco esta semana para empezar una.",
+  "statsTime": "Tiempo escuchando",
+  "statsTimeLabel": "Suma de tus discos",
+  "statsTimeHours": "{n, plural, =1{hora} other{horas}}",
+  "@statsTimeHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "statsTimeDays": "≈ {days} días seguidos",
+  "@statsTimeDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "statsTimeAlbums": "≈ {n, plural, =1{1 disco} other{{n} discos}}",
+  "@statsTimeAlbums": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "statsTimeLoading": "Calculando · {done} de {total}",
+  "@statsTimeLoading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "statsGenres": "Géneros",
+  "statsGenreOther": "Otros",
+  "statsCountries": "De dónde vienen",
+  "statsCountriesCount": "{n, plural, =1{1 país} other{{n} países}}",
+  "@statsCountriesCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "statsFriends": "Afinidad con amigos",
+  "statsMostAffine": "Más afín",
+  "statsLeastAffine": "Menos afín",
+  "statsCommon": "{n, plural, =1{1 disco en común} other{{n} discos en común}}",
+  "@statsCommon": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "statsShare": "Compartir mis estadísticas",
+  "statsEmptyPeriod": "Todavía no calificas nada en este periodo.",
+  "shareStatsTitleYear": "Mi año\nen discos",
+  "shareStatsTitleMonth": "Mi mes\nen discos",
+  "shareStatsTitleAll": "Mi vida\nen discos",
+  "shareStatsAlbums": "Discos",
+  "shareStatsAverage": "Promedio",
+  "shareStatsMode": "Mi nota más común: {score}",
+  "@shareStatsMode": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "shareStatsArtistYear": "Artista del año",
+  "shareStatsArtistMonth": "Artista del mes",
+  "shareStatsArtistAll": "Artista más escuchado",
+  "shareStatsSince": "Desde {year}",
+  "@shareStatsSince": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "shareStatsStories": "Historias",
+  "shareStatsWhatsapp": "WhatsApp",
+  "shareStatsSave": "Guardar",
+  "shareStatsCopy": "Copiar link",
+  "shareStatsMine": "Mis estadísticas en Vinilo",
+  "recoverStep": "Paso {n} de 3",
+  "@recoverStep": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "recoverTitle": "Recuperar\ncontraseña",
+  "recoverEmailBody": "Escribe el correo de tu cuenta y te mandamos un código de 6 dígitos.",
+  "recoverSendCode": "Enviar código",
+  "recoverRemembered": "¿Ya la recordaste? ",
+  "recoverCodeTitle": "Revisa tu\ncorreo",
+  "recoverCodeBody": "Mandamos un código a *{email}*. Vence en 10 minutos.",
+  "@recoverCodeBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "recoverWrongCode": "{n, plural, =1{Código incorrecto · te queda 1 intento} other{Código incorrecto · te quedan {n} intentos}}",
+  "@recoverWrongCode": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "recoverResendIn": "Reenviar en {time}",
+  "@recoverResendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recoverResend": "Reenviar código",
+  "recoverExpired": "El código venció. Pide otro.",
+  "recoverTooMany": "Demasiados intentos. Pide un código nuevo.",
+  "recoverThrottled": "Espera {n} s para pedir otro código.",
+  "@recoverThrottled": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "recoverCodeSent": "Te mandamos un código nuevo.",
+  "recoverNewTitle": "Nueva\ncontraseña",
+  "recoverNewLabel": "Contraseña nueva",
+  "recoverRepeatLabel": "Repetir contraseña",
+  "recoverRuleLength": "Al menos 8 caracteres",
+  "recoverRuleNumber": "Un número",
+  "recoverRuleDifferent": "Distinta a la anterior",
+  "recoverMismatch": "Las contraseñas no coinciden.",
+  "recoverSamePassword": "Es la misma de antes: elige otra.",
+  "recoverWeak": "Usa al menos 8 caracteres y un número.",
+  "recoverSave": "Guardar y entrar",
+  "recoverDoneLabel": "Contraseña",
+  "recoverDoneUpdated": "Actualizada",
+  "recoverDoneTitle": "Todo listo, {name}",
+  "@recoverDoneTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recoverDoneTitleNoName": "Todo listo",
+  "recoverDoneBody": "Cambiaste tu contraseña. Cerramos tu sesión en otros dispositivos por seguridad.",
+  "recoverGo": "Ir a Vinilo",
+  "recoverServer": "No pudimos hacerlo ahora. Vuelve a intentarlo en un momento.",
+  "signInWrongPassword": "La contraseña no coincide con ese usuario.",
+  "keypadDelete": "Borrar",
+  "offlineOverline": "Sin señal",
+  "offlineSide": "Lado B",
+  "offlineTitle": "Sin conexión",
+  "offlineBody": "Revisa tu wifi o tus datos. Las notas que guardes mientras tanto se suben cuando vuelvas a tener señal.",
+  "offlineConnecting": "Conectando…",
+  "offlineSaved": "Ver mis discos guardados",
+  "offlineBanner": "Sin conexión · mostrando lo último guardado",
+  "serverErrorTitle": "Se rayó el disco",
+  "serverErrorBody": "Algo falló de nuestro lado. No es tu conexión. Inténtalo de nuevo en unos segundos.",
+  "serverErrorCode": "Código · {code}",
+  "@serverErrorCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "serverErrorRetry": "Intentar de nuevo",
+  "serverErrorReport": "Reportar el problema",
+  "problemReported": "Gracias. Ya recibimos el aviso.",
+  "problemCopied": "Código copiado. Escríbenos a {email}.",
+  "@problemCopied": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "rateSaveFailedTitle": "No pudimos guardar tu nota",
+  "rateSaveFailedBody": "No perdiste nada, la guardamos en tu teléfono.",
+  "ratePendingLabel": "Tu nota · por subir",
+  "homeEmptyTitle": "Tu inicio está muy callado",
+  "homeEmptyBody": "Aquí verás lo que califican las personas que sigues. Empieza por gente con gustos parecidos a los tuyos.",
+  "homeEmptyFind": "Encontrar gente",
+  "homeEmptyRate": "Calificar un disco",
+  "profileEmptyTitle": "Tu diario está en blanco",
+  "profileEmptyBody": "Califica tu primer disco y aquí empezarán a aparecer tus notas, favoritos y estadísticas.",
+  "profileEmptyAction": "Calificar mi primer disco",
+  "searchZeroResults": "0 resultados",
+  "searchNotFound": "No encontramos “{query}”",
+  "@searchNotFound": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "searchNotFoundBody": "Revisa cómo está escrito o busca solo por artista.",
+  "searchDidYouMean": "¿Quisiste decir?",
+  "searchMissingLead": "¿Falta un disco en Vinilo? ",
+  "searchMissingAction": "Pídenos que lo agreguemos",
+  "searchRequestSent": "Anotado: vamos a buscar “{query}”.",
+  "@searchRequestSent": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsUpToDate": "Al día",
+  "notificationsNothingNew": "Nada nuevo por ahora",
+  "notificationsNothingNewBody": "Te avisaremos cuando alguien te siga, responda a tus notas o le guste lo que escribes."
 }

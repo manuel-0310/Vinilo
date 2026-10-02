@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/vinilo_theme.dart';
 import 'v_buttons.dart';
@@ -115,6 +116,55 @@ class ChoiceBox extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Interruptor cuadrado de 48×28: fondo de énfasis y botón oscuro cuando
+/// está encendido; fondo de tinta al 18 % y botón de tinta cuando no. El
+/// botón (22) se desliza en 200 ms. Lleva 8 de aire arriba y abajo para que
+/// el toque mida 44.
+class VSwitch extends StatelessWidget {
+  const VSwitch({super.key, required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return Semantics(
+      toggled: value,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onChanged == null
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                onChanged!(!value);
+              },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 48,
+            height: 28,
+            padding: const EdgeInsets.all(3),
+            color: value ? c.accent : c.inkA(0.18),
+            child: AnimatedAlign(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 22,
+                height: 22,
+                color: value ? c.onAccent : c.ink,
+              ),
+            ),
+          ),
         ),
       ),
     );

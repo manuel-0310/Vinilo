@@ -13,6 +13,7 @@ import '../widgets/v_icons.dart';
 import '../widgets/v_sections.dart';
 import 'delete_account_sheet.dart';
 import 'edit_profile_sheet.dart';
+import 'privacy_screen.dart';
 import 'profile_form.dart';
 
 /// Configuración: "Configuración" en 50 con su explicación y las secciones
@@ -148,6 +149,24 @@ class SettingsScreen extends StatelessWidget {
                         if (v == me.colorValue) return;
                         services.users.setColor(me, v);
                       },
+                    ),
+                  ),
+                  header(l.settingsPrivacy, bottom: 0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: VSpace.page),
+                    child: Pressable(
+                      key: const ValueKey('privacy-open'),
+                      onTap: () => openPrivacy(context),
+                      builder: (context, pressed) => Container(
+                        color: pressed ? c.inkA(0.04) : null,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Row(
+                          children: [
+                            Expanded(child: Text(l.privacyTitle, style: VText.ui(16, weight: 500))),
+                            Text('→', style: VText.ui(16, weight: 500, color: c.ink4)),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   header(l.settingsAccount),

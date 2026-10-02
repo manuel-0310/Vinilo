@@ -2,14 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/widgets.dart';
 
+import '../models/moderation.dart';
 import '../models/user_profile.dart';
 import 'account_service.dart';
 import 'auth_service.dart';
 import 'follow_repo.dart';
 import 'lists_repo.dart';
+import 'moderation_repo.dart';
 import 'notifications_repo.dart';
 import 'palette.dart';
 import 'ratings_repo.dart';
+import 'recovery_service.dart';
 import 'replies_repo.dart';
 import 'spotify_api.dart';
 import 'user_repo.dart';
@@ -28,6 +31,8 @@ class Services {
     required this.replies,
     required this.account,
     required this.web,
+    required this.moderation,
+    required this.recovery,
   });
 
   factory Services.create() {
@@ -58,6 +63,8 @@ class Services {
       replies: replies,
       account: AccountService(auth: auth, spotifyUrl: SpotifyApi.configuredUrl),
       web: WebService(spotifyUrl: SpotifyApi.configuredUrl),
+      moderation: ModerationRepo(db, notifications),
+      recovery: RecoveryService(spotifyUrl: SpotifyApi.configuredUrl),
     );
   }
 
@@ -72,6 +79,8 @@ class Services {
   final RepliesRepo replies;
   final AccountService account;
   final WebService web;
+  final ModerationRepo moderation;
+  final RecoveryService recovery;
 }
 
 class ServicesScope extends InheritedWidget {
@@ -103,4 +112,20 @@ class CurrentUser extends InheritedWidget {
 
   @override
   bool updateShouldNotify(CurrentUser oldWidget) => profile != oldWidget.profile;
+}
+
+/// Lo que hay que esconderle a quien usa la app (bloqueos, silenciados,
+/// comentarios ocultos y el filtro de palabras), disponible en todo el
+/// árbol como `CurrentUser`. Sin sesión, o mientras carga, no esconde nada.
+class Moderation extends InheritedWidget {
+  const Moderation({super.key, required this.state, required super.child});
+
+  final ModerationState state;
+
+  static ModerationState of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<Moderation>()?.state ??
+      const ModerationState();
+
+  @override
+  bool updateShouldNotify(Moderation oldWidget) => state != oldWidget.state;
 }

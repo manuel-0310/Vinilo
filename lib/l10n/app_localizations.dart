@@ -3235,6 +3235,1482 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Esta versión de la app todavía no puede compartir imágenes.'**
   String get shareImageUnsupported;
+
+  /// No description provided for @menuShareProfile.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir perfil'**
+  String get menuShareProfile;
+
+  /// No description provided for @menuMute.
+  ///
+  /// In es, this message translates to:
+  /// **'Silenciar'**
+  String get menuMute;
+
+  /// No description provided for @menuMuteHint.
+  ///
+  /// In es, this message translates to:
+  /// **'No verás su actividad'**
+  String get menuMuteHint;
+
+  /// No description provided for @menuUnmute.
+  ///
+  /// In es, this message translates to:
+  /// **'Dejar de silenciar'**
+  String get menuUnmute;
+
+  /// No description provided for @menuUnmuteHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Volverás a ver su actividad'**
+  String get menuUnmuteHint;
+
+  /// No description provided for @menuReportUser.
+  ///
+  /// In es, this message translates to:
+  /// **'Reportar a {handle}'**
+  String menuReportUser(String handle);
+
+  /// No description provided for @menuBlockUser.
+  ///
+  /// In es, this message translates to:
+  /// **'Bloquear a {handle}'**
+  String menuBlockUser(String handle);
+
+  /// No description provided for @menuUnblockUser.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquear a {handle}'**
+  String menuUnblockUser(String handle);
+
+  /// No description provided for @menuRatingOf.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificación de {handle}'**
+  String menuRatingOf(String handle);
+
+  /// No description provided for @menuReplyOf.
+  ///
+  /// In es, this message translates to:
+  /// **'Respuesta de {handle}'**
+  String menuReplyOf(String handle);
+
+  /// No description provided for @menuHideComment.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocultar este comentario'**
+  String get menuHideComment;
+
+  /// No description provided for @menuHideHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo para ti'**
+  String get menuHideHint;
+
+  /// No description provided for @menuReportComment.
+  ///
+  /// In es, this message translates to:
+  /// **'Reportar comentario'**
+  String get menuReportComment;
+
+  /// No description provided for @menuMore.
+  ///
+  /// In es, this message translates to:
+  /// **'Más opciones'**
+  String get menuMore;
+
+  /// No description provided for @commentHidden.
+  ///
+  /// In es, this message translates to:
+  /// **'Comentario oculto'**
+  String get commentHidden;
+
+  /// No description provided for @userMuted.
+  ///
+  /// In es, this message translates to:
+  /// **'Silenciaste a {handle}'**
+  String userMuted(String handle);
+
+  /// No description provided for @userUnmuted.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya no silencias a {handle}'**
+  String userUnmuted(String handle);
+
+  /// No description provided for @reportOverlineComment.
+  ///
+  /// In es, this message translates to:
+  /// **'Reportar comentario de {handle}'**
+  String reportOverlineComment(String handle);
+
+  /// No description provided for @reportTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué está pasando?'**
+  String get reportTitle;
+
+  /// No description provided for @reportAnonymous.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu reporte es anónimo. {handle} no sabrá que fuiste tú.'**
+  String reportAnonymous(String handle);
+
+  /// No description provided for @reportReasonSpam.
+  ///
+  /// In es, this message translates to:
+  /// **'Spam'**
+  String get reportReasonSpam;
+
+  /// No description provided for @reportReasonSpamHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicidad, enlaces o mensajes repetidos'**
+  String get reportReasonSpamHint;
+
+  /// No description provided for @reportReasonHarassment.
+  ///
+  /// In es, this message translates to:
+  /// **'Acoso o bullying'**
+  String get reportReasonHarassment;
+
+  /// No description provided for @reportReasonHarassmentHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Ataques o insultos a alguien'**
+  String get reportReasonHarassmentHint;
+
+  /// No description provided for @reportReasonHarassmentShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Acoso'**
+  String get reportReasonHarassmentShort;
+
+  /// No description provided for @reportReasonHate.
+  ///
+  /// In es, this message translates to:
+  /// **'Discurso de odio'**
+  String get reportReasonHate;
+
+  /// No description provided for @reportReasonHateHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Contra un grupo o identidad'**
+  String get reportReasonHateHint;
+
+  /// No description provided for @reportReasonHateShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Odio'**
+  String get reportReasonHateShort;
+
+  /// No description provided for @reportReasonSexual.
+  ///
+  /// In es, this message translates to:
+  /// **'Contenido sexual'**
+  String get reportReasonSexual;
+
+  /// No description provided for @reportReasonSexualHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Texto o imagen explícita'**
+  String get reportReasonSexualHint;
+
+  /// No description provided for @reportReasonSexualShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Sexual'**
+  String get reportReasonSexualShort;
+
+  /// No description provided for @reportReasonImpersonation.
+  ///
+  /// In es, this message translates to:
+  /// **'Suplantación'**
+  String get reportReasonImpersonation;
+
+  /// No description provided for @reportReasonImpersonationHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Se hace pasar por otra persona'**
+  String get reportReasonImpersonationHint;
+
+  /// No description provided for @reportReasonViolence.
+  ///
+  /// In es, this message translates to:
+  /// **'Violencia o amenazas'**
+  String get reportReasonViolence;
+
+  /// No description provided for @reportReasonViolenceHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Daño a alguien o a sí mismo'**
+  String get reportReasonViolenceHint;
+
+  /// No description provided for @reportReasonViolenceShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Violencia'**
+  String get reportReasonViolenceShort;
+
+  /// No description provided for @reportReasonOther.
+  ///
+  /// In es, this message translates to:
+  /// **'Otro'**
+  String get reportReasonOther;
+
+  /// No description provided for @reportReasonOtherHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuéntanos en los detalles'**
+  String get reportReasonOtherHint;
+
+  /// No description provided for @reportDetailsHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Agrega detalles (opcional)'**
+  String get reportDetailsHint;
+
+  /// No description provided for @reportSend.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar reporte'**
+  String get reportSend;
+
+  /// No description provided for @reportFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo enviar el reporte: {error}'**
+  String reportFailed(String error);
+
+  /// No description provided for @reportNumber.
+  ///
+  /// In es, this message translates to:
+  /// **'Reporte Nº {n}'**
+  String reportNumber(String n);
+
+  /// No description provided for @reportSentTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Gracias por avisarnos'**
+  String get reportSentTitle;
+
+  /// No description provided for @reportSentBodyComment.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya ocultamos este comentario para ti. Nuestro equipo lo revisa en menos de 24 horas y te avisamos qué decidimos.'**
+  String get reportSentBodyComment;
+
+  /// No description provided for @reportSentBodyUser.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuestro equipo revisa esta cuenta en menos de 24 horas y te avisamos qué decidimos.'**
+  String get reportSentBodyUser;
+
+  /// No description provided for @reportAlsoBlock.
+  ///
+  /// In es, this message translates to:
+  /// **'Bloquear también a {handle}'**
+  String reportAlsoBlock(String handle);
+
+  /// No description provided for @reportAlsoBlockHint.
+  ///
+  /// In es, this message translates to:
+  /// **'No podrá ver tu perfil ni responderte'**
+  String get reportAlsoBlockHint;
+
+  /// No description provided for @reportSeeMine.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver mis reportes en Ajustes'**
+  String get reportSeeMine;
+
+  /// No description provided for @blockTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Bloquear a {handle}?'**
+  String blockTitle(String handle);
+
+  /// No description provided for @blockRule1.
+  ///
+  /// In es, this message translates to:
+  /// **'No podrá ver tu perfil, tus notas ni tus listas.'**
+  String get blockRule1;
+
+  /// No description provided for @blockRule2.
+  ///
+  /// In es, this message translates to:
+  /// **'No podrá seguirte, responderte ni mencionarte.'**
+  String get blockRule2;
+
+  /// No description provided for @blockRule3.
+  ///
+  /// In es, this message translates to:
+  /// **'Dejarán de seguirse mutuamente.'**
+  String get blockRule3;
+
+  /// No description provided for @blockRule4.
+  ///
+  /// In es, this message translates to:
+  /// **'Sus calificaciones y comentarios desaparecen de tu inicio.'**
+  String get blockRule4;
+
+  /// No description provided for @blockNote.
+  ///
+  /// In es, this message translates to:
+  /// **'No le avisaremos. Puedes desbloquearlo cuando quieras en Ajustes.'**
+  String get blockNote;
+
+  /// No description provided for @blockConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Bloquear'**
+  String get blockConfirm;
+
+  /// No description provided for @blockFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo bloquear: {error}'**
+  String blockFailed(String error);
+
+  /// No description provided for @userBlocked.
+  ///
+  /// In es, this message translates to:
+  /// **'Bloqueaste a {handle}'**
+  String userBlocked(String handle);
+
+  /// No description provided for @blockedTag.
+  ///
+  /// In es, this message translates to:
+  /// **'Bloqueado'**
+  String get blockedTag;
+
+  /// No description provided for @blockedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Bloqueaste a esta cuenta'**
+  String get blockedTitle;
+
+  /// No description provided for @blockedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'No ves su actividad y no puede interactuar contigo.'**
+  String get blockedBody;
+
+  /// No description provided for @unblock.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquear'**
+  String get unblock;
+
+  /// No description provided for @unblockedTag.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloqueado'**
+  String get unblockedTag;
+
+  /// No description provided for @unblockedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya no está bloqueado'**
+  String get unblockedTitle;
+
+  /// No description provided for @unblockedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Pueden volver a verse. Tendrás que seguirlo de nuevo si quieres.'**
+  String get unblockedBody;
+
+  /// No description provided for @followPlain.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguir'**
+  String get followPlain;
+
+  /// No description provided for @followingPlain.
+  ///
+  /// In es, this message translates to:
+  /// **'Siguiendo'**
+  String get followingPlain;
+
+  /// No description provided for @unblockFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo desbloquear: {error}'**
+  String unblockFailed(String error);
+
+  /// No description provided for @settingsPrivacy.
+  ///
+  /// In es, this message translates to:
+  /// **'Privacidad'**
+  String get settingsPrivacy;
+
+  /// No description provided for @privacyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Privacidad y seguridad'**
+  String get privacyTitle;
+
+  /// No description provided for @privacyFilter.
+  ///
+  /// In es, this message translates to:
+  /// **'Filtrar comentarios ofensivos'**
+  String get privacyFilter;
+
+  /// No description provided for @privacyFilterHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocultamos palabras ofensivas automáticamente'**
+  String get privacyFilterHint;
+
+  /// No description provided for @privacyMyReports.
+  ///
+  /// In es, this message translates to:
+  /// **'Mis reportes'**
+  String get privacyMyReports;
+
+  /// No description provided for @privacyMuted.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuentas silenciadas'**
+  String get privacyMuted;
+
+  /// No description provided for @privacyBlocked.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuentas bloqueadas'**
+  String get privacyBlocked;
+
+  /// No description provided for @privacyNoBlocked.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes cuentas bloqueadas.'**
+  String get privacyNoBlocked;
+
+  /// No description provided for @privacyBlockedAgo.
+  ///
+  /// In es, this message translates to:
+  /// **'Bloqueado {when}'**
+  String privacyBlockedAgo(String when);
+
+  /// No description provided for @privacyMutedAgo.
+  ///
+  /// In es, this message translates to:
+  /// **'Silenciado {when}'**
+  String privacyMutedAgo(String when);
+
+  /// No description provided for @privacyNoMuted.
+  ///
+  /// In es, this message translates to:
+  /// **'No has silenciado a nadie.'**
+  String get privacyNoMuted;
+
+  /// No description provided for @privacyNoReports.
+  ///
+  /// In es, this message translates to:
+  /// **'No has enviado reportes.'**
+  String get privacyNoReports;
+
+  /// No description provided for @privacySupportLead.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Algo urgente? Escríbenos a '**
+  String get privacySupportLead;
+
+  /// No description provided for @emailCopied.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo copiado'**
+  String get emailCopied;
+
+  /// No description provided for @reportStatusOpen.
+  ///
+  /// In es, this message translates to:
+  /// **'En revisión'**
+  String get reportStatusOpen;
+
+  /// No description provided for @reportStatusDismissed.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisado · sin cambios'**
+  String get reportStatusDismissed;
+
+  /// No description provided for @reportStatusRemoved.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisado · contenido retirado'**
+  String get reportStatusRemoved;
+
+  /// No description provided for @reportTargetUser.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuenta de {handle}'**
+  String reportTargetUser(String handle);
+
+  /// No description provided for @reportTargetComment.
+  ///
+  /// In es, this message translates to:
+  /// **'Comentario de {handle}'**
+  String reportTargetComment(String handle);
+
+  /// No description provided for @timeToday.
+  ///
+  /// In es, this message translates to:
+  /// **'hoy'**
+  String get timeToday;
+
+  /// No description provided for @timeWeeksAgo.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{hace 1 semana} other{hace {n} semanas}}'**
+  String timeWeeksAgo(int n);
+
+  /// No description provided for @timeMonthsAgo.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{hace 1 mes} other{hace {n} meses}}'**
+  String timeMonthsAgo(int n);
+
+  /// No description provided for @timeYearsAgo.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{hace 1 año} other{hace {n} años}}'**
+  String timeYearsAgo(int n);
+
+  /// No description provided for @countAccounts.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 cuenta} other{{n} cuentas}}'**
+  String countAccounts(int n);
+
+  /// No description provided for @countReports.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 reporte} other{{n} reportes}}'**
+  String countReports(int n);
+
+  /// No description provided for @commentHiddenBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo ocultaste o lo reportaste, así que ya no aparece para ti.'**
+  String get commentHiddenBody;
+
+  /// No description provided for @commentShowAgain.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar de nuevo'**
+  String get commentShowAgain;
+
+  /// No description provided for @onboardStep1.
+  ///
+  /// In es, this message translates to:
+  /// **'Paso 1 de 2'**
+  String get onboardStep1;
+
+  /// No description provided for @onboardStep1Label.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus gustos'**
+  String get onboardStep1Label;
+
+  /// No description provided for @onboardTastesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige 3 discos que te encanten'**
+  String get onboardTastesTitle;
+
+  /// No description provided for @onboardTastesBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Con eso armamos tu inicio y te mostramos gente con gustos parecidos.'**
+  String get onboardTastesBody;
+
+  /// No description provided for @onboardSearchHint.
+  ///
+  /// In es, this message translates to:
+  /// **'un disco o artista'**
+  String get onboardSearchHint;
+
+  /// No description provided for @genrePopular.
+  ///
+  /// In es, this message translates to:
+  /// **'Populares'**
+  String get genrePopular;
+
+  /// No description provided for @genreRock.
+  ///
+  /// In es, this message translates to:
+  /// **'Rock'**
+  String get genreRock;
+
+  /// No description provided for @genreLatinPop.
+  ///
+  /// In es, this message translates to:
+  /// **'Pop latino'**
+  String get genreLatinPop;
+
+  /// No description provided for @genreHipHop.
+  ///
+  /// In es, this message translates to:
+  /// **'Hip hop'**
+  String get genreHipHop;
+
+  /// No description provided for @genreElectronic.
+  ///
+  /// In es, this message translates to:
+  /// **'Electrónica'**
+  String get genreElectronic;
+
+  /// No description provided for @genrePop.
+  ///
+  /// In es, this message translates to:
+  /// **'Pop'**
+  String get genrePop;
+
+  /// No description provided for @genreRnb.
+  ///
+  /// In es, this message translates to:
+  /// **'R&B'**
+  String get genreRnb;
+
+  /// No description provided for @genreIndie.
+  ///
+  /// In es, this message translates to:
+  /// **'Indie'**
+  String get genreIndie;
+
+  /// No description provided for @onboardPicked.
+  ///
+  /// In es, this message translates to:
+  /// **'{n} de 3'**
+  String onboardPicked(int n);
+
+  /// No description provided for @onboardPickedReady.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 elegido · listo} other{{n} elegidos · listo}}'**
+  String onboardPickedReady(int n);
+
+  /// No description provided for @onboardContinue.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get onboardContinue;
+
+  /// No description provided for @onboardTastesError.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar los discos.'**
+  String get onboardTastesError;
+
+  /// No description provided for @onboardNoResults.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos “{query}”. Prueba con otro nombre.'**
+  String onboardNoResults(String query);
+
+  /// No description provided for @onboardStep2.
+  ///
+  /// In es, this message translates to:
+  /// **'Paso 2 de 2 · opcional'**
+  String get onboardStep2;
+
+  /// No description provided for @onboardSkip.
+  ///
+  /// In es, this message translates to:
+  /// **'Saltar'**
+  String get onboardSkip;
+
+  /// No description provided for @onboardFollowTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sigue a gente con tu oído'**
+  String get onboardFollowTitle;
+
+  /// No description provided for @onboardFollowBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Así tu inicio no empieza vacío. Puedes hacerlo después.'**
+  String get onboardFollowBody;
+
+  /// No description provided for @onboardContacts.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar en tus contactos'**
+  String get onboardContacts;
+
+  /// No description provided for @onboardContactsHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Encuentra amigos que ya usan Vinilo'**
+  String get onboardContactsHint;
+
+  /// No description provided for @onboardByTastes.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{Por tu disco} other{Por tus {n} discos}}'**
+  String onboardByTastes(int n);
+
+  /// No description provided for @onboardPopularPeople.
+  ///
+  /// In es, this message translates to:
+  /// **'Populares en Vinilo'**
+  String get onboardPopularPeople;
+
+  /// No description provided for @suggestSameTen.
+  ///
+  /// In es, this message translates to:
+  /// **'También le puso 10 a {album}'**
+  String suggestSameTen(String album);
+
+  /// No description provided for @suggestRated.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificó {album} con {score}'**
+  String suggestRated(String album, int score);
+
+  /// No description provided for @suggestPopular.
+  ///
+  /// In es, this message translates to:
+  /// **'Popular en Vinilo · {n, plural, =1{1 seguidor} other{{n} seguidores}}'**
+  String suggestPopular(int n);
+
+  /// No description provided for @onboardStartAlone.
+  ///
+  /// In es, this message translates to:
+  /// **'Empezar sin seguir a nadie'**
+  String get onboardStartAlone;
+
+  /// No description provided for @onboardStartFollowing.
+  ///
+  /// In es, this message translates to:
+  /// **'Empezar · sigues a {n}'**
+  String onboardStartFollowing(int n);
+
+  /// No description provided for @onboardNoSuggestions.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay a quién sugerirte. Puedes buscar gente después, en Buscar.'**
+  String get onboardNoSuggestions;
+
+  /// No description provided for @findPeopleTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar personas'**
+  String get findPeopleTitle;
+
+  /// No description provided for @findPeopleHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre o @usuario'**
+  String get findPeopleHint;
+
+  /// No description provided for @findPeopleEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Nadie con ese nombre.'**
+  String get findPeopleEmpty;
+
+  /// No description provided for @findPeopleBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sigue a quien califica lo que te gusta y tu inicio se llena solo.'**
+  String get findPeopleBody;
+
+  /// No description provided for @profileStatsTab.
+  ///
+  /// In es, this message translates to:
+  /// **'Estadísticas'**
+  String get profileStatsTab;
+
+  /// No description provided for @statsPeriodMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'Este mes'**
+  String get statsPeriodMonth;
+
+  /// No description provided for @statsPeriodYear.
+  ///
+  /// In es, this message translates to:
+  /// **'Este año'**
+  String get statsPeriodYear;
+
+  /// No description provided for @statsPeriodAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Siempre'**
+  String get statsPeriodAll;
+
+  /// No description provided for @statsRated.
+  ///
+  /// In es, this message translates to:
+  /// **'Discos calificados'**
+  String get statsRated;
+
+  /// No description provided for @statsMyAverage.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu nota promedio'**
+  String get statsMyAverage;
+
+  /// No description provided for @statsCompareHigher.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificas *{amount} puntos más alto* que la comunidad. Su promedio en los mismos discos es {average}.'**
+  String statsCompareHigher(String amount, String average);
+
+  /// No description provided for @statsCompareLower.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificas *{amount} puntos más bajo* que la comunidad. Su promedio en los mismos discos es {average}.'**
+  String statsCompareLower(String amount, String average);
+
+  /// No description provided for @statsCompareSame.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificas *igual* que la comunidad. Su promedio en los mismos discos es {average}.'**
+  String statsCompareSame(String average);
+
+  /// No description provided for @statsHowYouRate.
+  ///
+  /// In es, this message translates to:
+  /// **'Cómo calificas'**
+  String get statsHowYouRate;
+
+  /// No description provided for @statsHistSelected.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 disco} other{{n} discos}} con {score}'**
+  String statsHistSelected(int n, int score);
+
+  /// No description provided for @statsTopArtists.
+  ///
+  /// In es, this message translates to:
+  /// **'Artistas que más escuchas'**
+  String get statsTopArtists;
+
+  /// No description provided for @statsArtistAverage.
+  ///
+  /// In es, this message translates to:
+  /// **'prom. {average}'**
+  String statsArtistAverage(String average);
+
+  /// No description provided for @statsByDecade.
+  ///
+  /// In es, this message translates to:
+  /// **'Por década'**
+  String get statsByDecade;
+
+  /// No description provided for @statsRhythm.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu ritmo'**
+  String get statsRhythm;
+
+  /// No description provided for @statsRhythmLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Discos por mes · {year}'**
+  String statsRhythmLabel(String year);
+
+  /// No description provided for @statsStreak.
+  ///
+  /// In es, this message translates to:
+  /// **'Racha actual: *{n, plural, =1{1 semana} other{{n} semanas}}* calificando al menos un disco.'**
+  String statsStreak(int n);
+
+  /// No description provided for @statsStreakNone.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin racha por ahora: califica un disco esta semana para empezar una.'**
+  String get statsStreakNone;
+
+  /// No description provided for @statsTime.
+  ///
+  /// In es, this message translates to:
+  /// **'Tiempo escuchando'**
+  String get statsTime;
+
+  /// No description provided for @statsTimeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Suma de tus discos'**
+  String get statsTimeLabel;
+
+  /// No description provided for @statsTimeHours.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{hora} other{horas}}'**
+  String statsTimeHours(int n);
+
+  /// No description provided for @statsTimeDays.
+  ///
+  /// In es, this message translates to:
+  /// **'≈ {days} días seguidos'**
+  String statsTimeDays(String days);
+
+  /// No description provided for @statsTimeAlbums.
+  ///
+  /// In es, this message translates to:
+  /// **'≈ {n, plural, =1{1 disco} other{{n} discos}}'**
+  String statsTimeAlbums(int n);
+
+  /// No description provided for @statsTimeLoading.
+  ///
+  /// In es, this message translates to:
+  /// **'Calculando · {done} de {total}'**
+  String statsTimeLoading(int done, int total);
+
+  /// No description provided for @statsGenres.
+  ///
+  /// In es, this message translates to:
+  /// **'Géneros'**
+  String get statsGenres;
+
+  /// No description provided for @statsGenreOther.
+  ///
+  /// In es, this message translates to:
+  /// **'Otros'**
+  String get statsGenreOther;
+
+  /// No description provided for @statsCountries.
+  ///
+  /// In es, this message translates to:
+  /// **'De dónde vienen'**
+  String get statsCountries;
+
+  /// No description provided for @statsCountriesCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 país} other{{n} países}}'**
+  String statsCountriesCount(int n);
+
+  /// No description provided for @statsFriends.
+  ///
+  /// In es, this message translates to:
+  /// **'Afinidad con amigos'**
+  String get statsFriends;
+
+  /// No description provided for @statsMostAffine.
+  ///
+  /// In es, this message translates to:
+  /// **'Más afín'**
+  String get statsMostAffine;
+
+  /// No description provided for @statsLeastAffine.
+  ///
+  /// In es, this message translates to:
+  /// **'Menos afín'**
+  String get statsLeastAffine;
+
+  /// No description provided for @statsCommon.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{1 disco en común} other{{n} discos en común}}'**
+  String statsCommon(int n);
+
+  /// No description provided for @statsShare.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir mis estadísticas'**
+  String get statsShare;
+
+  /// No description provided for @statsEmptyPeriod.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no calificas nada en este periodo.'**
+  String get statsEmptyPeriod;
+
+  /// No description provided for @shareStatsTitleYear.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi año\nen discos'**
+  String get shareStatsTitleYear;
+
+  /// No description provided for @shareStatsTitleMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi mes\nen discos'**
+  String get shareStatsTitleMonth;
+
+  /// No description provided for @shareStatsTitleAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi vida\nen discos'**
+  String get shareStatsTitleAll;
+
+  /// No description provided for @shareStatsAlbums.
+  ///
+  /// In es, this message translates to:
+  /// **'Discos'**
+  String get shareStatsAlbums;
+
+  /// No description provided for @shareStatsAverage.
+  ///
+  /// In es, this message translates to:
+  /// **'Promedio'**
+  String get shareStatsAverage;
+
+  /// No description provided for @shareStatsMode.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi nota más común: {score}'**
+  String shareStatsMode(int score);
+
+  /// No description provided for @shareStatsArtistYear.
+  ///
+  /// In es, this message translates to:
+  /// **'Artista del año'**
+  String get shareStatsArtistYear;
+
+  /// No description provided for @shareStatsArtistMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'Artista del mes'**
+  String get shareStatsArtistMonth;
+
+  /// No description provided for @shareStatsArtistAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Artista más escuchado'**
+  String get shareStatsArtistAll;
+
+  /// No description provided for @shareStatsSince.
+  ///
+  /// In es, this message translates to:
+  /// **'Desde {year}'**
+  String shareStatsSince(String year);
+
+  /// No description provided for @shareStatsStories.
+  ///
+  /// In es, this message translates to:
+  /// **'Historias'**
+  String get shareStatsStories;
+
+  /// No description provided for @shareStatsWhatsapp.
+  ///
+  /// In es, this message translates to:
+  /// **'WhatsApp'**
+  String get shareStatsWhatsapp;
+
+  /// No description provided for @shareStatsSave.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar'**
+  String get shareStatsSave;
+
+  /// No description provided for @shareStatsCopy.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar link'**
+  String get shareStatsCopy;
+
+  /// No description provided for @shareStatsMine.
+  ///
+  /// In es, this message translates to:
+  /// **'Mis estadísticas en Vinilo'**
+  String get shareStatsMine;
+
+  /// No description provided for @recoverStep.
+  ///
+  /// In es, this message translates to:
+  /// **'Paso {n} de 3'**
+  String recoverStep(int n);
+
+  /// No description provided for @recoverTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Recuperar\ncontraseña'**
+  String get recoverTitle;
+
+  /// No description provided for @recoverEmailBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe el correo de tu cuenta y te mandamos un código de 6 dígitos.'**
+  String get recoverEmailBody;
+
+  /// No description provided for @recoverSendCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar código'**
+  String get recoverSendCode;
+
+  /// No description provided for @recoverRemembered.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Ya la recordaste? '**
+  String get recoverRemembered;
+
+  /// No description provided for @recoverCodeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa tu\ncorreo'**
+  String get recoverCodeTitle;
+
+  /// No description provided for @recoverCodeBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Mandamos un código a *{email}*. Vence en 10 minutos.'**
+  String recoverCodeBody(String email);
+
+  /// No description provided for @recoverWrongCode.
+  ///
+  /// In es, this message translates to:
+  /// **'{n, plural, =1{Código incorrecto · te queda 1 intento} other{Código incorrecto · te quedan {n} intentos}}'**
+  String recoverWrongCode(int n);
+
+  /// No description provided for @recoverResendIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Reenviar en {time}'**
+  String recoverResendIn(String time);
+
+  /// No description provided for @recoverResend.
+  ///
+  /// In es, this message translates to:
+  /// **'Reenviar código'**
+  String get recoverResend;
+
+  /// No description provided for @recoverExpired.
+  ///
+  /// In es, this message translates to:
+  /// **'El código venció. Pide otro.'**
+  String get recoverExpired;
+
+  /// No description provided for @recoverTooMany.
+  ///
+  /// In es, this message translates to:
+  /// **'Demasiados intentos. Pide un código nuevo.'**
+  String get recoverTooMany;
+
+  /// No description provided for @recoverThrottled.
+  ///
+  /// In es, this message translates to:
+  /// **'Espera {n} s para pedir otro código.'**
+  String recoverThrottled(int n);
+
+  /// No description provided for @recoverCodeSent.
+  ///
+  /// In es, this message translates to:
+  /// **'Te mandamos un código nuevo.'**
+  String get recoverCodeSent;
+
+  /// No description provided for @recoverNewTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva\ncontraseña'**
+  String get recoverNewTitle;
+
+  /// No description provided for @recoverNewLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña nueva'**
+  String get recoverNewLabel;
+
+  /// No description provided for @recoverRepeatLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Repetir contraseña'**
+  String get recoverRepeatLabel;
+
+  /// No description provided for @recoverRuleLength.
+  ///
+  /// In es, this message translates to:
+  /// **'Al menos 8 caracteres'**
+  String get recoverRuleLength;
+
+  /// No description provided for @recoverRuleNumber.
+  ///
+  /// In es, this message translates to:
+  /// **'Un número'**
+  String get recoverRuleNumber;
+
+  /// No description provided for @recoverRuleDifferent.
+  ///
+  /// In es, this message translates to:
+  /// **'Distinta a la anterior'**
+  String get recoverRuleDifferent;
+
+  /// No description provided for @recoverMismatch.
+  ///
+  /// In es, this message translates to:
+  /// **'Las contraseñas no coinciden.'**
+  String get recoverMismatch;
+
+  /// No description provided for @recoverSamePassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Es la misma de antes: elige otra.'**
+  String get recoverSamePassword;
+
+  /// No description provided for @recoverWeak.
+  ///
+  /// In es, this message translates to:
+  /// **'Usa al menos 8 caracteres y un número.'**
+  String get recoverWeak;
+
+  /// No description provided for @recoverSave.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar y entrar'**
+  String get recoverSave;
+
+  /// No description provided for @recoverDoneLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña'**
+  String get recoverDoneLabel;
+
+  /// No description provided for @recoverDoneUpdated.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizada'**
+  String get recoverDoneUpdated;
+
+  /// No description provided for @recoverDoneTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo listo, {name}'**
+  String recoverDoneTitle(String name);
+
+  /// No description provided for @recoverDoneTitleNoName.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo listo'**
+  String get recoverDoneTitleNoName;
+
+  /// No description provided for @recoverDoneBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiaste tu contraseña. Cerramos tu sesión en otros dispositivos por seguridad.'**
+  String get recoverDoneBody;
+
+  /// No description provided for @recoverGo.
+  ///
+  /// In es, this message translates to:
+  /// **'Ir a Vinilo'**
+  String get recoverGo;
+
+  /// No description provided for @recoverServer.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos hacerlo ahora. Vuelve a intentarlo en un momento.'**
+  String get recoverServer;
+
+  /// No description provided for @signInWrongPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña no coincide con ese usuario.'**
+  String get signInWrongPassword;
+
+  /// No description provided for @keypadDelete.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar'**
+  String get keypadDelete;
+
+  /// No description provided for @offlineOverline.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin señal'**
+  String get offlineOverline;
+
+  /// No description provided for @offlineSide.
+  ///
+  /// In es, this message translates to:
+  /// **'Lado B'**
+  String get offlineSide;
+
+  /// No description provided for @offlineTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin conexión'**
+  String get offlineTitle;
+
+  /// No description provided for @offlineBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa tu wifi o tus datos. Las notas que guardes mientras tanto se suben cuando vuelvas a tener señal.'**
+  String get offlineBody;
+
+  /// No description provided for @offlineConnecting.
+  ///
+  /// In es, this message translates to:
+  /// **'Conectando…'**
+  String get offlineConnecting;
+
+  /// No description provided for @offlineSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver mis discos guardados'**
+  String get offlineSaved;
+
+  /// No description provided for @offlineBanner.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin conexión · mostrando lo último guardado'**
+  String get offlineBanner;
+
+  /// No description provided for @serverErrorTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Se rayó el disco'**
+  String get serverErrorTitle;
+
+  /// No description provided for @serverErrorBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Algo falló de nuestro lado. No es tu conexión. Inténtalo de nuevo en unos segundos.'**
+  String get serverErrorBody;
+
+  /// No description provided for @serverErrorCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código · {code}'**
+  String serverErrorCode(String code);
+
+  /// No description provided for @serverErrorRetry.
+  ///
+  /// In es, this message translates to:
+  /// **'Intentar de nuevo'**
+  String get serverErrorRetry;
+
+  /// No description provided for @serverErrorReport.
+  ///
+  /// In es, this message translates to:
+  /// **'Reportar el problema'**
+  String get serverErrorReport;
+
+  /// No description provided for @problemReported.
+  ///
+  /// In es, this message translates to:
+  /// **'Gracias. Ya recibimos el aviso.'**
+  String get problemReported;
+
+  /// No description provided for @problemCopied.
+  ///
+  /// In es, this message translates to:
+  /// **'Código copiado. Escríbenos a {email}.'**
+  String problemCopied(String email);
+
+  /// No description provided for @rateSaveFailedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos guardar tu nota'**
+  String get rateSaveFailedTitle;
+
+  /// No description provided for @rateSaveFailedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'No perdiste nada, la guardamos en tu teléfono.'**
+  String get rateSaveFailedBody;
+
+  /// No description provided for @ratePendingLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu nota · por subir'**
+  String get ratePendingLabel;
+
+  /// No description provided for @homeEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu inicio está muy callado'**
+  String get homeEmptyTitle;
+
+  /// No description provided for @homeEmptyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Aquí verás lo que califican las personas que sigues. Empieza por gente con gustos parecidos a los tuyos.'**
+  String get homeEmptyBody;
+
+  /// No description provided for @homeEmptyFind.
+  ///
+  /// In es, this message translates to:
+  /// **'Encontrar gente'**
+  String get homeEmptyFind;
+
+  /// No description provided for @homeEmptyRate.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificar un disco'**
+  String get homeEmptyRate;
+
+  /// No description provided for @profileEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu diario está en blanco'**
+  String get profileEmptyTitle;
+
+  /// No description provided for @profileEmptyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Califica tu primer disco y aquí empezarán a aparecer tus notas, favoritos y estadísticas.'**
+  String get profileEmptyBody;
+
+  /// No description provided for @profileEmptyAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificar mi primer disco'**
+  String get profileEmptyAction;
+
+  /// No description provided for @searchZeroResults.
+  ///
+  /// In es, this message translates to:
+  /// **'0 resultados'**
+  String get searchZeroResults;
+
+  /// No description provided for @searchNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos “{query}”'**
+  String searchNotFound(String query);
+
+  /// No description provided for @searchNotFoundBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa cómo está escrito o busca solo por artista.'**
+  String get searchNotFoundBody;
+
+  /// No description provided for @searchDidYouMean.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Quisiste decir?'**
+  String get searchDidYouMean;
+
+  /// No description provided for @searchMissingLead.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Falta un disco en Vinilo? '**
+  String get searchMissingLead;
+
+  /// No description provided for @searchMissingAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Pídenos que lo agreguemos'**
+  String get searchMissingAction;
+
+  /// No description provided for @searchRequestSent.
+  ///
+  /// In es, this message translates to:
+  /// **'Anotado: vamos a buscar “{query}”.'**
+  String searchRequestSent(String query);
+
+  /// No description provided for @notificationsUpToDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Al día'**
+  String get notificationsUpToDate;
+
+  /// No description provided for @notificationsNothingNew.
+  ///
+  /// In es, this message translates to:
+  /// **'Nada nuevo por ahora'**
+  String get notificationsNothingNew;
+
+  /// No description provided for @notificationsNothingNewBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Te avisaremos cuando alguien te siga, responda a tus notas o le guste lo que escribes.'**
+  String get notificationsNothingNewBody;
 }
 
 class _AppLocalizationsDelegate

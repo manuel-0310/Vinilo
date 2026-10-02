@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
+import '../models/user_profile.dart';
 import '../services/services.dart';
 import '../theme/vinilo_theme.dart';
 import '../util/auth_errors.dart';
@@ -116,6 +117,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         name: name,
         username: username,
         colorValue: ViniloPalette.defaultAccent.toARGB32(),
+        onboarding: OnboardingStep.tastes,
       );
     } catch (e) {
       // La cuenta ya existe: debajo, `main.dart` muestra "Completa tu

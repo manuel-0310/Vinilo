@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
+import '../models/follow.dart';
 import '../models/music_list.dart';
 import '../models/rating.dart';
 import '../models/user_profile.dart';
@@ -13,16 +14,19 @@ import '../widgets/pull_stretch.dart';
 import '../widgets/v_buttons.dart';
 import '../widgets/v_icons.dart';
 import '../widgets/v_sections.dart';
+import 'blocked_profile.dart';
 import 'favorites_pickers.dart';
 import 'list_form_sheet.dart';
 import 'profile_header.dart';
 import 'profile_lists_tab.dart';
+import 'profile_stats_tab.dart';
 import 'profile_tab.dart';
 import 'routes.dart';
 
 /// El perfil, propio (la pestaña Perfil) o de otra persona (ruta propia):
-/// el encabezado (`ProfileHeader`), las pestañas "Perfil" y "Listas", y su
-/// contenido (`ProfileTab`, `ProfileListsTab`). Al bajar, el nombre con
+/// el encabezado (`ProfileHeader`), las pestañas "Perfil", "Listas" y (en el
+/// propio) "Estadísticas", y su contenido (`ProfileTab`, `ProfileListsTab`,
+/// `ProfileStatsTab`). Al bajar, el nombre con
 /// "N discos · promedio" y las pestañas quedan fijos arriba
 /// (`ProfileCompactBar`), en las dos pestañas.
 class ProfileScreen extends StatefulWidget {
@@ -47,8 +51,9 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-/// Las dos pestañas: favoritos, "Cómo califico" y diario, o listas.
-enum _ProfileSection { perfil, listas }
+/// Las pestañas: favoritos, "Cómo califico" y diario; listas; y, en el
+/// perfil propio, estadísticas.
+enum _ProfileSection { perfil, listas, estadisticas }
 
 class _ProfileScreenState extends State<ProfileScreen> {
   _ProfileSection _section = _ProfileSection.perfil;
@@ -66,6 +71,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Stream<bool>? _followsMe;
 
   final ScrollController _scroll = ScrollController();
+
+  /// La persona, mientras está bloqueada (sus datos van en el bloqueo) y
+  /// justo después de desbloquearla: entonces se ve "Ya no está bloqueado"
+  /// con "Seguir" hasta que se toca o se sale.
+  PersonInfo? _blockedPerson;
+  bool _justUnblocked = false;
 
   /// Las pestañas dentro del contenido: cuando llegan a donde van las de la
   /// barra compacta, esta aparece.
@@ -172,8 +183,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _tabs() {
     final l = context.l10n;
     return VTabs(
-      labels: [l.tabProfile, l.profileListsTab],
-      keys: const ['profile-section-perfil', 'profile-section-listas'],
+      labels: [l.tabProfile, l.profileListsTab, if (widget.isMe) l.profileStatsTab],
+      keys: [
+        'profile-section-perfil',
+        'profile-section-listas',
+        if (widget.isMe) 'profile-section-estadisticas',
+      ],
       selected: _section.index,
       onChanged: (i) => _setSection(_ProfileSection.values[i]),
     );
@@ -208,7 +223,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: KeyedSubtree(key: _tabsKey, child: _tabs()),
                   ),
                 ),
-                if (_section == _ProfileSection.perfil)
+                if (_section == _ProfileSection.estadisticas)
+                  SliverToBoxAdapter(
+                    child: ProfileStatsTab(profile: profile, ratings: ratings),
+                  )
+                else if (_section == _ProfileSection.perfil)
                   ProfileTab(
                     profile: profile,
                     isMe: widget.isMe,
@@ -263,6 +282,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final me = CurrentUser.maybeOf(context);
       return Scaffold(body: me == null ? const SizedBox.shrink() : _body(me));
     }
+    // Quien me bloqueó no existe para mí: ni su perfil ni nada suyo.
+    final moderation = Moderation.of(context);
+    if (moderation.blocksMe(widget.uid)) return Scaffold(body: _notFound(l));
+    final edge = moderation.blocked[widget.uid];
+    if (edge != null) {
+      _blockedPerson = edge.blockedInfo;
+      _justUnblocked = false;
+    }
+    final blockedPerson = _blockedPerson;
+    if (blockedPerson != null && (edge != null || _justUnblocked)) {
+      return Scaffold(
+        body: BlockedProfile(
+          person: blockedPerson,
+          blocked: edge != null,
+          onUnblocked: () => setState(() => _justUnblocked = true),
+          onFollowed: () => setState(() => _justUnblocked = false),
+        ),
+      );
+    }
     return Scaffold(
       body: StreamBuilder<UserProfile?>(
         stream: _profile,
@@ -271,34 +309,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return const _Loading();
           }
           final profile = snap.data;
-          if (profile == null) {
-            return SafeArea(
-              bottom: false,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: VIconButton(
-                        key: const ValueKey('back'),
-                        icon: VIcon.back,
-                        onTap: () => Navigator.of(context).maybePop(),
-                      ),
-                    ),
-                  ),
-                  VEmptyState(
-                    title: l.profileNotFound,
-                    message: l.profileNotFoundBody,
-                    padding: const EdgeInsets.fromLTRB(VSpace.page, 28, VSpace.page, 24),
-                  ),
-                ],
-              ),
-            );
-          }
+          if (profile == null) return _notFound(l);
           return _body(profile);
         },
+      ),
+    );
+  }
+
+  Widget _notFound(AppLocalizations l) {
+    return SafeArea(
+      bottom: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: VIconButton(
+                key: const ValueKey('back'),
+                icon: VIcon.back,
+                onTap: () => Navigator.of(context).maybePop(),
+              ),
+            ),
+          ),
+          VEmptyState(
+            title: l.profileNotFound,
+            message: l.profileNotFoundBody,
+            padding: const EdgeInsets.fromLTRB(VSpace.page, 28, VSpace.page, 24),
+          ),
+        ],
       ),
     );
   }

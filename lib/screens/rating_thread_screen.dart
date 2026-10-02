@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
 import '../models/follow.dart';
+import '../models/moderation.dart';
 import '../models/rating.dart';
 import '../models/reply.dart';
 import '../models/user_profile.dart';
@@ -27,6 +28,7 @@ import '../widgets/user_avatar.dart';
 import '../widgets/v_buttons.dart';
 import '../widgets/v_icons.dart';
 import '../widgets/v_sections.dart';
+import 'moderation_actions.dart';
 import 'routes.dart';
 
 /// El detalle de una nota: la portada del disco arriba (con su título y
@@ -35,7 +37,9 @@ import 'routes.dart';
 /// responder fijo abajo. Las respuestas son de un solo nivel:
 /// "Responder" en una respuesta se la dirige a su autora con su @ al
 /// principio. Mantener pulsada una respuesta propia (o cualquiera, si la
-/// nota es mía) ofrece borrarla.
+/// nota es mía) ofrece borrarla. Las notas y respuestas ajenas llevan "···"
+/// (ocultar, reportar, bloquear); lo oculto y lo de las cuentas bloqueadas
+/// no se ve.
 class RatingThreadScreen extends StatefulWidget {
   const RatingThreadScreen({
     super.key,
@@ -212,6 +216,45 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
     }
   }
 
+  /// El "···" de la nota de otra persona. Si la oculté, la reporté o bloqueé
+  /// a su autora, aquí ya no queda nada que ver: se vuelve atrás.
+  Future<void> _noteMenu(RatingEntry entry) async {
+    final owner = _owner;
+    final author = owner != null && owner.uid == entry.uid
+        ? owner.person
+        : PersonInfo(
+            uid: entry.uid,
+            name: entry.user.name,
+            colorValue: entry.user.colorValue,
+            avatarUrl: entry.user.avatarUrl,
+          );
+    final result = await showContentMenu(
+      context,
+      author: author,
+      kind: ReportTarget.rating,
+      contentId: entry.id,
+      ratingId: entry.id,
+      excerpt: entry.note,
+    );
+    if (result != null && mounted) Navigator.of(context).maybePop();
+  }
+
+  Future<void> _replyMenu(Reply reply) {
+    return showContentMenu(
+      context,
+      author: reply.user,
+      kind: ReportTarget.reply,
+      contentId: reply.id,
+      ratingId: reply.ratingId,
+      excerpt: reply.text,
+    );
+  }
+
+  void _likeReply(Reply reply) {
+    HapticFeedback.lightImpact();
+    ServicesScope.of(context).replies.toggleLike(reply, CurrentUser.of(context).uid);
+  }
+
   /// Llamado al pintar la lista: si llegó una respuesta mía, baja al final.
   void _onReplies(List<Reply> replies, String me) {
     final grew = replies.length > _seen.length;
@@ -234,6 +277,7 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
     final c = VColors.of(context);
     final l10n = context.l10n;
     final me = CurrentUser.of(context);
+    final moderation = Moderation.of(context);
     final cover = _coverColor;
     final tone = cover == null ? c.accentText : c.coverTone(cover);
     return Scaffold(
@@ -241,9 +285,15 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
         stream: _rating,
         initialData: widget.initial,
         builder: (context, ratingSnap) {
-          final entry = ratingSnap.data;
-          final gone = entry == null &&
-              ratingSnap.connectionState == ConnectionState.active;
+          final loaded = ratingSnap.data;
+          // La nota de alguien con bloqueo de por medio no existe para mí;
+          // la que oculté se ve como oculta, con la forma de volver a verla.
+          final blockedOwner = loaded != null && moderation.hidesUser(loaded.uid);
+          final hiddenByMe =
+              loaded != null && !blockedOwner && moderation.hidesContent(loaded.id);
+          final entry = blockedOwner || hiddenByMe ? null : loaded;
+          final gone = blockedOwner ||
+              (loaded == null && ratingSnap.connectionState == ConnectionState.active);
           if (entry != null) {
             _askPalette(entry);
             _askOwner(entry, me.uid);
@@ -263,7 +313,8 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
                   builder: (context) => StreamBuilder<List<Reply>>(
                     stream: _replies,
                     builder: (context, repliesSnap) {
-                      final replies = repliesSnap.data;
+                      final allReplies = repliesSnap.data;
+                      final replies = allReplies == null ? null : moderation.replies(allReplies);
                       if (replies != null) _onReplies(replies, me.uid);
                       return CustomScrollView(
                         controller: _scroll,
@@ -287,6 +338,7 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
                                 entry: entry,
                                 tone: tone,
                                 onReply: () => _replyTo(null),
+                                onMore: entry.uid == me.uid ? null : () => _noteMenu(entry),
                               ),
                             ),
                             SliverToBoxAdapter(
@@ -308,7 +360,24 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
                                 ),
                               ),
                             ),
-                            if (gone)
+                            if (hiddenByMe)
+                              SliverToBoxAdapter(
+                                child: _Lined(
+                                  child: VEmptyState(
+                                    key: const ValueKey('thread-hidden'),
+                                    title: l10n.commentHidden,
+                                    message: l10n.commentHiddenBody,
+                                    action: VTextLink(
+                                      l10n.commentShowAgain,
+                                      key: const ValueKey('thread-unhide'),
+                                      onTap: () => ServicesScope.of(context)
+                                          .moderation
+                                          .unhide(me: me.uid, contentId: widget.ratingId),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else if (gone)
                               SliverToBoxAdapter(
                                 child: _Lined(
                                   child: VEmptyState(
@@ -364,7 +433,12 @@ class _RatingThreadScreenState extends State<RatingThreadScreen> {
                                     key: ValueKey('reply-$i'),
                                     index: i,
                                     reply: replies[i],
+                                    liked: replies[i].likedByMe(me.uid),
+                                    onLike: () => _likeReply(replies[i]),
                                     onReply: () => _replyTo(replies[i].user),
+                                    onMore: replies[i].uid == me.uid
+                                        ? null
+                                        : () => _replyMenu(replies[i]),
                                     onLongPress: replies[i].canDelete(me.uid)
                                         ? () => _askDelete(replies[i])
                                         : null,
@@ -503,13 +577,22 @@ class _ThreadCover extends StatelessWidget {
 /// La nota: quién calificó (foto de 28 y nombre, abren su perfil) y
 /// "Calificó hace N" a la izquierda; la nota en 112 con "Bueno · de 10" a la
 /// derecha, en el tono de la portada; el comentario en cita y "♡ Me gusta ·
-/// N" y "Responder", que escribe aquí mismo.
+/// N" y "Responder", que escribe aquí mismo. En la nota de otra persona,
+/// "···" junto al nombre abre el menú (ocultar, reportar, bloquear).
 class _ThreadNote extends StatelessWidget {
-  const _ThreadNote({required this.entry, required this.tone, required this.onReply});
+  const _ThreadNote({
+    required this.entry,
+    required this.tone,
+    required this.onReply,
+    this.onMore,
+  });
 
   final RatingEntry entry;
   final Color tone;
   final VoidCallback onReply;
+
+  /// Null en mi propia nota.
+  final VoidCallback? onMore;
 
   @override
   Widget build(BuildContext context) {
@@ -517,7 +600,7 @@ class _ThreadNote extends StatelessWidget {
     final l10n = context.l10n;
     final user = entry.user;
     void openProfile() => openUser(context, user.uid);
-    final note = entry.note.trim();
+    final note = Moderation.of(context).text(entry.note.trim());
     return Container(
       key: const ValueKey('thread-note'),
       margin: const EdgeInsets.symmetric(horizontal: VSpace.page),
@@ -533,29 +616,42 @@ class _ThreadNote extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: openProfile,
-                      child: Row(
-                        children: [
-                          UserAvatar(
-                            name: user.name,
-                            color: user.color,
-                            url: user.avatarUrl,
-                            size: 28,
-                            initialSize: 12,
-                          ),
-                          const SizedBox(width: 10),
-                          Flexible(
-                            child: Text(
-                              user.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: VText.ui(16, weight: 600),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: openProfile,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                UserAvatar(
+                                  name: user.name,
+                                  color: user.color,
+                                  url: user.avatarUrl,
+                                  size: 28,
+                                  initialSize: 12,
+                                ),
+                                const SizedBox(width: 10),
+                                Flexible(
+                                  child: Text(
+                                    user.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: VText.ui(16, weight: 600),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        if (onMore != null)
+                          MoreDots(
+                            key: const ValueKey('thread-more'),
+                            onTap: onMore!,
+                            padding: const EdgeInsets.fromLTRB(6, 7, 10, 7),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 10),
                     VMono(
@@ -621,20 +717,31 @@ class _ThreadNote extends StatelessWidget {
 }
 
 /// Una respuesta: foto de 32, nombre, @usuario y hora en mono, el texto
-/// (con las menciones en énfasis) y "Responder". Mantenerla pulsada ofrece
-/// borrarla, si se puede.
+/// (con las menciones en énfasis), el ♡ con cuántos tiene y "Responder".
+/// Mantenerla pulsada ofrece borrarla, si se puede; en las ajenas, "···"
+/// abre el menú (ocultar, reportar, bloquear).
 class _ReplyTile extends StatelessWidget {
   const _ReplyTile({
     super.key,
     required this.index,
     required this.reply,
+    required this.liked,
+    required this.onLike,
     required this.onReply,
+    this.onMore,
     this.onLongPress,
   });
 
   final int index;
   final Reply reply;
+
+  /// Si me gusta.
+  final bool liked;
+  final VoidCallback onLike;
   final VoidCallback onReply;
+
+  /// Null en mis propias respuestas.
+  final VoidCallback? onMore;
 
   /// Solo si se puede borrar.
   final VoidCallback? onLongPress;
@@ -698,14 +805,52 @@ class _ReplyTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  MentionText(reply.text, style: VText.ui(14.5, height: 1.4, color: c.ink)),
-                  Pressable(
-                    key: ValueKey('reply-to-$index'),
-                    onTap: onReply,
-                    builder: (context, pressed) => Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8, right: 12),
-                      child: VMono(l10n.replyAction, tracking: 0.06, color: pressed ? c.ink : c.ink3),
-                    ),
+                  MentionText(
+                    Moderation.of(context).text(reply.text),
+                    style: VText.ui(14.5, height: 1.4, color: c.ink),
+                  ),
+                  Row(
+                    children: [
+                      Pressable(
+                        key: ValueKey('reply-like-$index'),
+                        onTap: onLike,
+                        builder: (context, pressed) {
+                          final color = liked ? c.accentText : (pressed ? c.ink : c.ink3);
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8, bottom: 8, right: 18),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                VIconView(
+                                  liked ? VIcon.heartFilled : VIcon.heart,
+                                  size: 10,
+                                  color: color,
+                                ),
+                                if (reply.likes > 0) ...[
+                                  const SizedBox(width: 6),
+                                  VMono('${reply.likes}', tracking: 0.06, color: color),
+                                ],
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      Pressable(
+                        key: ValueKey('reply-to-$index'),
+                        onTap: onReply,
+                        builder: (context, pressed) => Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 8, right: 12),
+                          child: VMono(l10n.replyAction, tracking: 0.06, color: pressed ? c.ink : c.ink3),
+                        ),
+                      ),
+                      const Spacer(),
+                      if (onMore != null)
+                        MoreDots(
+                          key: ValueKey('reply-more-$index'),
+                          onTap: onMore!,
+                          padding: const EdgeInsets.fromLTRB(10, 7, 0, 7),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -816,10 +961,7 @@ class _Composer extends StatelessWidget {
                               border: enabled ? null : Border.all(color: c.buttonLine),
                             ),
                             child: sending
-                                ? SizedBox.square(
-                                    dimension: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 1.6, color: c.ink2),
-                                  )
+                                ? VSpinner(color: c.ink2)
                                 : VIconView(VIcon.send, size: 18, color: enabled ? c.onAccent : c.ink4),
                           ),
                         ),

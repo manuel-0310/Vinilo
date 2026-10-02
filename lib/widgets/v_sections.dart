@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../theme/vinilo_theme.dart';
 import 'v_buttons.dart';
@@ -382,26 +381,195 @@ class VEmptyState extends StatelessWidget {
   }
 }
 
-/// Bloque plano mientras algo carga: late de opacidad, sin brillos.
+/// Bloque plano mientras algo carga, con la forma de lo que va a llegar
+/// (`soft` para las líneas secundarias, un punto más apagado). El brillo que
+/// lo cruza lo pone `VShimmer`: si el bloque no está dentro de uno, trae el
+/// suyo.
 class VSkeleton extends StatelessWidget {
-  const VSkeleton({super.key, this.width, this.height, this.circle = false});
+  const VSkeleton({
+    super.key,
+    this.width,
+    this.height,
+    this.circle = false,
+    this.soft = false,
+  });
 
   final double? width;
   final double? height;
   final bool circle;
+  final bool soft;
 
   @override
   Widget build(BuildContext context) {
     final c = VColors.of(context);
-    return Container(
+    final block = Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: c.ink.withValues(alpha: 0.07),
+        color: soft ? c.skeletonSoft : c.skeleton,
         shape: circle ? BoxShape.circle : BoxShape.rectangle,
       ),
-    )
-        .animate(onPlay: (controller) => controller.repeat(reverse: true))
-        .fade(begin: 0.55, end: 1, duration: 900.ms, curve: Curves.easeInOut);
+    );
+    if (_ShimmerScope.around(context)) return block;
+    return VShimmer(circle: circle, child: block);
+  }
+}
+
+/// El brillo de las cargas: una franja clara que cruza de izquierda a
+/// derecha en 1,4 s, en bucle, por encima de todo lo que envuelve (un grupo
+/// de `VSkeleton` comparte así un solo brillo, como en el prototipo).
+class VShimmer extends StatefulWidget {
+  const VShimmer({super.key, required this.child, this.circle = false});
+
+  final Widget child;
+
+  /// Recorta el brillo en círculo (un avatar suelto).
+  final bool circle;
+
+  /// Cuánto tarda en cruzar.
+  static const Duration period = Duration(milliseconds: 1400);
+
+  @override
+  State<VShimmer> createState() => _VShimmerState();
+}
+
+class _VShimmerState extends State<VShimmer> with SingleTickerProviderStateMixin {
+  late final AnimationController _sweep =
+      AnimationController(vsync: this, duration: VShimmer.period)..repeat();
+
+  @override
+  void dispose() {
+    _sweep.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    final clear = c.ink.withValues(alpha: 0);
+    final band = RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _sweep,
+        builder: (context, child) => FractionalTranslation(
+          // De −100 % a 100 % del ancho, con arranque y llegada suaves.
+          translation: Offset(-1 + 2 * Curves.easeInOut.transform(_sweep.value), 0),
+          child: child,
+        ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [clear, c.inkA(0.06), clear]),
+          ),
+        ),
+      ),
+    );
+    return _ShimmerScope(
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          widget.child,
+          Positioned.fill(
+            child: IgnorePointer(
+              child: widget.circle ? ClipOval(child: band) : ClipRect(child: band),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Marca que los bloques de dentro ya tienen brillo.
+class _ShimmerScope extends InheritedWidget {
+  const _ShimmerScope({required super.child});
+
+  static bool around(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<_ShimmerScope>() != null;
+
+  @override
+  bool updateShouldNotify(_ShimmerScope oldWidget) => false;
+}
+
+/// Un filtro de texto ("Populares", "Este año"): 14, el elegido en tinta
+/// con una raya de 1 px debajo y los demás apagados. Lleva 12 de aire
+/// arriba y abajo para que el toque mida 44; quien lo usa los descuenta.
+class VFilterOption extends StatelessWidget {
+  const VFilterOption({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  /// El aire de arriba y de abajo que agranda el toque.
+  static const double touchPad = 12;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VColors.of(context);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: selected ? null : onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: touchPad),
+        child: Container(
+          padding: const EdgeInsets.only(bottom: 3),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: selected ? c.ink : Colors.transparent),
+            ),
+          ),
+          child: Text(
+            label,
+            maxLines: 1,
+            softWrap: false,
+            style: VText.ui(14, weight: 500, color: selected ? c.ink : c.inactive),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Una fila de filtros de texto, separados 18; si no caben, se desliza de
+/// lado. El alto incluye los 12 de aire de cada lado (`VFilterOption`).
+class VTextFilters extends StatelessWidget {
+  const VTextFilters({
+    super.key,
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+    this.keys,
+    this.padding = const EdgeInsets.symmetric(horizontal: VSpace.page),
+  });
+
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onChanged;
+  final List<String>? keys;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: padding,
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++) ...[
+            if (i > 0) const SizedBox(width: 18),
+            VFilterOption(
+              key: keys == null ? null : ValueKey(keys![i]),
+              label: labels[i],
+              selected: i == selected,
+              onTap: () => onChanged(i),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

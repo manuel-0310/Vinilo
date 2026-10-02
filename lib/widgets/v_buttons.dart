@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../theme/vinilo_theme.dart';
@@ -54,6 +56,8 @@ class VPrimaryButton extends StatelessWidget {
     this.fontSize = 16,
     this.busy = false,
     this.center = false,
+    this.mutedWhenDisabled = false,
+    this.trailingIcon,
   })  : _kind = _PrimaryKind.ink,
         color = null;
 
@@ -67,6 +71,8 @@ class VPrimaryButton extends StatelessWidget {
     this.fontSize = 16,
     this.busy = false,
     this.center = false,
+    this.mutedWhenDisabled = false,
+    this.trailingIcon,
   })  : _kind = _PrimaryKind.accent,
         color = null;
 
@@ -82,6 +88,8 @@ class VPrimaryButton extends StatelessWidget {
     this.fontSize = 16,
     this.busy = false,
     this.center = false,
+    this.mutedWhenDisabled = false,
+    this.trailingIcon,
   }) : _kind = _PrimaryKind.tone;
 
   final String label;
@@ -98,6 +106,15 @@ class VPrimaryButton extends StatelessWidget {
 
   /// Texto centrado y sin flecha ("+ Seguir").
   final bool center;
+
+  /// Apagado (`onPressed` null) se ve como un bloque de tinta al 12 % con
+  /// el texto al 40 %, en vez de su color atenuado: "Continuar" del
+  /// onboarding y "Enviar reporte" hasta que se puede seguir.
+  final bool mutedWhenDisabled;
+
+  /// Un ícono a la derecha en lugar del texto de `trailing` (el ↻ de
+  /// "Intentar de nuevo").
+  final VIcon? trailingIcon;
   final Color? color;
   final _PrimaryKind _kind;
 
@@ -113,7 +130,10 @@ class VPrimaryButton extends StatelessWidget {
           _PrimaryKind.accent => pressed ? c.ink : c.accent,
           _PrimaryKind.tone => pressed ? c.ink : color!,
         };
-        final foreground = _kind == _PrimaryKind.ink ? c.bg : c.onAccent;
+        final muted = mutedWhenDisabled && onPressed == null;
+        final foreground = muted
+            ? c.inkA(0.4)
+            : (_kind == _PrimaryKind.ink ? c.bg : c.onAccent);
         final text = Text(
           label,
           maxLines: 1,
@@ -127,7 +147,7 @@ class VPrimaryButton extends StatelessWidget {
             children: [
               if (leading != null) ...[leading!, const SizedBox(width: 8)],
               Flexible(child: text),
-              if (busy) ...[const SizedBox(width: 10), _Spinner(color: foreground)],
+              if (busy) ...[const SizedBox(width: 10), VSpinner(color: foreground)],
             ],
           );
         } else {
@@ -136,17 +156,20 @@ class VPrimaryButton extends StatelessWidget {
               if (leading != null) ...[leading!, const SizedBox(width: 8)],
               Expanded(child: text),
               if (busy)
-                _Spinner(color: foreground)
+                VSpinner(color: foreground)
+              else if (trailingIcon != null)
+                VIconView(trailingIcon!, size: 18, color: foreground)
               else if (trailing != null)
                 Text(trailing!, style: VText.ui(fontSize, weight: 600, color: foreground)),
             ],
           );
         }
         return Opacity(
-          opacity: onPressed == null ? 0.4 : 1,
-          child: Container(
+          opacity: onPressed == null && !muted ? 0.4 : 1,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
             height: height,
-            color: background,
+            color: muted ? c.inkA(0.12) : background,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: content,
           ),
@@ -221,7 +244,7 @@ class VSecondaryButton extends StatelessWidget {
                     children: [
                       if (leading != null) ...[leading!, const SizedBox(width: 8)],
                       Flexible(child: text),
-                      if (busy) ...[const SizedBox(width: 10), _Spinner(color: ink)],
+                      if (busy) ...[const SizedBox(width: 10), VSpinner(color: ink)],
                     ],
                   )
                 : Row(
@@ -229,7 +252,7 @@ class VSecondaryButton extends StatelessWidget {
                       if (leading != null) ...[leading!, const SizedBox(width: 8)],
                       Expanded(child: text),
                       if (busy)
-                        _Spinner(color: ink)
+                        VSpinner(color: ink)
                       else if (trailing != null)
                         Text(trailing!, style: VText.ui(fontSize, weight: weight, color: c.ink4)),
                     ],
@@ -348,16 +371,70 @@ class VIconButton extends StatelessWidget {
   }
 }
 
-class _Spinner extends StatelessWidget {
-  const _Spinner({required this.color});
+/// El "cargando" del rediseño: un círculo de 16 con borde de 2 al que le
+/// falta el cuarto de arriba, girando a 0,8 s por vuelta.
+class VSpinner extends StatefulWidget {
+  const VSpinner({super.key, this.size = 16, this.color, this.strokeWidth = 2});
 
-  final Color color;
+  final double size;
+
+  /// Por defecto, tinta.
+  final Color? color;
+  final double strokeWidth;
+
+  /// Cuánto tarda una vuelta.
+  static const Duration turn = Duration(milliseconds: 800);
+
+  @override
+  State<VSpinner> createState() => _VSpinnerState();
+}
+
+class _VSpinnerState extends State<VSpinner> with SingleTickerProviderStateMixin {
+  late final AnimationController _turn =
+      AnimationController(vsync: this, duration: VSpinner.turn)..repeat();
+
+  @override
+  void dispose() {
+    _turn.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: 16,
-      child: CircularProgressIndicator(strokeWidth: 1.6, color: color),
+    final color = widget.color ?? VColors.of(context).ink;
+    return RotationTransition(
+      turns: _turn,
+      child: CustomPaint(
+        size: Size.square(widget.size),
+        painter: _SpinnerPainter(color, widget.strokeWidth),
+      ),
     );
   }
+}
+
+class _SpinnerPainter extends CustomPainter {
+  _SpinnerPainter(this.color, this.strokeWidth);
+
+  final Color color;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    // Tres cuartos de círculo: falta el de arriba, como un borde con
+    // `border-top-color: transparent`.
+    canvas.drawArc(
+      (Offset.zero & size).deflate(strokeWidth / 2),
+      -math.pi / 4,
+      math.pi * 1.5,
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SpinnerPainter old) => old.color != color || old.strokeWidth != strokeWidth;
 }

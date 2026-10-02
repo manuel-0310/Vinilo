@@ -142,7 +142,10 @@ class FeedCard extends StatelessWidget {
             ),
             if (entry.hasNote) ...[
               const SizedBox(height: 12),
-              Text('“${entry.note}”', style: VText.quote(21, color: c.ink)),
+              Text(
+                '“${Moderation.of(context).text(entry.note)}”',
+                style: VText.quote(21, color: c.ink),
+              ),
             ],
             const SizedBox(height: 4),
             Row(

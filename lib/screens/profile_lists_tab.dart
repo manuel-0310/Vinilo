@@ -188,12 +188,13 @@ class ProfileListsTab extends StatelessWidget {
         ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.fromLTRB(VSpace.page, 14, VSpace.page, 0),
+          // Cada filtro trae 12 de aire arriba y abajo para el toque.
+          padding: const EdgeInsets.fromLTRB(VSpace.page, 2, VSpace.page, 0),
           child: Row(
             children: [
               for (final (i, (filter, label, key)) in filters.indexed) ...[
                 if (i > 0) const SizedBox(width: 18),
-                _FilterOption(
+                VFilterOption(
                   key: ValueKey(key),
                   label: label,
                   selected: current == filter,
@@ -203,7 +204,7 @@ class ProfileListsTab extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: VSpace.page, vertical: 10),
           decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
@@ -289,41 +290,6 @@ class _Heading extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       builder: (context, pressed) => Opacity(opacity: pressed ? 0.6 : 1, child: text),
-    );
-  }
-}
-
-/// Un filtro: texto de 14; el elegido en tinta con una raya de 1 px debajo.
-class _FilterOption extends StatelessWidget {
-  const _FilterOption({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = VColors.of(context);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: selected ? null : onTap,
-      child: Container(
-        padding: const EdgeInsets.only(bottom: 3),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: selected ? c.ink : Colors.transparent),
-          ),
-        ),
-        child: Text(
-          label,
-          style: VText.ui(14, weight: 500, color: selected ? c.ink : c.inactive),
-        ),
-      ),
     );
   }
 }

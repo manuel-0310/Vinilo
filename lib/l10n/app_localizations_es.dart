@@ -2070,4 +2070,972 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get shareImageUnsupported =>
       'Esta versión de la app todavía no puede compartir imágenes.';
+
+  @override
+  String get menuShareProfile => 'Compartir perfil';
+
+  @override
+  String get menuMute => 'Silenciar';
+
+  @override
+  String get menuMuteHint => 'No verás su actividad';
+
+  @override
+  String get menuUnmute => 'Dejar de silenciar';
+
+  @override
+  String get menuUnmuteHint => 'Volverás a ver su actividad';
+
+  @override
+  String menuReportUser(String handle) {
+    return 'Reportar a $handle';
+  }
+
+  @override
+  String menuBlockUser(String handle) {
+    return 'Bloquear a $handle';
+  }
+
+  @override
+  String menuUnblockUser(String handle) {
+    return 'Desbloquear a $handle';
+  }
+
+  @override
+  String menuRatingOf(String handle) {
+    return 'Calificación de $handle';
+  }
+
+  @override
+  String menuReplyOf(String handle) {
+    return 'Respuesta de $handle';
+  }
+
+  @override
+  String get menuHideComment => 'Ocultar este comentario';
+
+  @override
+  String get menuHideHint => 'Solo para ti';
+
+  @override
+  String get menuReportComment => 'Reportar comentario';
+
+  @override
+  String get menuMore => 'Más opciones';
+
+  @override
+  String get commentHidden => 'Comentario oculto';
+
+  @override
+  String userMuted(String handle) {
+    return 'Silenciaste a $handle';
+  }
+
+  @override
+  String userUnmuted(String handle) {
+    return 'Ya no silencias a $handle';
+  }
+
+  @override
+  String reportOverlineComment(String handle) {
+    return 'Reportar comentario de $handle';
+  }
+
+  @override
+  String get reportTitle => '¿Qué está pasando?';
+
+  @override
+  String reportAnonymous(String handle) {
+    return 'Tu reporte es anónimo. $handle no sabrá que fuiste tú.';
+  }
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonSpamHint => 'Publicidad, enlaces o mensajes repetidos';
+
+  @override
+  String get reportReasonHarassment => 'Acoso o bullying';
+
+  @override
+  String get reportReasonHarassmentHint => 'Ataques o insultos a alguien';
+
+  @override
+  String get reportReasonHarassmentShort => 'Acoso';
+
+  @override
+  String get reportReasonHate => 'Discurso de odio';
+
+  @override
+  String get reportReasonHateHint => 'Contra un grupo o identidad';
+
+  @override
+  String get reportReasonHateShort => 'Odio';
+
+  @override
+  String get reportReasonSexual => 'Contenido sexual';
+
+  @override
+  String get reportReasonSexualHint => 'Texto o imagen explícita';
+
+  @override
+  String get reportReasonSexualShort => 'Sexual';
+
+  @override
+  String get reportReasonImpersonation => 'Suplantación';
+
+  @override
+  String get reportReasonImpersonationHint => 'Se hace pasar por otra persona';
+
+  @override
+  String get reportReasonViolence => 'Violencia o amenazas';
+
+  @override
+  String get reportReasonViolenceHint => 'Daño a alguien o a sí mismo';
+
+  @override
+  String get reportReasonViolenceShort => 'Violencia';
+
+  @override
+  String get reportReasonOther => 'Otro';
+
+  @override
+  String get reportReasonOtherHint => 'Cuéntanos en los detalles';
+
+  @override
+  String get reportDetailsHint => 'Agrega detalles (opcional)';
+
+  @override
+  String get reportSend => 'Enviar reporte';
+
+  @override
+  String reportFailed(String error) {
+    return 'No se pudo enviar el reporte: $error';
+  }
+
+  @override
+  String reportNumber(String n) {
+    return 'Reporte Nº $n';
+  }
+
+  @override
+  String get reportSentTitle => 'Gracias por avisarnos';
+
+  @override
+  String get reportSentBodyComment =>
+      'Ya ocultamos este comentario para ti. Nuestro equipo lo revisa en menos de 24 horas y te avisamos qué decidimos.';
+
+  @override
+  String get reportSentBodyUser =>
+      'Nuestro equipo revisa esta cuenta en menos de 24 horas y te avisamos qué decidimos.';
+
+  @override
+  String reportAlsoBlock(String handle) {
+    return 'Bloquear también a $handle';
+  }
+
+  @override
+  String get reportAlsoBlockHint => 'No podrá ver tu perfil ni responderte';
+
+  @override
+  String get reportSeeMine => 'Ver mis reportes en Ajustes';
+
+  @override
+  String blockTitle(String handle) {
+    return '¿Bloquear a $handle?';
+  }
+
+  @override
+  String get blockRule1 => 'No podrá ver tu perfil, tus notas ni tus listas.';
+
+  @override
+  String get blockRule2 => 'No podrá seguirte, responderte ni mencionarte.';
+
+  @override
+  String get blockRule3 => 'Dejarán de seguirse mutuamente.';
+
+  @override
+  String get blockRule4 =>
+      'Sus calificaciones y comentarios desaparecen de tu inicio.';
+
+  @override
+  String get blockNote =>
+      'No le avisaremos. Puedes desbloquearlo cuando quieras en Ajustes.';
+
+  @override
+  String get blockConfirm => 'Bloquear';
+
+  @override
+  String blockFailed(String error) {
+    return 'No se pudo bloquear: $error';
+  }
+
+  @override
+  String userBlocked(String handle) {
+    return 'Bloqueaste a $handle';
+  }
+
+  @override
+  String get blockedTag => 'Bloqueado';
+
+  @override
+  String get blockedTitle => 'Bloqueaste a esta cuenta';
+
+  @override
+  String get blockedBody =>
+      'No ves su actividad y no puede interactuar contigo.';
+
+  @override
+  String get unblock => 'Desbloquear';
+
+  @override
+  String get unblockedTag => 'Desbloqueado';
+
+  @override
+  String get unblockedTitle => 'Ya no está bloqueado';
+
+  @override
+  String get unblockedBody =>
+      'Pueden volver a verse. Tendrás que seguirlo de nuevo si quieres.';
+
+  @override
+  String get followPlain => 'Seguir';
+
+  @override
+  String get followingPlain => 'Siguiendo';
+
+  @override
+  String unblockFailed(String error) {
+    return 'No se pudo desbloquear: $error';
+  }
+
+  @override
+  String get settingsPrivacy => 'Privacidad';
+
+  @override
+  String get privacyTitle => 'Privacidad y seguridad';
+
+  @override
+  String get privacyFilter => 'Filtrar comentarios ofensivos';
+
+  @override
+  String get privacyFilterHint =>
+      'Ocultamos palabras ofensivas automáticamente';
+
+  @override
+  String get privacyMyReports => 'Mis reportes';
+
+  @override
+  String get privacyMuted => 'Cuentas silenciadas';
+
+  @override
+  String get privacyBlocked => 'Cuentas bloqueadas';
+
+  @override
+  String get privacyNoBlocked => 'No tienes cuentas bloqueadas.';
+
+  @override
+  String privacyBlockedAgo(String when) {
+    return 'Bloqueado $when';
+  }
+
+  @override
+  String privacyMutedAgo(String when) {
+    return 'Silenciado $when';
+  }
+
+  @override
+  String get privacyNoMuted => 'No has silenciado a nadie.';
+
+  @override
+  String get privacyNoReports => 'No has enviado reportes.';
+
+  @override
+  String get privacySupportLead => '¿Algo urgente? Escríbenos a ';
+
+  @override
+  String get emailCopied => 'Correo copiado';
+
+  @override
+  String get reportStatusOpen => 'En revisión';
+
+  @override
+  String get reportStatusDismissed => 'Revisado · sin cambios';
+
+  @override
+  String get reportStatusRemoved => 'Revisado · contenido retirado';
+
+  @override
+  String reportTargetUser(String handle) {
+    return 'Cuenta de $handle';
+  }
+
+  @override
+  String reportTargetComment(String handle) {
+    return 'Comentario de $handle';
+  }
+
+  @override
+  String get timeToday => 'hoy';
+
+  @override
+  String timeWeeksAgo(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'hace $n semanas',
+      one: 'hace 1 semana',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String timeMonthsAgo(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'hace $n meses',
+      one: 'hace 1 mes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String timeYearsAgo(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'hace $n años',
+      one: 'hace 1 año',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countAccounts(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n cuentas',
+      one: '1 cuenta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countReports(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n reportes',
+      one: '1 reporte',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commentHiddenBody =>
+      'Lo ocultaste o lo reportaste, así que ya no aparece para ti.';
+
+  @override
+  String get commentShowAgain => 'Mostrar de nuevo';
+
+  @override
+  String get onboardStep1 => 'Paso 1 de 2';
+
+  @override
+  String get onboardStep1Label => 'Tus gustos';
+
+  @override
+  String get onboardTastesTitle => 'Elige 3 discos que te encanten';
+
+  @override
+  String get onboardTastesBody =>
+      'Con eso armamos tu inicio y te mostramos gente con gustos parecidos.';
+
+  @override
+  String get onboardSearchHint => 'un disco o artista';
+
+  @override
+  String get genrePopular => 'Populares';
+
+  @override
+  String get genreRock => 'Rock';
+
+  @override
+  String get genreLatinPop => 'Pop latino';
+
+  @override
+  String get genreHipHop => 'Hip hop';
+
+  @override
+  String get genreElectronic => 'Electrónica';
+
+  @override
+  String get genrePop => 'Pop';
+
+  @override
+  String get genreRnb => 'R&B';
+
+  @override
+  String get genreIndie => 'Indie';
+
+  @override
+  String onboardPicked(int n) {
+    return '$n de 3';
+  }
+
+  @override
+  String onboardPickedReady(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n elegidos · listo',
+      one: '1 elegido · listo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onboardContinue => 'Continuar';
+
+  @override
+  String get onboardTastesError => 'No pudimos cargar los discos.';
+
+  @override
+  String onboardNoResults(String query) {
+    return 'No encontramos “$query”. Prueba con otro nombre.';
+  }
+
+  @override
+  String get onboardStep2 => 'Paso 2 de 2 · opcional';
+
+  @override
+  String get onboardSkip => 'Saltar';
+
+  @override
+  String get onboardFollowTitle => 'Sigue a gente con tu oído';
+
+  @override
+  String get onboardFollowBody =>
+      'Así tu inicio no empieza vacío. Puedes hacerlo después.';
+
+  @override
+  String get onboardContacts => 'Buscar en tus contactos';
+
+  @override
+  String get onboardContactsHint => 'Encuentra amigos que ya usan Vinilo';
+
+  @override
+  String onboardByTastes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Por tus $n discos',
+      one: 'Por tu disco',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onboardPopularPeople => 'Populares en Vinilo';
+
+  @override
+  String suggestSameTen(String album) {
+    return 'También le puso 10 a $album';
+  }
+
+  @override
+  String suggestRated(String album, int score) {
+    return 'Calificó $album con $score';
+  }
+
+  @override
+  String suggestPopular(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n seguidores',
+      one: '1 seguidor',
+    );
+    return 'Popular en Vinilo · $_temp0';
+  }
+
+  @override
+  String get onboardStartAlone => 'Empezar sin seguir a nadie';
+
+  @override
+  String onboardStartFollowing(int n) {
+    return 'Empezar · sigues a $n';
+  }
+
+  @override
+  String get onboardNoSuggestions =>
+      'Todavía no hay a quién sugerirte. Puedes buscar gente después, en Buscar.';
+
+  @override
+  String get findPeopleTitle => 'Buscar personas';
+
+  @override
+  String get findPeopleHint => 'Nombre o @usuario';
+
+  @override
+  String get findPeopleEmpty => 'Nadie con ese nombre.';
+
+  @override
+  String get findPeopleBody =>
+      'Sigue a quien califica lo que te gusta y tu inicio se llena solo.';
+
+  @override
+  String get profileStatsTab => 'Estadísticas';
+
+  @override
+  String get statsPeriodMonth => 'Este mes';
+
+  @override
+  String get statsPeriodYear => 'Este año';
+
+  @override
+  String get statsPeriodAll => 'Siempre';
+
+  @override
+  String get statsRated => 'Discos calificados';
+
+  @override
+  String get statsMyAverage => 'Tu nota promedio';
+
+  @override
+  String statsCompareHigher(String amount, String average) {
+    return 'Calificas *$amount puntos más alto* que la comunidad. Su promedio en los mismos discos es $average.';
+  }
+
+  @override
+  String statsCompareLower(String amount, String average) {
+    return 'Calificas *$amount puntos más bajo* que la comunidad. Su promedio en los mismos discos es $average.';
+  }
+
+  @override
+  String statsCompareSame(String average) {
+    return 'Calificas *igual* que la comunidad. Su promedio en los mismos discos es $average.';
+  }
+
+  @override
+  String get statsHowYouRate => 'Cómo calificas';
+
+  @override
+  String statsHistSelected(int n, int score) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n discos',
+      one: '1 disco',
+    );
+    return '$_temp0 con $score';
+  }
+
+  @override
+  String get statsTopArtists => 'Artistas que más escuchas';
+
+  @override
+  String statsArtistAverage(String average) {
+    return 'prom. $average';
+  }
+
+  @override
+  String get statsByDecade => 'Por década';
+
+  @override
+  String get statsRhythm => 'Tu ritmo';
+
+  @override
+  String statsRhythmLabel(String year) {
+    return 'Discos por mes · $year';
+  }
+
+  @override
+  String statsStreak(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n semanas',
+      one: '1 semana',
+    );
+    return 'Racha actual: *$_temp0* calificando al menos un disco.';
+  }
+
+  @override
+  String get statsStreakNone =>
+      'Sin racha por ahora: califica un disco esta semana para empezar una.';
+
+  @override
+  String get statsTime => 'Tiempo escuchando';
+
+  @override
+  String get statsTimeLabel => 'Suma de tus discos';
+
+  @override
+  String statsTimeHours(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'horas',
+      one: 'hora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsTimeDays(String days) {
+    return '≈ $days días seguidos';
+  }
+
+  @override
+  String statsTimeAlbums(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n discos',
+      one: '1 disco',
+    );
+    return '≈ $_temp0';
+  }
+
+  @override
+  String statsTimeLoading(int done, int total) {
+    return 'Calculando · $done de $total';
+  }
+
+  @override
+  String get statsGenres => 'Géneros';
+
+  @override
+  String get statsGenreOther => 'Otros';
+
+  @override
+  String get statsCountries => 'De dónde vienen';
+
+  @override
+  String statsCountriesCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n países',
+      one: '1 país',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statsFriends => 'Afinidad con amigos';
+
+  @override
+  String get statsMostAffine => 'Más afín';
+
+  @override
+  String get statsLeastAffine => 'Menos afín';
+
+  @override
+  String statsCommon(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n discos en común',
+      one: '1 disco en común',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statsShare => 'Compartir mis estadísticas';
+
+  @override
+  String get statsEmptyPeriod => 'Todavía no calificas nada en este periodo.';
+
+  @override
+  String get shareStatsTitleYear => 'Mi año\nen discos';
+
+  @override
+  String get shareStatsTitleMonth => 'Mi mes\nen discos';
+
+  @override
+  String get shareStatsTitleAll => 'Mi vida\nen discos';
+
+  @override
+  String get shareStatsAlbums => 'Discos';
+
+  @override
+  String get shareStatsAverage => 'Promedio';
+
+  @override
+  String shareStatsMode(int score) {
+    return 'Mi nota más común: $score';
+  }
+
+  @override
+  String get shareStatsArtistYear => 'Artista del año';
+
+  @override
+  String get shareStatsArtistMonth => 'Artista del mes';
+
+  @override
+  String get shareStatsArtistAll => 'Artista más escuchado';
+
+  @override
+  String shareStatsSince(String year) {
+    return 'Desde $year';
+  }
+
+  @override
+  String get shareStatsStories => 'Historias';
+
+  @override
+  String get shareStatsWhatsapp => 'WhatsApp';
+
+  @override
+  String get shareStatsSave => 'Guardar';
+
+  @override
+  String get shareStatsCopy => 'Copiar link';
+
+  @override
+  String get shareStatsMine => 'Mis estadísticas en Vinilo';
+
+  @override
+  String recoverStep(int n) {
+    return 'Paso $n de 3';
+  }
+
+  @override
+  String get recoverTitle => 'Recuperar\ncontraseña';
+
+  @override
+  String get recoverEmailBody =>
+      'Escribe el correo de tu cuenta y te mandamos un código de 6 dígitos.';
+
+  @override
+  String get recoverSendCode => 'Enviar código';
+
+  @override
+  String get recoverRemembered => '¿Ya la recordaste? ';
+
+  @override
+  String get recoverCodeTitle => 'Revisa tu\ncorreo';
+
+  @override
+  String recoverCodeBody(String email) {
+    return 'Mandamos un código a *$email*. Vence en 10 minutos.';
+  }
+
+  @override
+  String recoverWrongCode(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Código incorrecto · te quedan $n intentos',
+      one: 'Código incorrecto · te queda 1 intento',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recoverResendIn(String time) {
+    return 'Reenviar en $time';
+  }
+
+  @override
+  String get recoverResend => 'Reenviar código';
+
+  @override
+  String get recoverExpired => 'El código venció. Pide otro.';
+
+  @override
+  String get recoverTooMany => 'Demasiados intentos. Pide un código nuevo.';
+
+  @override
+  String recoverThrottled(int n) {
+    return 'Espera $n s para pedir otro código.';
+  }
+
+  @override
+  String get recoverCodeSent => 'Te mandamos un código nuevo.';
+
+  @override
+  String get recoverNewTitle => 'Nueva\ncontraseña';
+
+  @override
+  String get recoverNewLabel => 'Contraseña nueva';
+
+  @override
+  String get recoverRepeatLabel => 'Repetir contraseña';
+
+  @override
+  String get recoverRuleLength => 'Al menos 8 caracteres';
+
+  @override
+  String get recoverRuleNumber => 'Un número';
+
+  @override
+  String get recoverRuleDifferent => 'Distinta a la anterior';
+
+  @override
+  String get recoverMismatch => 'Las contraseñas no coinciden.';
+
+  @override
+  String get recoverSamePassword => 'Es la misma de antes: elige otra.';
+
+  @override
+  String get recoverWeak => 'Usa al menos 8 caracteres y un número.';
+
+  @override
+  String get recoverSave => 'Guardar y entrar';
+
+  @override
+  String get recoverDoneLabel => 'Contraseña';
+
+  @override
+  String get recoverDoneUpdated => 'Actualizada';
+
+  @override
+  String recoverDoneTitle(String name) {
+    return 'Todo listo, $name';
+  }
+
+  @override
+  String get recoverDoneTitleNoName => 'Todo listo';
+
+  @override
+  String get recoverDoneBody =>
+      'Cambiaste tu contraseña. Cerramos tu sesión en otros dispositivos por seguridad.';
+
+  @override
+  String get recoverGo => 'Ir a Vinilo';
+
+  @override
+  String get recoverServer =>
+      'No pudimos hacerlo ahora. Vuelve a intentarlo en un momento.';
+
+  @override
+  String get signInWrongPassword =>
+      'La contraseña no coincide con ese usuario.';
+
+  @override
+  String get keypadDelete => 'Borrar';
+
+  @override
+  String get offlineOverline => 'Sin señal';
+
+  @override
+  String get offlineSide => 'Lado B';
+
+  @override
+  String get offlineTitle => 'Sin conexión';
+
+  @override
+  String get offlineBody =>
+      'Revisa tu wifi o tus datos. Las notas que guardes mientras tanto se suben cuando vuelvas a tener señal.';
+
+  @override
+  String get offlineConnecting => 'Conectando…';
+
+  @override
+  String get offlineSaved => 'Ver mis discos guardados';
+
+  @override
+  String get offlineBanner => 'Sin conexión · mostrando lo último guardado';
+
+  @override
+  String get serverErrorTitle => 'Se rayó el disco';
+
+  @override
+  String get serverErrorBody =>
+      'Algo falló de nuestro lado. No es tu conexión. Inténtalo de nuevo en unos segundos.';
+
+  @override
+  String serverErrorCode(String code) {
+    return 'Código · $code';
+  }
+
+  @override
+  String get serverErrorRetry => 'Intentar de nuevo';
+
+  @override
+  String get serverErrorReport => 'Reportar el problema';
+
+  @override
+  String get problemReported => 'Gracias. Ya recibimos el aviso.';
+
+  @override
+  String problemCopied(String email) {
+    return 'Código copiado. Escríbenos a $email.';
+  }
+
+  @override
+  String get rateSaveFailedTitle => 'No pudimos guardar tu nota';
+
+  @override
+  String get rateSaveFailedBody =>
+      'No perdiste nada, la guardamos en tu teléfono.';
+
+  @override
+  String get ratePendingLabel => 'Tu nota · por subir';
+
+  @override
+  String get homeEmptyTitle => 'Tu inicio está muy callado';
+
+  @override
+  String get homeEmptyBody =>
+      'Aquí verás lo que califican las personas que sigues. Empieza por gente con gustos parecidos a los tuyos.';
+
+  @override
+  String get homeEmptyFind => 'Encontrar gente';
+
+  @override
+  String get homeEmptyRate => 'Calificar un disco';
+
+  @override
+  String get profileEmptyTitle => 'Tu diario está en blanco';
+
+  @override
+  String get profileEmptyBody =>
+      'Califica tu primer disco y aquí empezarán a aparecer tus notas, favoritos y estadísticas.';
+
+  @override
+  String get profileEmptyAction => 'Calificar mi primer disco';
+
+  @override
+  String get searchZeroResults => '0 resultados';
+
+  @override
+  String searchNotFound(String query) {
+    return 'No encontramos “$query”';
+  }
+
+  @override
+  String get searchNotFoundBody =>
+      'Revisa cómo está escrito o busca solo por artista.';
+
+  @override
+  String get searchDidYouMean => '¿Quisiste decir?';
+
+  @override
+  String get searchMissingLead => '¿Falta un disco en Vinilo? ';
+
+  @override
+  String get searchMissingAction => 'Pídenos que lo agreguemos';
+
+  @override
+  String searchRequestSent(String query) {
+    return 'Anotado: vamos a buscar “$query”.';
+  }
+
+  @override
+  String get notificationsUpToDate => 'Al día';
+
+  @override
+  String get notificationsNothingNew => 'Nada nuevo por ahora';
+
+  @override
+  String get notificationsNothingNewBody =>
+      'Te avisaremos cuando alguien te siga, responda a tus notas o le guste lo que escribes.';
 }

@@ -35,7 +35,9 @@ class _BellButtonState extends State<BellButton> {
     return StreamBuilder<List<AppNotification>>(
       stream: _stream,
       builder: (context, snap) {
-        final unread = (snap.data ?? const <AppNotification>[]).any((n) => !n.read);
+        final unread = Moderation.of(context)
+            .notifications(snap.data ?? const <AppNotification>[])
+            .any((n) => !n.read);
         return VIconButton(
           key: const ValueKey('bell'),
           icon: VIcon.bell,

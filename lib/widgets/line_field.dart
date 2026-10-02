@@ -7,6 +7,8 @@ import 'v_sections.dart';
 /// Campo del rediseño: sin caja, una etiqueta mono arriba, el texto y una
 /// línea debajo. Con foco, la línea es de 2 px en énfasis y la etiqueta
 /// también se pinta de énfasis. El cursor es una barra de 2 px en énfasis.
+/// Con error, la línea (2 px) y la etiqueta van en rojo y el mensaje sale
+/// debajo.
 /// Con `maxLength` muestra el contador ("13/60") a la derecha, debajo.
 class LineField extends StatefulWidget {
   const LineField({
@@ -164,7 +166,7 @@ class _LineFieldState extends State<LineField> {
                   child: VMono(
                     widget.label!,
                     size: 10,
-                    color: focused ? focusColor : c.ink3,
+                    color: hasError ? c.danger : (focused ? focusColor : c.ink3),
                   ),
                 )
               else
@@ -247,11 +249,11 @@ class _LineFieldState extends State<LineField> {
         ),
         if (hasError)
           Padding(
-            padding: const EdgeInsets.only(top: 6),
+            padding: const EdgeInsets.only(top: 8),
             child: Text(
               widget.error!,
               key: widget.errorKey,
-              style: VText.ui(12.5, color: c.danger, height: 1.35),
+              style: VText.ui(13.5, color: c.danger, height: 1.4),
             ),
           )
         else if (maxLength != null)
